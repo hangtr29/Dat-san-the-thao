@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng ký tài khoản - SPORTBOOK{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto my-12 px-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 mb-3 shadow-inner">
+                <i class="fa-solid fa-user-plus text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-800">Đăng Ký Tài Khoản</h2>
+            <p class="text-sm text-slate-500 mt-1">Gia nhập nền tảng đặt sân thể thao thông minh</p>
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="text-xs text-slate-400 mt-1">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p class="text-xs text-red-500 font-medium mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" 
+                class="w-full py-3 px-4 rounded-xl text-white font-bold bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200 transition duration-150 mt-4">
+                Tạo Tài Khoản
+            </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-slate-100 text-center text-sm text-slate-600">
+            Đã có tài khoản? 
+            <a href="{% url 'users:login' %}" class="font-bold text-emerald-600 hover:text-emerald-700">Đăng nhập</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

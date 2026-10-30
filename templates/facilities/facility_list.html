@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}SportBook - Đặt Sân Cầu Lông, Pickleball, Bóng Bàn{% endblock %}
+
+{% block content %}
+<div class="w-full px-4 sm:px-8 lg:px-12 py-6">
+
+    <!-- Categories Filter Chips (Cầu lông, Pickleball, Bóng bàn) -->
+    <div class="flex items-center gap-2.5 overflow-x-auto pb-2 mb-6 text-xs font-black">
+        <a href="{% url 'facilities:facility_list' %}" 
+           class="px-5 py-2.5 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm 
+           {% if not selected_category %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
+            <i class="fa-solid fa-border-all"></i>
+            <span>Tất cả môn</span>
+        </a>
+        {% for cat in categories %}
+            <a href="?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}" 
+               class="px-5 py-2.5 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm
+               {% if selected_category == cat.slug %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
+                <span>{{ cat.icon_url|default:"🏸" }}</span>
+                <span>{{ cat.name }}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full {% if selected_category == cat.slug %} bg-emerald-800 text-white {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                    {{ cat.count_courts }}
+                </span>
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Facility Cards Grid (Full-width, 3-4 cột rộng rãi) -->
+    {% if facilities %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for fac in facilities %}
+                <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-lg transition duration-200 flex flex-col group">
+                    
+                    <!-- Top Court Photo Banner with Overlays -->
+                    <div class="h-48 bg-gradient-to-tr from-slate-900 via-emerald-950 to-teal-900 relative overflow-hidden">
+                        <!-- Background Pattern -->
+                        <div class="absolute inset-0 opacity-40 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                        
+                        <!-- Top Left Badges -->
+                        <div class="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500 text-white flex items-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-star text-[9px] text-amber-300"></i> Đơn ngày
+                            </span>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-purple-600 text-white shadow-sm">
+                                Sự kiện
+                            </span>
+                        </div>
+
+                        <!-- Top Right Action Icons -->
+                        <div class="absolute top-3 right-3 flex items-center gap-2 z-10">
+                            <button title="Lưu yêu thích" class="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-600 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
+                                <i class="fa-regular fa-heart"></i>
+                            </button>
+                            <button title="Chỉ đường" class="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-600 hover:text-emerald-700 shadow-md flex items-center justify-center text-xs transition">
+                                <i class="fa-solid fa-diamond-turn-right"></i>
+                            </button>
+                        </div>
+
+                        <!-- Bottom Gradient Fade -->
+                        <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 to-transparent flex items-end p-3">
+                            <div class="text-[11px] text-emerald-300 font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check text-[10px]"></i> {{ fac.courts.count }} sân sẵn sàng hoạt động
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Info Card -->
+                    <div class="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start gap-3">
+                                <!-- Circular Logo Thumbnail -->
+                                <div class="w-12 h-12 rounded-full bg-emerald-50 border-2 border-emerald-500 flex-shrink-0 flex items-center justify-center text-[#0b6b3a] font-black text-sm shadow-sm">
+                                    {{ fac.name|slice:":2"|upper }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-sm font-black text-slate-900 truncate group-hover:text-[#0b6b3a] transition">
+                                        {{ fac.name }}
+                                    </h3>
+                                    <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                                        <span class="text-amber-600 font-bold">(Gần bạn)</span> {{ fac.address }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Opening Hours -->
+                            <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 mt-3.5 pt-3 border-t border-slate-100">
+                                <i class="fa-regular fa-clock text-slate-400"></i>
+                                <span>{{ fac.open_time|time:"H:i" }} - {{ fac.close_time|time:"H:i" }}</span>
+                                <span class="text-slate-300 mx-1">•</span>
+                                <span class="text-slate-600 font-medium">Hotline: <strong class="text-slate-800">{{ fac.phone_contact }}</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Action Button: ĐẶT LỊCH (Alobo Gold/Amber Button) -->
+                        <div class="mt-4 pt-3.5 flex items-center justify-between border-t border-slate-100">
+                            <div>
+                                <span class="text-[10px] text-slate-400 uppercase font-bold block">Ngân hàng</span>
+                                <span class="text-xs font-black text-slate-800 uppercase">{{ fac.bank_name }}</span>
+                            </div>
+                            <a href="{% url 'facilities:facility_detail' fac.id %}" 
+                               class="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-900 bg-[#e6a23c] hover:bg-[#d6932e] shadow-md shadow-amber-500/20 transition duration-150 flex items-center gap-1.5">
+                                <span>ĐẶT LỊCH</span>
+                                <i class="fa-solid fa-angle-right text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-3xl border border-slate-200 p-12 text-center max-w-md mx-auto shadow-sm">
+            <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-800">Không tìm thấy cụm sân</h3>
+            <p class="text-xs text-slate-500 mt-1">Vui lòng chọn bộ môn khác hoặc tìm kiếm với từ khóa khác.</p>
+            <a href="{% url 'facilities:facility_list' %}" class="inline-block mt-4 px-5 py-2.5 bg-[#0b6b3a] text-white font-bold rounded-xl text-xs">
+                Xem Tất Cả Sân
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

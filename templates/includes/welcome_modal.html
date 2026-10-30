@@ -1,0 +1,295 @@
+{% load static %}
+<!-- Intro Splash Screen & Onboarding Carousel Modal -->
+<div id="splash-screen" class="fixed inset-0 z-[9999] bg-gradient-to-br from-[#04101e] via-[#07192f] to-[#02070e] flex flex-col items-center justify-center text-white overflow-hidden transition-opacity duration-700">
+    
+    <!-- Floating Background Icons -->
+    <div class="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+        <span class="floating-icon absolute top-[12%] left-[10%] text-3xl">🏸</span>
+        <span class="floating-icon absolute top-[25%] right-[15%] text-2xl" style="animation-delay: 1.2s;">🏓</span>
+        <span class="floating-icon absolute bottom-[20%] left-[18%] text-3xl" style="animation-delay: 2.4s;">🎾</span>
+        <span class="floating-icon absolute bottom-[30%] right-[12%] text-2xl" style="animation-delay: 0.8s;">⚽</span>
+        <span class="floating-icon absolute top-[45%] left-[8%] text-xl" style="animation-delay: 1.8s;">🏀</span>
+        <span class="floating-icon absolute top-[15%] right-[35%] text-xl" style="animation-delay: 3s;">🏓</span>
+        <span class="floating-icon absolute bottom-[15%] right-[40%] text-2xl" style="animation-delay: 2.1s;">🏸</span>
+    </div>
+
+    <!-- Centered Brand Splash Box with Large Glowing SportBook Logo -->
+    <div id="splash-content" class="relative z-10 flex flex-col items-center text-center px-4 animate-scaleUp">
+        
+        <!-- Official Logo Image with Soft Ambient Glow -->
+        <div class="relative mb-4">
+            <div class="absolute -inset-8 bg-emerald-500/25 rounded-full blur-3xl animate-pulse"></div>
+            <img src="{% static 'images/logo_transparent.png' %}" alt="SportBook - Đặt Sân Nhanh Chóng" 
+                 class="relative max-w-[320px] sm:max-w-[420px] h-auto object-contain logo-glow-effect">
+        </div>
+
+        <div class="flex items-center justify-center gap-2 text-xs sm:text-sm font-black tracking-widest text-emerald-300 uppercase mt-2">
+            <span>Cầu Lông</span>
+            <span class="w-1 h-3 bg-emerald-500/70 rounded-full inline-block"></span>
+            <span>Pickleball</span>
+            <span class="w-1 h-3 bg-emerald-500/70 rounded-full inline-block"></span>
+            <span>Bóng Bàn</span>
+        </div>
+
+        <!-- Pulsating 3 Dots Loader -->
+        <div class="flex items-center gap-2 mt-8">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay: 0s;"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay: 0.2s;"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay: 0.4s;"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Onboarding Modal (Gọn gàng, ít chữ, phân tách từ ngữ tinh tế hiện đại) -->
+<div id="onboarding-modal" class="fixed inset-0 z-[9990] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 relative animate-fadeInUp">
+        
+        <!-- Header: Bỏ qua -->
+        <div class="absolute top-4 right-5 z-20">
+            <button onclick="closeOnboarding()" class="text-xs font-bold text-slate-500 hover:text-slate-800 bg-slate-100/90 hover:bg-slate-200 px-3.5 py-1.5 rounded-full transition flex items-center gap-1 shadow-sm">
+                <span>Bỏ Qua</span>
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            </button>
+        </div>
+
+        <!-- Carousel Content Area -->
+        <div class="p-6 sm:p-7 pt-10">
+            <div id="onboarding-slides">
+                
+                <!-- Slide 1: Trực Quan / Nhanh Chóng / Chuẩn Xác -->
+                <div class="onboarding-slide active flex flex-col items-center text-center">
+                    <!-- Top Visual Graphic Banner -->
+                    <div class="w-full h-44 rounded-2xl bg-gradient-to-tr from-[#071224] via-[#0b1c38] to-[#08152b] p-4 flex flex-col items-center justify-center text-white relative shadow-inner mb-6 overflow-hidden border border-slate-800">
+                        <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl"></div>
+                        <img src="{% static 'images/logo_transparent.png' %}" alt="SportBook" class="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_4px_16px_rgba(34,197,94,0.4)]">
+                        <div class="flex items-center justify-center gap-2 text-[10px] tracking-widest text-emerald-400 font-extrabold uppercase mt-2">
+                            <span>CẦU LÔNG</span>
+                            <span class="w-1 h-2.5 bg-emerald-500/60 rounded-full inline-block"></span>
+                            <span>PICKLEBALL</span>
+                            <span class="w-1 h-2.5 bg-emerald-500/60 rounded-full inline-block"></span>
+                            <span>BÓNG BÀN</span>
+                        </div>
+                    </div>
+
+                    <!-- Tiêu đề Phân tách bằng thanh Capsule Gradient hiện đại (Không dùng dấu chấm) -->
+                    <div class="flex items-center justify-center gap-2.5 text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                        <span class="hover:text-emerald-600 transition">Trực Quan</span>
+                        <span class="w-1.5 h-4 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full inline-block shadow-sm"></span>
+                        <span class="hover:text-emerald-600 transition">Nhanh Chóng</span>
+                        <span class="w-1.5 h-4 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full inline-block shadow-sm"></span>
+                        <span class="hover:text-emerald-600 transition">Chuẩn Xác</span>
+                    </div>
+
+                    <!-- Badges Điểm nhấn ngắn gọn -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 mt-4 px-2">
+                        <span class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[#0b6b3a] font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-bolt text-amber-500"></i> Lịch Thời Gian Thực
+                        </span>
+                        <span class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[#0b6b3a] font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-lock text-emerald-600"></i> Khóa Giữ Chỗ 10 Phút
+                        </span>
+                        <span class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[#0b6b3a] font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-shield-check text-emerald-600"></i> Không Trùng Lịch
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Minh Bạch / Tiện Lợi / Siêu Tốc -->
+                <div class="onboarding-slide hidden flex flex-col items-center text-center">
+                    <div class="w-full h-44 rounded-2xl bg-gradient-to-tr from-[#042618] via-[#0b4d2c] to-[#042618] p-4 flex flex-col items-center justify-center text-white relative shadow-inner mb-6 overflow-hidden border border-emerald-900">
+                        <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-3xl mb-2 border border-white/20 shadow-md">
+                            <i class="fa-solid fa-qrcode text-emerald-300"></i>
+                        </div>
+                        <h3 class="text-lg font-black tracking-wide text-white">VietQR 1-Chạm</h3>
+                        <p class="text-[10px] text-emerald-200 uppercase tracking-wider font-extrabold">Chuyển Thẳng Ngân Hàng Chủ Sân</p>
+                    </div>
+
+                    <!-- Tiêu đề Phân tách bằng thanh Capsule Gradient hiện đại (Không dùng dấu chấm) -->
+                    <div class="flex items-center justify-center gap-2.5 text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                        <span class="hover:text-emerald-600 transition">Minh Bạch</span>
+                        <span class="w-1.5 h-4 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full inline-block shadow-sm"></span>
+                        <span class="hover:text-emerald-600 transition">Tiện Lợi</span>
+                        <span class="w-1.5 h-4 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full inline-block shadow-sm"></span>
+                        <span class="hover:text-emerald-600 transition">Siêu Tốc</span>
+                    </div>
+
+                    <!-- Badges Điểm nhấn ngắn gọn -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 mt-4 px-2">
+                        <span class="px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-qrcode text-teal-600"></i> Quét QR Tự Động
+                        </span>
+                        <span class="px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-money-bill-transfer text-emerald-600"></i> Tiền Về Thẳng Chủ Sân
+                        </span>
+                        <span class="px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> 0% Phí Trung Gian
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Chủ Động / An Tâm / Trực Tiếp -->
+                <div class="onboarding-slide hidden flex flex-col items-center text-center">
+                    <div class="w-full h-44 rounded-2xl bg-gradient-to-tr from-[#1b1c24] via-[#242b3b] to-[#121620] p-4 flex flex-col items-center justify-center text-white relative shadow-inner mb-6 overflow-hidden border border-slate-700">
+                        <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-3xl mb-2 border border-white/20 shadow-md">
+                            <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                        </div>
+                        <h3 class="text-lg font-black tracking-wide text-white">Chủ Sân & Khách Hàng</h3>
+                        <p class="text-[10px] text-amber-300 uppercase tracking-wider font-extrabold">Liên Hệ Trực Tiếp Hotline / Zalo</p>
+                    </div>
+
+                    <!-- Tiêu đề Phân tách bằng thanh Capsule Gradient hiện đại (Không dùng dấu chấm) -->
+                    <div class="flex items-center justify-center gap-2.5 text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                        <span class="hover:text-emerald-600 transition">Chủ Động</span>
+                        <span class="w-1.5 h-4 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full inline-block shadow-sm"></span>
+                        <span class="hover:text-emerald-600 transition">An Tâm</span>
+                        <span class="w-1.5 h-4 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full inline-block shadow-sm"></span>
+                        <span class="hover:text-emerald-600 transition">Trực Tiếp</span>
+                    </div>
+
+                    <!-- Badges Điểm nhấn ngắn gọn -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 mt-4 px-2">
+                        <span class="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-camera text-amber-600"></i> Nộp Bill Xét Duyệt
+                        </span>
+                        <span class="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-phone text-emerald-600"></i> Hotline/Zalo Trên Phiếu
+                        </span>
+                        <span class="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-handshake text-emerald-600"></i> Hỗ Trợ 24/7
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Dots Indicator (Pill for active, dot for inactive) -->
+            <div class="flex items-center justify-center gap-2 mt-6 mb-6">
+                <span class="slide-dot w-6 h-2 rounded-full bg-[#0b6b3a] transition-all duration-300"></span>
+                <span class="slide-dot w-2 h-2 rounded-full bg-slate-300 transition-all duration-300"></span>
+                <span class="slide-dot w-2 h-2 rounded-full bg-slate-300 transition-all duration-300"></span>
+            </div>
+
+            <!-- Bottom Button -->
+            <button id="btn-next-onboarding" onclick="nextOnboardingSlide()" 
+                class="w-full py-4 px-4 rounded-2xl font-black text-sm tracking-wide text-white bg-[#0b6b3a] hover:bg-[#07532d] shadow-lg shadow-emerald-700/30 transition duration-150 flex items-center justify-center gap-2">
+                <span>Tiếp Tục</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<style>
+@keyframes floatAnimation {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(10deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.floating-icon {
+    animation: floatAnimation 4s ease-in-out infinite;
+}
+
+@keyframes scaleUp {
+    0% { opacity: 0; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-scaleUp {
+    animation: scaleUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+</style>
+
+<script>
+    let currentSlide = 0;
+    const totalSlides = 3;
+
+    function initWelcomeExperience() {
+        const hasVisited = sessionStorage.getItem('sportbook_welcome_seen');
+        const splash = document.getElementById('splash-screen');
+        const modal = document.getElementById('onboarding-modal');
+
+        if (!hasVisited) {
+            setTimeout(() => {
+                splash.classList.add('opacity-0');
+                setTimeout(() => {
+                    splash.classList.add('hidden');
+                    modal.classList.remove('hidden');
+                    setTimeout(() => modal.classList.remove('opacity-0'), 20);
+                }, 600);
+            }, 1200);
+        } else {
+            splash.classList.add('hidden');
+        }
+    }
+
+    function updateSlidesUI() {
+        const slides = document.querySelectorAll('.onboarding-slide');
+        const dots = document.querySelectorAll('.slide-dot');
+        const btnNext = document.getElementById('btn-next-onboarding');
+
+        slides.forEach((s, idx) => {
+            if (idx === currentSlide) {
+                s.classList.remove('hidden');
+                s.classList.add('active');
+            } else {
+                s.classList.add('hidden');
+                s.classList.remove('active');
+            }
+        });
+
+        dots.forEach((d, idx) => {
+            if (idx === currentSlide) {
+                d.classList.add('w-6', 'bg-[#0b6b3a]');
+                d.classList.remove('w-2', 'bg-slate-300');
+            } else {
+                d.classList.remove('w-6', 'bg-[#0b6b3a]');
+                d.classList.add('w-2', 'bg-slate-300');
+            }
+        });
+
+        if (currentSlide === totalSlides - 1) {
+            btnNext.innerHTML = '<span>Bắt Đầu Khám Phá Ngay</span> <i class="fa-solid fa-rocket text-xs"></i>';
+        } else {
+            btnNext.innerHTML = '<span>Tiếp Tục</span> <i class="fa-solid fa-arrow-right text-xs"></i>';
+        }
+    }
+
+    function nextOnboardingSlide() {
+        if (currentSlide < totalSlides - 1) {
+            currentSlide++;
+            updateSlidesUI();
+        } else {
+            closeOnboarding();
+        }
+    }
+
+    function closeOnboarding() {
+        const modal = document.getElementById('onboarding-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            sessionStorage.setItem('sportbook_welcome_seen', 'true');
+        }, 300);
+    }
+
+    function replayWelcomeExperience() {
+        currentSlide = 0;
+        updateSlidesUI();
+        const modal = document.getElementById('onboarding-modal');
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 20);
+    }
+
+    document.addEventListener('DOMContentLoaded', initWelcomeExperience);
+</script>

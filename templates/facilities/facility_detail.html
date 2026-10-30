@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+
+{% block title %}ĐẶT LỊCH THEO SÂN - TRỰC QUAN - {{ facility.name }}{% endblock %}
+
+{% block body_class %}h-screen w-screen overflow-hidden bg-[#eafaf1] flex flex-col font-['Nunito',sans-serif] m-0 p-0 select-none{% endblock %}
+{% block site_header %}{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block main_class %}h-full w-full overflow-hidden flex flex-col justify-between p-0 m-0{% endblock %}
+
+{% block content %}
+<div class="h-full w-full flex flex-col justify-between overflow-hidden">
+
+    <!-- TOP SECTION: HEADER + LEGEND + NOTICE BANNER -->
+    <div class="flex-none shadow-sm">
+        <!-- Top Alobo Dark Green Header -->
+        <div class="bg-[#006837] text-white w-full">
+            <div class="w-full px-4 sm:px-8 py-2.5 flex items-center justify-between">
+                <a href="{% url 'facilities:facility_list' %}" title="Quay lại danh sách cụm sân" class="flex items-center gap-1.5 text-white hover:text-emerald-200 transition font-bold text-sm sm:text-base">
+                    <i class="fa-solid fa-chevron-left text-lg"></i>
+                </a>
+
+                <h1 class="text-sm sm:text-base font-extrabold tracking-wide uppercase text-center flex-1 mx-2">
+                    ĐẶT LỊCH THEO SÂN - TRỰC QUAN
+                </h1>
+
+                <!-- Date Selector Pill (30/10/2026 📅) -->
+                <div class="relative group">
+                    <button class="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition">
+                        <span>{{ target_date|date:"d/m/Y" }}</span>
+                        <i class="fa-solid fa-calendar-days text-amber-300"></i>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-52 bg-white text-slate-800 rounded-2xl shadow-xl py-2 hidden group-hover:block z-50 border border-slate-200">
+                        <div class="px-4 py-1.5 text-[11px] font-bold text-slate-400 uppercase">Chọn ngày đặt sân</div>
+                        {% for d in upcoming_dates %}
+                            <a href="?date={{ d|date:'Y-m-d' }}" 
+                               class="block px-4 py-2 text-xs font-semibold hover:bg-emerald-50 {% if d == target_date %} text-[#006837] font-black bg-emerald-50/50 {% endif %}">
+                                {{ d|date:"d/m/Y" }} {% if d == today %}(Hôm nay){% endif %}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alobo Status Legend Bar (Chính xác từng chi tiết theo Ảnh tham khảo) -->
+            <div class="px-4 sm:px-8 py-2 border-t border-white/10 text-xs sm:text-[13px] font-bold text-white w-full">
+                <div class="w-full flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-5 sm:gap-7 flex-wrap">
+                        <!-- Trống: Khối bo tròn màu trắng -->
+                        <div class="flex items-center gap-2">
+                            <span class="w-[18px] h-[18px] bg-white rounded-md inline-block shadow-sm"></span>
+                            <span class="font-bold">Trống</span>
+                        </div>
+
+                        <!-- Đã đặt: Khối bo tròn màu san hô tươi -->
+                        <div class="flex items-center gap-2">
+                            <span class="w-[18px] h-[18px] bg-[#ff5353] rounded-md inline-block shadow-sm"></span>
+                            <span class="font-bold">Đã đặt</span>
+                        </div>
+
+                        <!-- Khoá: Khối bo tròn màu xám -->
+                        <div class="flex items-center gap-2">
+                            <span class="w-[18px] h-[18px] bg-[#8e8e93] rounded-md inline-block shadow-sm"></span>
+                            <span class="font-bold">Khoá</span>
+                        </div>
+
+                        <!-- Sự kiện: Khối bo tròn màu tím phong lan có dấu chấm than ! -->
+                        <div class="flex items-center gap-2">
+                            <span class="w-[18px] h-[18px] bg-[#e056fd] text-slate-900 font-black text-[12px] rounded-md inline-flex items-center justify-center shadow-sm">!</span>
+                            <span class="font-bold">Sự kiện</span>
+                        </div>
+                    </div>
+
+                    <!-- Xem sân & bảng giá: Chữ vàng nghệ có gạch chân -->
+                    <button type="button" onclick="document.getElementById('pricing-modal').classList.remove('hidden')" 
+                       class="text-[#ffeaa7] hover:text-white transition text-xs sm:text-[13px] font-bold underline underline-offset-4 decoration-[#f9ca24] decoration-2 flex items-center gap-1.5">
+                        Xem sân & bảng giá
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notice Banner (Lưu ý: Nếu bạn cần đặt lịch cố định...) -->
+        <div class="bg-[#fcfdfd] border-b border-emerald-100/80 px-4 sm:px-8 py-1.5 text-center text-xs sm:text-[13px] font-semibold text-slate-700 w-full shadow-sm">
+            <span class="text-[#c05621] font-bold">Lưu ý:</span> Nếu bạn cần đặt lịch cố định vui lòng liên hệ: 
+            <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{ facility.phone_contact }}</a> để được hỗ trợ.
+        </div>
+    </div>
+
+    <!-- MIDDLE SECTION: CONTINUOUS MATRIX GRID (Cố định trong viewport, vừa khít màn hình) -->
+    <div class="flex-1 min-h-0 w-full px-2 sm:px-4 lg:px-6 py-2 flex flex-col overflow-hidden">
+        <form id="booking-form" method="post" action="{% url 'bookings:lock_slots' %}" class="h-full flex flex-col justify-between overflow-hidden">
+            {% csrf_token %}
+            <input type="hidden" name="facility_id" value="{{ facility.id }}">
+            <input type="hidden" name="date" value="{{ target_date|date:'Y-m-d' }}">
+
+            <!-- Khung Chứa Bảng Ma Trận -->
+            <div class="flex-1 min-h-0 bg-transparent rounded-lg overflow-hidden border border-[#b2d8c7] shadow-sm flex flex-col">
+                
+                <!-- Horizontal & Vertical Scrollable Container (Tự thích ứng, không đẩy vỡ màn hình ngoài) -->
+                <div id="matrix-scroll-container" class="flex-1 min-h-0 overflow-x-auto overflow-y-auto relative bg-white">
+                    <table class="border-collapse text-center select-none w-full">
+                        
+                        <!-- Timeline Header Row -->
+                        <thead>
+                            <tr class="bg-[#c8ede1] text-[10px] sm:text-[11px] font-bold text-slate-800 border-b border-[#a9dfbf] sticky top-0 z-40">
+                                
+                                <!-- Cột 1: Khu Vực -->
+                                <th class="sticky left-0 bg-[#b8e8d6] border-r border-[#a9dfbf] py-2 px-1 text-center z-50 w-20 min-w-[75px]">
+                                    <span class="text-[10px] text-[#006837] font-bold uppercase">Khu Vực</span>
+                                </th>
+
+                                <!-- Cột 2: Sân Đấu -->
+                                <th class="sticky left-[75px] bg-[#c3ecdc] border-r border-[#a9dfbf] py-2 px-1 text-center z-50 w-16 min-w-[65px]">
+                                    <span class="text-[10px] text-[#006837] font-bold uppercase">Sân</span>
+                                </th>
+
+                                <!-- Vạch các mốc giờ có vạch tick cam vàng ở trên -->
+                                {% for start_t, end_t in time_headers %}
+                                    <th class="py-2 px-1 border-r border-[#a9dfbf] min-w-[42px] sm:min-w-[48px] text-center font-bold relative bg-[#c8ede1]">
+                                        <div class="w-full h-1 bg-amber-400 absolute top-0 left-0"></div>
+                                        <span>{{ start_t|time:"H:i" }}</span>
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+
+                        <!-- Court Rows phân theo Khu vực (Sân trong nhà vs Sân ngoài trời) -->
+                        <tbody class="divide-y divide-[#c4e3d5] text-xs">
+                            {% for group in area_groups %}
+                                
+                                <!-- Dải phân cách nhẹ giữa các khu vực nếu không phải nhóm đầu -->
+                                {% if not forloop.first %}
+                                    <tr class="h-2.5 bg-[#a9dfbf]/40 border-y border-[#a9dfbf]">
+                                        <td colspan="{{ time_headers|length|add:2 }}" class="p-0"></td>
+                                    </tr>
+                                {% endif %}
+
+                                {% for row in group.rows %}
+                                    <tr class="h-10 sm:h-11">
+                                        
+                                        <!-- Cột 1: Tên Khu Vực (Chỉ render 1 lần với rowspan gom nhiều sân) -->
+                                        {% if forloop.first %}
+                                            <td rowspan="{{ group.rowspan }}" 
+                                                class="sticky left-0 bg-[#d5f5e3] border-r border-[#a9dfbf] py-2 px-1 text-center z-30 w-20 min-w-[75px] align-middle font-bold text-xs text-[#145a32]">
+                                                <div class="leading-snug px-0.5">
+                                                    {{ group.area_name }}
+                                                </div>
+                                            </td>
+                                        {% endif %}
+
+                                        <!-- Cột 2: Tên Sân Đơn (Sân 1, Sân 2, Sân 3...) -->
+                                        <td class="sticky left-[75px] bg-[#e8f8f5] border-r border-[#a9dfbf] py-1 px-1 z-20 text-center w-16 min-w-[65px]">
+                                            <div class="font-bold text-slate-800 text-xs truncate">
+                                                {{ row.court.court_name }}
+                                            </div>
+                                        </td>
+
+                                        <!-- Các Ô Slot Giờ Phẳng Liền Mạch Theo Ảnh Mẫu -->
+                                        {% for cell in row.cells %}
+                                            {% with slot=cell.slot is_past=cell.is_past %}
+                                                <td class="p-0 border-r border-[#c4e3d5] min-w-[42px] sm:min-w-[48px] h-10 sm:h-11 relative">
+                                                    {% if slot %}
+                                                        {% if is_past %}
+                                                            <!-- ĐÃ QUA THỜI GIAN THỰC TẾ (KHỐI XÁM ĐẶC ĐỒNG NHẤT NHƯ ẢNH MẪU) -->
+                                                            <div title="Khung giờ {{ slot.start_time|time:'H:i' }} đã trôi qua" 
+                                                                 class="w-full h-full bg-[#a6acaf] cursor-not-allowed">
+                                                            </div>
+
+                                                        {% elif slot.booking and slot.booking.status == 'WAITING_APPROVAL' or slot.booking.status == 'CONFIRMED' %}
+                                                            <!-- ĐÃ ĐẶT (KHỐI ĐỎ GẠCH SAN HÔ ĐẶC PHẲNG - CHÍNH XÁC NHƯ ẢNH ALOBO) -->
+                                                            <div title="Đã đặt: {{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }}" 
+                                                                 class="w-full h-full bg-[#b7484b] cursor-not-allowed">
+                                                            </div>
+
+                                                        {% elif slot.is_locked %}
+                                                            <!-- ĐANG KHÓA TẠM THỜI (XÁM) -->
+                                                            <div title="Đang được khách khác giữ chỗ" 
+                                                                 class="w-full h-full bg-[#8e8e93] cursor-not-allowed flex items-center justify-center">
+                                                                <i class="fa-solid fa-lock text-[10px] text-white/70"></i>
+                                                            </div>
+
+                                                        {% else %}
+                                                            <!-- TRỐNG KHẢ DỤNG (KHỐI TRẮNG TINH - CLICK ĐỂ CHỌN) -->
+                                                            <label class="slot-cell block w-full h-full bg-white hover:bg-emerald-100 cursor-pointer transition relative group flex items-center justify-center"
+                                                                   title="{{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }} | Giá: {{ slot.price|floatformat:0 }} đ (Bấm để chọn)">
+                                                                <input type="checkbox" name="slot_ids" value="{{ slot.id }}" 
+                                                                       data-price="{{ slot.price }}"
+                                                                       data-duration="60"
+                                                                       onchange="handleSlotSelection()" 
+                                                                       class="hidden slot-check">
+                                                                <span class="check-mark hidden text-white text-xs font-black">
+                                                                    <i class="fa-solid fa-check"></i>
+                                                                </span>
+                                                            </label>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <div class="w-full h-full bg-slate-100"></div>
+                                                    {% endif %}
+                                                </td>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- Thanh Trượt Slider Viên Thuốc Tinh Tế (Giống Hệt Góc Phải Ảnh Tham Khảo) -->
+            <div class="flex-none w-full flex justify-end py-1.5 px-1">
+                <div class="bg-white rounded-full px-4 py-1 border border-slate-300 shadow-sm inline-flex items-center gap-3">
+                    <span class="text-[11px] font-bold text-slate-500 hidden sm:inline">Kéo trượt giờ:</span>
+                    <input type="range" id="matrix-range" min="0" max="100" value="0" 
+                           class="w-44 sm:w-60 accent-[#27ae60] cursor-pointer" 
+                           oninput="syncScroll(this.value)">
+                </div>
+            </div>
+
+            <!-- Bottom Submit Button Wrapper (Được kích hoạt khi chọn slot) -->
+            <button type="submit" id="hidden-submit-btn" class="hidden"></button>
+        </form>
+    </div>
+
+    <!-- BOTTOM SECTION: STICKY BOTTOM ACTION BAR (Cố định ở đáy màn hình) -->
+    <div class="flex-none bg-[#005028] text-white shadow-2xl border-t border-emerald-900 w-full z-40">
+        <div class="w-full">
+            
+            <!-- Dòng hiển thị Tổng giờ & Tổng tiền -->
+            <div class="px-5 sm:px-8 py-2 flex items-center justify-between text-xs sm:text-sm font-bold">
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-200">Tổng giờ:</span>
+                    <span id="summary-duration" class="text-white text-sm sm:text-base font-black">0h00</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-200">Tổng tiền:</span>
+                    <span id="summary-total" class="text-amber-300 text-base sm:text-lg font-black">0 đ</span>
+                </div>
+            </div>
+
+            <!-- Nút Vàng Nghệ Mật Ong TIẾP THEO Full-Width -->
+            <button type="button" id="btn-next-step" onclick="document.getElementById('booking-form').requestSubmit()" disabled
+                class="w-full py-3 sm:py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-white bg-[#d1b272] cursor-not-allowed transition duration-150 flex items-center justify-center gap-2 shadow-inner">
+                <span>TIẾP THEO</span>
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Bảng Giá Cụm Sân -->
+<div id="pricing-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden font-['Nunito',sans-serif]">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+            <h3 class="font-extrabold text-slate-800 text-sm uppercase">BẢNG GIÁ & QUY ĐỊNH SÂN</h3>
+            <button onclick="document.getElementById('pricing-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="space-y-3 text-xs text-slate-600 mb-5">
+            <div class="p-3 bg-emerald-50 rounded-xl text-[#006837] font-bold">
+                🏸 Giờ hoạt động: <strong>{{ facility.open_time|time:"H:i" }} - {{ facility.close_time|time:"H:i" }}</strong>
+            </div>
+            <div class="space-y-1.5">
+                <span class="font-bold text-slate-700 block">Quy tắc định giá:</span>
+                {% for rule in facility.pricing_rules.all %}
+                    <div class="flex justify-between py-1.5 border-b border-slate-100">
+                        <span>{{ rule.get_day_of_week_display }} ({{ rule.start_time|time:"H:i" }}-{{ rule.end_time|time:"H:i" }}):</span>
+                        <strong class="text-[#006837] font-extrabold">{{ rule.price_per_hour|floatformat:0 }} đ/h</strong>
+                    </div>
+                {% empty %}
+                    <p class="text-slate-400">Đang cập nhật bảng giá chi tiết.</p>
+                {% endfor %}
+            </div>
+        </div>
+        <button onclick="document.getElementById('pricing-modal').classList.add('hidden')" class="w-full py-2.5 rounded-xl font-bold bg-[#006837] hover:bg-[#005028] text-white text-xs transition">
+            Đóng
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function handleSlotSelection() {
+        const checkedBoxes = document.querySelectorAll('.slot-check:checked');
+        let totalMoney = 0;
+        let totalMinutes = 0;
+
+        checkedBoxes.forEach(cb => {
+            totalMoney += parseFloat(cb.dataset.price || 0);
+            totalMinutes += parseInt(cb.dataset.duration || 60);
+
+            const cell = cb.closest('.slot-cell');
+            cell.classList.add('!bg-[#27ae60]');
+            cell.classList.remove('bg-white');
+            const check = cell.querySelector('.check-mark');
+            if (check) check.classList.remove('hidden');
+        });
+
+        document.querySelectorAll('.slot-check:not(:checked)').forEach(cb => {
+            const cell = cb.closest('.slot-cell');
+            cell.classList.remove('!bg-[#27ae60]');
+            cell.classList.add('bg-white');
+            const check = cell.querySelector('.check-mark');
+            if (check) check.classList.add('hidden');
+        });
+
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        const durationText = `${hours}h${mins < 10 ? '0' : ''}${mins}`;
+
+        document.getElementById('summary-duration').innerText = durationText;
+        document.getElementById('summary-total').innerText = `${new Intl.NumberFormat('vi-VN').format(totalMoney)} đ`;
+
+        const btnNext = document.getElementById('btn-next-step');
+        if (checkedBoxes.length > 0) {
+            btnNext.disabled = false;
+            btnNext.classList.remove('bg-[#d1b272]', 'cursor-not-allowed');
+            btnNext.classList.add('!bg-[#e5a93c]', 'hover:!bg-[#d89b30]', 'text-white', 'shadow-lg', 'cursor-pointer');
+        } else {
+            btnNext.disabled = true;
+            btnNext.classList.add('bg-[#d1b272]', 'cursor-not-allowed');
+            btnNext.classList.remove('!bg-[#e5a93c]', 'hover:!bg-[#d89b30]', 'text-white', 'shadow-lg', 'cursor-pointer');
+        }
+    }
+
+    function syncScroll(value) {
+        const container = document.getElementById('matrix-scroll-container');
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        container.scrollLeft = (value / 100) * maxScroll;
+    }
+
+    document.getElementById('matrix-scroll-container').addEventListener('scroll', function() {
+        const maxScroll = this.scrollWidth - this.clientWidth;
+        if (maxScroll > 0) {
+            const percent = (this.scrollLeft / maxScroll) * 100;
+            document.getElementById('matrix-range').value = percent;
+        }
+    });
+</script>
+{% endblock %}

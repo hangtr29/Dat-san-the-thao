@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Thanh toán Đặt Sân - Mã đơn: {{ booking.booking_code }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Countdown Timer Banner -->
+    <div class="bg-amber-500 text-white rounded-2xl p-4 sm:p-5 shadow-lg shadow-amber-500/20 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-stopwatch animate-pulse"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-base sm:text-lg">Slot giờ đang được khóa giữ chỗ tạm thời</h3>
+                <p class="text-xs text-amber-100">Vui lòng chuyển khoản và tải ảnh bill trước khi hết hạn.</p>
+            </div>
+        </div>
+        <div class="bg-black/30 backdrop-blur px-5 py-2.5 rounded-xl border border-white/20 text-center">
+            <span class="text-xs uppercase tracking-wider text-amber-200 block font-semibold">Thời gian còn lại</span>
+            <span id="countdown-timer" class="text-2xl font-black font-mono tracking-widest text-white">10:00</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+
+        <!-- Cột Trái: Mã QR VietQR Chuyển Khoản Trực Tiếp -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col items-center text-center">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 mb-3">
+                Thanh Toán Không Giữ Tiền (Direct-to-Owner)
+            </span>
+            <h2 class="text-xl font-black text-slate-800">Quét Mã VietQR Chuyển Khoản</h2>
+            <p class="text-xs text-slate-500 mt-1 max-w-xs">
+                Mở ứng dụng Ngân hàng (App Bank) bất kỳ và quét mã bên dưới để chuyển khoản trực tiếp cho Chủ sân.
+            </p>
+
+            <!-- QR Image Box -->
+            <div class="my-5 p-3 bg-slate-50 border-2 border-dashed border-emerald-300 rounded-2xl relative shadow-inner">
+                {% if vietqr_url %}
+                    <img src="{{ vietqr_url }}" alt="VietQR Payment Code" class="w-64 h-64 object-contain rounded-xl shadow-md">
+                {% else %}
+                    <div class="w-64 h-64 flex items-center justify-center text-slate-400">
+                        Không thể sinh QR
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Thông tin tài khoản chủ sân chi tiết -->
+            <div class="w-full bg-slate-50 rounded-xl p-4 text-left text-xs space-y-2 border border-slate-200">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Ngân hàng:</span>
+                    <span class="font-bold text-slate-800 uppercase">{{ facility.bank_name }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400">Số tài khoản:</span>
+                    <div class="flex items-center gap-1">
+                        <span class="font-bold font-mono text-emerald-700 text-sm">{{ facility.bank_account_no }}</span>
+                        <button onclick="copyToClipboard('{{ facility.bank_account_no }}')" class="text-slate-400 hover:text-slate-600"><i class="fa-regular fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Chủ tài khoản:</span>
+                    <span class="font-bold text-slate-800">{{ facility.bank_account_name }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400">Số tiền:</span>
+                    <span class="font-black text-emerald-600 text-sm">{{ booking.total_amount|floatformat:0 }} đ</span>
+                </div>
+                <div class="flex justify-between items-center pt-1 border-t border-slate-200">
+                    <span class="text-slate-400">Nội dung (Bắt buộc):</span>
+                    <span class="font-black font-mono text-slate-900 bg-amber-100 px-2 py-0.5 rounded">{{ booking.booking_code }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Phải: Tóm tắt đơn & Upload Bill Chuyển Khoản -->
+        <div class="space-y-6">
+            <!-- Tóm tắt đơn -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                    <div>
+                        <span class="text-xs text-slate-400 uppercase font-bold">Mã Đơn Đặt</span>
+                        <h3 class="text-xl font-mono font-black text-slate-800">{{ booking.booking_code }}</h3>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                        {{ booking.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="py-4 space-y-2 text-xs">
+                    <div class="text-slate-500 font-semibold mb-2">Các khung giờ đã giữ chỗ:</div>
+                    {% for slot in slots %}
+                        <div class="flex justify-between items-center p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                            <div>
+                                <span class="font-bold text-slate-800">{{ slot.court.court_name }}</span>
+                                <span class="text-slate-400 block text-[11px]">{{ slot.date|date:"d/m/Y" }} | {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</span>
+                            </div>
+                            <span class="font-bold text-slate-700">{{ slot.price|floatformat:0 }} đ</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+                    <span class="text-sm font-bold text-slate-600">Tổng thanh toán:</span>
+                    <span class="text-2xl font-black text-emerald-600">{{ booking.total_amount|floatformat:0 }} đ</span>
+                </div>
+            </div>
+
+            <!-- Form Upload Bill -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h3 class="font-extrabold text-slate-800 text-base">Tải Ảnh Biên Lai (Bill)</h3>
+                </div>
+                <p class="text-xs text-slate-500 mb-4">
+                    Sau khi chuyển khoản thành công trên App Ngân hàng, chụp màn hình biên lai giao dịch và tải lên đây để Chủ sân xác nhận.
+                </p>
+
+                <form method="post" action="{% url 'bookings:upload_proof' booking.booking_code %}" enctype="multipart/form-data" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <input type="file" name="payment_proof" id="payment_proof" accept="image/*" required
+                            class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-slate-200 rounded-xl p-1">
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Gửi Xác Nhận Thanh Toán</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let seconds = {{ seconds_remaining }};
+    const timerEl = document.getElementById('countdown-timer');
+
+    function updateTimer() {
+        if (seconds <= 0) {
+            timerEl.innerText = "00:00";
+            alert("Đã hết thời gian giữ chỗ tạm thời (10 phút). Đơn đặt đã bị hủy.");
+            window.location.href = "{% url 'facilities:facility_list' %}";
+            return;
+        }
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        timerEl.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+        seconds--;
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        alert('Đã sao chép: ' + text);
+    }
+</script>
+{% endblock %}
+

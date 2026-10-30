@@ -1,0 +1,280 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SportBook - Đặt Sân Nhanh Chóng{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/logo_icon_transparent.png' %}">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        alobo: {
+                            dark: '#064e2a',
+                            green: '#0b6b3a',
+                            lightGreen: '#12884c',
+                            accent: '#e6a23c',
+                            yellow: '#f39c12',
+                            red: '#d9534f',
+                            bg: '#f4f6f8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+        body { 
+            font-family: 'Nunito', 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f0fbf7;
+        }
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0b6b3a;
+            border-radius: 4px;
+        }
+
+        /* Hiệu ứng bóng sáng uyển chuyển cho Logo (Ambient Glow Animation) */
+        @keyframes logoSheen {
+            0%, 100% {
+                filter: drop-shadow(0 4px 14px rgba(34, 197, 94, 0.5)) drop-shadow(0 0 8px rgba(56, 189, 248, 0.35));
+                transform: translateY(0px);
+            }
+            50% {
+                filter: drop-shadow(0 8px 22px rgba(34, 197, 94, 0.85)) drop-shadow(0 0 16px rgba(74, 222, 128, 0.6));
+                transform: translateY(-2px);
+            }
+        }
+        .logo-glow-effect {
+            animation: logoSheen 3.2s ease-in-out infinite;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .logo-glow-effect:hover {
+            filter: drop-shadow(0 10px 28px rgba(34, 197, 94, 1.0)) drop-shadow(0 0 20px rgba(250, 204, 21, 0.8));
+            transform: scale(1.05) translateY(-3px);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}text-slate-800 min-h-screen flex flex-col antialiased pb-20 md:pb-0{% endblock %}">
+
+    <!-- Splash Screen & Onboarding Carousel -->
+    {% include 'includes/welcome_modal.html' %}
+
+    {% block site_header %}
+    <!-- Top Alobo Deep Green Header (Full-width bản lề 2 bên) -->
+    <header class="bg-gradient-to-r from-[#032614] via-[#0b6b3a] to-[#04331b] text-white shadow-xl sticky top-0 z-50 border-b border-emerald-800/40">
+        <div class="w-full px-4 sm:px-8 lg:px-12 flex justify-between items-center h-24">
+            
+            <!-- Left: Logo SportBook Siêu To & Hiệu Ứng Ánh Sáng Uyển Chuyển -->
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'facilities:facility_list' %}" class="flex items-center space-x-3 group py-1">
+                    <img src="{% static 'images/logo_transparent.png' %}" alt="SportBook - ĐẶT SÂN NHANH CHÓNG" 
+                         class="h-16 sm:h-20 w-auto object-contain logo-glow-effect cursor-pointer">
+                    
+                    <div class="hidden xl:block border-l-2 border-white/20 pl-4 py-1">
+                        <span class="text-[11px] uppercase tracking-wider text-emerald-300 font-extrabold block">Hệ Thống Đặt Sân Thể Thao</span>
+                        <span class="text-xs font-bold text-white block mt-0.5">
+                            <i class="fa-regular fa-calendar-check mr-1.5 text-amber-300"></i>Thứ Sáu, 30/10/2026
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Right: Action Buttons & Auth (Đẩy sát mép phải bản lề) -->
+            <div class="flex items-center space-x-3.5">
+                {% if user.is_authenticated %}
+                    <div class="flex items-center space-x-3">
+                        {% if user.is_owner or user.is_staff %}
+                            <a href="{% url 'bookings:owner_dashboard' %}" class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-amber-400 text-slate-900 font-black text-xs shadow-md hover:bg-amber-300 transition">
+                                <i class="fa-solid fa-shield-halved"></i> Quản lý Chủ sân
+                            </a>
+                        {% endif %}
+                        
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2.5 py-2 px-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 transition text-xs font-bold text-white shadow-sm">
+                                <span class="w-7 h-7 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center font-black text-xs shadow-inner">
+                                    {{ user.username|slice:":1"|upper }}
+                                </span>
+                                <span class="hidden sm:inline text-sm font-bold">{{ user.get_full_name|default:user.username }}</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-emerald-200 ml-1"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 hidden group-hover:block text-slate-800 z-50">
+                                <div class="px-4 py-2.5 border-b border-slate-100 text-xs text-slate-500">
+                                    Vai trò: <strong class="text-emerald-700 font-black">{{ user.get_role_display }}</strong>
+                                </div>
+                                <a href="{% url 'bookings:booking_history' %}" class="block px-4 py-2 text-xs font-bold hover:bg-emerald-50 text-slate-700">
+                                    <i class="fa-solid fa-calendar-check text-emerald-600 mr-2"></i> Sân đã đặt
+                                </a>
+                                <a href="{% url 'users:profile' %}" class="block px-4 py-2 text-xs font-bold hover:bg-emerald-50 text-slate-700">
+                                    <i class="fa-solid fa-user text-slate-400 mr-2"></i> Tài khoản
+                                </a>
+                                <hr class="my-1 border-slate-100">
+                                <a href="{% url 'users:logout' %}" class="block px-4 py-2 text-xs font-black text-red-600 hover:bg-red-50">
+                                    <i class="fa-solid fa-right-from-bracket mr-2"></i> Đăng xuất
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'users:login' %}" 
+                       class="px-6 py-2.5 rounded-full bg-white text-[#0b6b3a] font-black text-xs hover:bg-emerald-50 transition shadow-md">
+                        Đăng nhập
+                    </a>
+                    <a href="{% url 'users:register' %}" 
+                       class="px-6 py-2.5 rounded-full border-2 border-white text-white font-black text-xs hover:bg-white/10 transition">
+                        Đăng kí
+                    </a>
+                {% endif %}
+
+                <!-- Quick Icon: Replay Welcome Intro -->
+                <button onclick="replayWelcomeExperience()" title="Xem giới thiệu" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-amber-300 text-sm transition shadow-inner">
+                    <i class="fa-solid fa-star"></i>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Subheader Search & Quick Filter Bar (Full-width bản lề 2 bên) -->
+    <div class="bg-white border-b border-slate-200 py-3.5 shadow-sm sticky top-24 z-40">
+        <div class="w-full px-4 sm:px-8 lg:px-12 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            
+            <!-- Search Box (Bên trái) -->
+            <form method="get" action="{% url 'facilities:facility_list' %}" class="flex-1 max-w-xl relative">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" name="q" value="{{ search_query|default:'' }}" 
+                       placeholder="Tìm kiếm cụm sân, địa chỉ, quận huyện..." 
+                       class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-100 border-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#0b6b3a] placeholder-slate-400">
+                <button type="submit" class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#0b6b3a] hover:text-[#064e2a]">
+                    <i class="fa-solid fa-sliders text-xs"></i>
+                </button>
+            </form>
+
+            <!-- Quick Action Pills (Đẩy sang mép phải) -->
+            <div class="flex items-center space-x-2 text-xs font-bold overflow-x-auto pb-1 md:pb-0">
+                <a href="{% url 'facilities:facility_list' %}" class="px-4 py-2 rounded-xl bg-emerald-50 text-[#0b6b3a] border border-emerald-200 hover:bg-emerald-100 transition flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                    <i class="fa-solid fa-map-location-dot"></i> Bản đồ sân
+                </a>
+                <a href="{% url 'bookings:booking_history' %}" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-check text-[#0b6b3a]"></i> Sân đã đặt
+                </a>
+                <a href="{% url 'bookings:booking_lookup' %}" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-magnifying-glass text-amber-500"></i> Tra cứu mã
+                </a>
+                {% if user.is_authenticated and user.is_owner %}
+                <a href="{% url 'bookings:owner_dashboard' %}" class="px-4 py-2 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-shield-halved text-amber-600"></i> Duyệt bill
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+    {% endblock site_header %}
+
+    <!-- Messages / Alerts (Full width) -->
+    <div class="w-full px-4 sm:px-8 lg:px-12 mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 mb-3 rounded-2xl border flex items-center justify-between text-xs font-bold shadow-sm
+                    {% if message.tags == 'success' %} bg-emerald-50 border-emerald-300 text-emerald-800
+                    {% elif message.tags == 'error' %} bg-red-50 border-red-300 text-red-800
+                    {% elif message.tags == 'warning' %} bg-amber-50 border-amber-300 text-amber-800
+                    {% else %} bg-blue-50 border-blue-300 text-blue-800 {% endif %}">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid 
+                            {% if message.tags == 'success' %} fa-circle-check text-emerald-600
+                            {% elif message.tags == 'error' %} fa-circle-xmark text-red-600
+                            {% elif message.tags == 'warning' %} fa-triangle-exclamation text-amber-600
+                            {% else %} fa-circle-info text-blue-600 {% endif %} text-base"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Page Body (Full width) -->
+    <main class="{% block main_class %}flex-1 pb-16 w-full{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block site_footer %}
+    <!-- Footer (Full width) -->
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-12 mt-auto w-full">
+        <div class="w-full px-4 sm:px-8 lg:px-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                <div>
+                    <div class="flex items-center space-x-2 mb-3">
+                        <img src="{% static 'images/logo_transparent.png' %}" alt="SportBook" class="h-16 w-auto logo-glow-effect">
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed max-w-md">
+                        SportBook - Đặt Sân Nhanh Chóng. Nền tảng kết nối trực tiếp Khách hàng & Chủ sân Cầu lông, Pickleball, Bóng bàn. Chuyển khoản VietQR không giữ tiền trung gian.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-white font-black text-xs mb-3 uppercase tracking-wider">Danh Mục Môn Thể Thao</h4>
+                    <ul class="space-y-2 text-xs font-semibold">
+                        <li><a href="{% url 'facilities:facility_list' %}?category=cau-long" class="hover:text-emerald-400">🏸 Sân Cầu Lông</a></li>
+                        <li><a href="{% url 'facilities:facility_list' %}?category=pickleball" class="hover:text-emerald-400">🏓 Sân Pickleball</a></li>
+                        <li><a href="{% url 'facilities:facility_list' %}?category=bong-ban" class="hover:text-emerald-400">🏓 Sân Bóng Bàn</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-black text-xs mb-3 uppercase tracking-wider">Đề Cương Kiến Trúc OOP</h4>
+                    <p class="text-xs font-bold text-slate-300">Phát triển ứng dụng Hướng Đối Tượng (HTTT14)</p>
+                    <p class="text-xs text-slate-400 mt-1">Tech Stack: Python / Django / Tailwind CSS</p>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 mt-8 pt-6 text-center text-xs text-slate-500">
+                &copy; 2026 SportBook - Đặt Sân Nhanh Chóng. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-50 px-4 py-2 shadow-2xl flex items-center justify-around text-center text-[10px] font-bold">
+        <a href="{% url 'facilities:facility_list' %}" class="flex flex-col items-center text-[#0b6b3a]">
+            <i class="fa-solid fa-house text-base mb-0.5"></i>
+            <span>Trang chủ</span>
+        </a>
+        <a href="{% url 'facilities:facility_list' %}" class="flex flex-col items-center text-slate-400 hover:text-slate-700">
+            <i class="fa-solid fa-map-location-dot text-base mb-0.5"></i>
+            <span>Bản đồ</span>
+        </a>
+        <!-- Central Floating Button with New Emblem -->
+        <button onclick="replayWelcomeExperience()" class="-mt-6 w-12 h-12 rounded-full bg-slate-900 shadow-xl flex items-center justify-center border-4 border-white overflow-hidden p-1">
+            <img src="{% static 'images/logo_icon_transparent.png' %}" alt="SportBook" class="w-full h-full object-contain">
+        </button>
+        <a href="{% url 'bookings:booking_history' %}" class="flex flex-col items-center text-slate-400 hover:text-slate-700">
+            <i class="fa-solid fa-fire text-base mb-0.5"></i>
+            <span>Nổi bật</span>
+        </a>
+        <a href="{% if user.is_authenticated %}{% url 'users:profile' %}{% else %}{% url 'users:login' %}{% endif %}" class="flex flex-col items-center text-slate-400 hover:text-slate-700">
+            <i class="fa-solid fa-user text-base mb-0.5"></i>
+            <span>Tài khoản</span>
+        </a>
+    </nav>
+    {% endblock site_footer %}
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

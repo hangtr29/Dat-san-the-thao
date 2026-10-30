@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Bảng Điều Khiển Chủ Sân - SPORTBOOK{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Header & Stats -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                    Khu Vực Quản Lý Sân
+                </span>
+            </div>
+            <h1 class="text-3xl font-black text-slate-900">Bảng Điều Khiển Chủ Sân</h1>
+            <p class="text-xs text-slate-500 mt-1">Soi ảnh chuyển khoản (Bill), kiểm tra tài khoản ngân hàng và xét duyệt đơn đặt sân.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 font-bold uppercase block">Chờ duyệt bill</span>
+                    <span class="text-xl font-black text-amber-600">{{ pending_count }} đơn</span>
+                </div>
+            </div>
+            <div class="bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 font-bold uppercase block">Đã hoàn tất</span>
+                    <span class="text-xl font-black text-emerald-600">{{ confirmed_count }} đơn</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex items-center gap-2 mb-6 border-b border-slate-200 pb-3 overflow-x-auto text-xs font-bold">
+        <a href="?status=WAITING_APPROVAL" 
+           class="px-4 py-2 rounded-xl transition flex items-center gap-1.5 
+           {% if status_filter == 'WAITING_APPROVAL' %} bg-amber-500 text-white shadow-md {% else %} text-slate-600 hover:bg-slate-100 {% endif %}">
+            <i class="fa-solid fa-clock-rotate-left"></i> Đơn Chờ Duyệt ({{ pending_count }})
+        </a>
+        <a href="?status=CONFIRMED" 
+           class="px-4 py-2 rounded-xl transition flex items-center gap-1.5 
+           {% if status_filter == 'CONFIRMED' %} bg-emerald-600 text-white shadow-md {% else %} text-slate-600 hover:bg-slate-100 {% endif %}">
+            <i class="fa-solid fa-check"></i> Đã Duyệt Thành Công
+        </a>
+        <a href="?status=ALL" 
+           class="px-4 py-2 rounded-xl transition flex items-center gap-1.5 
+           {% if status_filter == 'ALL' %} bg-slate-900 text-white shadow-md {% else %} text-slate-600 hover:bg-slate-100 {% endif %}">
+            <i class="fa-solid fa-list"></i> Tất Cả Các Đơn
+        </a>
+    </div>
+
+    <!-- Orders Table -->
+    {% if bookings %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+                            <th class="py-4 px-4">Mã đơn & Thời gian</th>
+                            <th class="py-4 px-4">Khách hàng</th>
+                            <th class="py-4 px-4">Khung giờ đặt</th>
+                            <th class="py-4 px-4 text-right">Tổng tiền</th>
+                            <th class="py-4 px-4 text-center">Ảnh Bill (Minh chứng)</th>
+                            <th class="py-4 px-4 text-center">Trạng thái</th>
+                            <th class="py-4 px-4 text-center">Hành động duyệt</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for b in bookings %}
+                            <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-4 px-4 font-mono font-bold text-slate-800">
+                                    {{ b.booking_code }}
+                                    <span class="block text-[10px] font-normal text-slate-400 mt-0.5">{{ b.created_at|date:"d/m/Y H:i" }}</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="font-bold text-slate-800">{{ b.customer.get_full_name|default:b.customer.username }}</div>
+                                    <div class="text-[11px] text-emerald-600 font-semibold">{{ b.customer.phone|default:"Chưa có SĐT" }}</div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    {% for slot in b.slots.all %}
+                                        <div class="font-semibold text-slate-700">{{ slot.court.court_name }}</div>
+                                        <div class="text-[10px] text-slate-400">
+                                            {{ slot.date|date:"d/m" }} | {{ slot.start_time|time:"H:i" }}-{{ slot.end_time|time:"H:i" }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+                                <td class="py-4 px-4 text-right font-black text-emerald-600 text-sm">
+                                    {{ b.total_amount|floatformat:0 }} đ
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    {% if b.payment_proof %}
+                                        <a href="{{ b.payment_proof.url }}" target="_blank" class="inline-block relative group cursor-pointer">
+                                            <img src="{{ b.payment_proof.url }}" alt="Bill" class="w-12 h-12 object-cover rounded-lg border border-slate-200 shadow-sm group-hover:scale-110 transition">
+                                            <span class="text-[9px] block text-emerald-600 font-bold mt-0.5">Soi ảnh</span>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-slate-400 text-[11px]">Chưa nộp bill</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold inline-block
+                                        {% if b.status == 'CONFIRMED' %} bg-emerald-100 text-emerald-800 border border-emerald-200
+                                        {% elif b.status == 'WAITING_APPROVAL' %} bg-amber-100 text-amber-800 border border-amber-200
+                                        {% elif b.status == 'PENDING_BILL' %} bg-slate-100 text-slate-700
+                                        {% elif b.status == 'REJECTED' %} bg-rose-100 text-rose-800 border border-rose-200
+                                        {% else %} bg-slate-100 text-slate-700 {% endif %}">
+                                        {{ b.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    {% if b.status == 'WAITING_APPROVAL' %}
+                                        <div class="flex items-center justify-center gap-2">
+                                            <!-- Duyệt thành công -->
+                                            <form method="post" action="{% url 'bookings:owner_approve' b.booking_code %}">
+                                                {% csrf_token %}
+                                                <button type="submit" onclick="return confirm('Bạn xác nhận đã nhận đủ tiền {{ b.total_amount|floatformat:0 }} đ cho đơn này?')"
+                                                    class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm flex items-center gap-1">
+                                                    <i class="fa-solid fa-check"></i> Xác Nhận
+                                                </button>
+                                            </form>
+                                            <!-- Từ chối -->
+                                            <form method="post" action="{% url 'bookings:owner_reject' b.booking_code %}">
+                                                {% csrf_token %}
+                                                <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn TỪ CHỐI đơn này và giải phóng slot?')"
+                                                    class="px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[11px] border border-rose-200">
+                                                    Từ Chối
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-slate-400 text-[11px]">Đã xử lý</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-md mx-auto">
+            <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-800">Không có đơn đặt nào trong danh mục này</h3>
+            <p class="text-xs text-slate-500 mt-1">Khi khách hàng đặt sân và chuyển khoản, các đơn chờ duyệt sẽ lập tức xuất hiện tại đây.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+

@@ -28,7 +28,7 @@
                     <button type="button" id="calendar-trigger-btn" onclick="toggleCalendarWidget()" 
                             class="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition active:scale-95">
                         <span>{{ target_date|date:"d/m/Y" }}</span>
-                        <i class="fa-solid fa-calendar-days text-amber-300"></i>
+                        <i class="fa-solid fa-calendar-days text-[#e5a93c]"></i>
                     </button>
 
                     <!-- Popup Cuốn Lịch Để Bàn (Desk Calendar Popover) -->
@@ -64,7 +64,7 @@
                             <span class="py-1">T4</span>
                             <span class="py-1">T5</span>
                             <span class="py-1">T6</span>
-                            <span class="py-1 text-amber-600 font-black">T7</span>
+                            <span class="py-1 text-[#e5a93c] font-black">T7</span>
                             <span class="py-1 text-rose-600 font-black">CN</span>
                         </div>
 
@@ -125,9 +125,9 @@
                         </div>
                     </div>
 
-                    <!-- Xem sân & bảng giá: Chữ vàng nghệ có gạch chân -->
+                    <!-- Xem sân & bảng giá: Đồng nhất chuẩn màu vàng hổ phách #e5a93c -->
                     <button type="button" onclick="document.getElementById('pricing-modal').classList.remove('hidden')" 
-                       class="text-[#ffeaa7] hover:text-white transition text-xs sm:text-[13px] font-bold underline underline-offset-4 decoration-[#f9ca24] decoration-2 flex items-center gap-1.5">
+                       class="text-[#e5a93c] hover:text-amber-200 transition text-xs sm:text-[13px] font-bold underline underline-offset-4 decoration-[#e5a93c] decoration-2 flex items-center gap-1.5">
                         Xem sân & bảng giá
                     </button>
                 </div>
@@ -136,9 +136,10 @@
 
         <!-- Notice Banner (Lưu ý: Nếu bạn cần đặt lịch cố định...) -->
         <div class="bg-[#fcfdfd] border-b border-emerald-100/80 px-4 sm:px-8 py-1.5 text-center text-xs sm:text-[13px] font-semibold text-slate-700 w-full shadow-sm">
-            <span class="text-[#c05621] font-bold">Lưu ý:</span> Nếu bạn cần đặt lịch cố định vui lòng liên hệ: 
+            <span class="text-[#c27803] font-bold">Lưu ý:</span> Nếu bạn cần đặt lịch cố định vui lòng liên hệ: 
             <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{ facility.phone_contact }}</a> để được hỗ trợ.
         </div>
+    </div>
     </div>
 
     <!-- MIDDLE SECTION: CONTINUOUS MATRIX GRID (Cố định trong viewport, vừa khít màn hình) -->
@@ -148,11 +149,11 @@
             <input type="hidden" name="facility_id" value="{{ facility.id }}">
             <input type="hidden" name="date" value="{{ target_date|date:'Y-m-d' }}">
 
-            <!-- Khung Chứa Bảng Ma Trận -->
-            <div class="flex-1 min-h-0 bg-transparent rounded-lg overflow-hidden border border-[#b2d8c7] shadow-sm flex flex-col">
+            <!-- Khung Chứa Bảng Ma Trận (Nền xanh pastel đồng nhất, không bị vệt trắng thô) -->
+            <div class="flex-1 min-h-0 bg-[#eafaf1] rounded-lg overflow-hidden border border-[#b2d8c7] shadow-sm flex flex-col">
                 
-                <!-- Horizontal & Vertical Scrollable Container (Tự thích ứng, không đẩy vỡ màn hình ngoài) -->
-                <div id="matrix-scroll-container" class="flex-1 min-h-0 overflow-x-auto overflow-y-auto relative bg-white">
+                <!-- Horizontal & Vertical Scrollable Container -->
+                <div id="matrix-scroll-container" class="flex-1 min-h-0 overflow-x-auto overflow-y-auto relative bg-[#f4fbf7]">
                     <table class="border-collapse text-center select-none w-full">
                         
                         <!-- Timeline Header Row -->
@@ -160,19 +161,19 @@
                             <tr class="bg-[#c8ede1] text-[10px] sm:text-[11px] font-bold text-slate-800 border-b border-[#a9dfbf] sticky top-0 z-40">
                                 
                                 <!-- Cột 1: Khu Vực -->
-                                <th class="sticky left-0 bg-[#b8e8d6] border-r border-[#a9dfbf] py-2 px-1 text-center z-50 w-20 min-w-[75px]">
+                                <th class="sticky left-0 bg-[#b8e8d6] border-r border-[#a9dfbf] py-2.5 px-1 text-center z-50 w-20 min-w-[75px]">
                                     <span class="text-[10px] text-[#006837] font-bold uppercase">Khu Vực</span>
                                 </th>
 
                                 <!-- Cột 2: Sân Đấu -->
-                                <th class="sticky left-[75px] bg-[#c3ecdc] border-r border-[#a9dfbf] py-2 px-1 text-center z-50 w-16 min-w-[65px]">
+                                <th class="sticky left-[75px] bg-[#c3ecdc] border-r border-[#a9dfbf] py-2.5 px-1 text-center z-50 w-16 min-w-[65px]">
                                     <span class="text-[10px] text-[#006837] font-bold uppercase">Sân</span>
                                 </th>
 
-                                <!-- Vạch các mốc giờ có vạch tick cam vàng ở trên -->
+                                <!-- Vạch các mốc giờ: Đồng nhất vạch màu vàng hổ phách #e5a93c -->
                                 {% for start_t, end_t in time_headers %}
-                                    <th class="py-2 px-1 border-r border-[#a9dfbf] min-w-[42px] sm:min-w-[48px] text-center font-bold relative bg-[#c8ede1]">
-                                        <div class="w-full h-1 bg-amber-400 absolute top-0 left-0"></div>
+                                    <th class="py-2.5 px-1 border-r border-[#a9dfbf] min-w-[42px] sm:min-w-[48px] text-center font-bold relative bg-[#c8ede1]">
+                                        <div class="w-full h-1 bg-[#e5a93c] absolute top-0 left-0"></div>
                                         <span>{{ start_t|time:"H:i" }}</span>
                                     </th>
                                 {% endfor %}
@@ -191,7 +192,7 @@
                                 {% endif %}
 
                                 {% for row in group.rows %}
-                                    <tr class="h-10 sm:h-11">
+                                    <tr class="h-11 sm:h-12 bg-white">
                                         
                                         <!-- Cột 1: Tên Khu Vực (Chỉ render 1 lần với rowspan gom nhiều sân) -->
                                         {% if forloop.first %}
@@ -213,7 +214,7 @@
                                         <!-- Các Ô Slot Giờ Phẳng Liền Mạch Theo Ảnh Mẫu -->
                                         {% for cell in row.cells %}
                                             {% with slot=cell.slot is_past=cell.is_past %}
-                                                <td class="p-0 border-r border-[#c4e3d5] min-w-[42px] sm:min-w-[48px] h-10 sm:h-11 relative">
+                                                <td class="p-0 border-r border-[#c4e3d5] min-w-[42px] sm:min-w-[48px] h-11 sm:h-12 relative">
                                                     {% if slot %}
                                                         {% if is_past %}
                                                             <!-- ĐÃ QUA THỜI GIAN THỰC TẾ (KHỐI XÁM ĐẶC ĐỒNG NHẤT NHƯ ẢNH MẪU) -->
@@ -283,7 +284,7 @@
     <div class="flex-none bg-[#005028] text-white shadow-2xl border-t border-emerald-900 w-full z-40">
         <div class="w-full">
             
-            <!-- Dòng hiển thị Tổng giờ & Tổng tiền -->
+            <!-- Dòng hiển thị Tổng giờ & Tổng tiền (Màu vàng hổ phách #e5a93c đồng nhất) -->
             <div class="px-5 sm:px-8 py-2 flex items-center justify-between text-xs sm:text-sm font-bold">
                 <div class="flex items-center gap-2">
                     <span class="text-emerald-200">Tổng giờ:</span>
@@ -291,13 +292,18 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-emerald-200">Tổng tiền:</span>
-                    <span id="summary-total" class="text-amber-300 text-base sm:text-lg font-black">0 đ</span>
+                    <span id="summary-total" class="text-[#e5a93c] text-base sm:text-lg font-black">0 đ</span>
                 </div>
             </div>
 
-            <!-- Nút Vàng Pastel TIẾP THEO Full-Width -->
+            <!-- Nút Vàng TIẾP THEO Full-Width (Chuẩn 1 tone màu vàng #e5a93c đồng nhất) -->
             <button type="button" id="btn-next-step" onclick="document.getElementById('booking-form').requestSubmit()" disabled
-                class="w-full py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-[#966d24] bg-[#fae8b6] cursor-not-allowed transition duration-200 flex items-center justify-center gap-2">
+                class="w-full py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-white/70 bg-[#e5a93c]/35 cursor-not-allowed transition duration-200 flex items-center justify-center gap-2">
+                <span>TIẾP THEO</span>
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+        </div>
+    </div>
                 <span>TIẾP THEO</span>
                 <i class="fa-solid fa-chevron-right text-xs"></i>
             </button>
@@ -374,12 +380,12 @@
         const btnNext = document.getElementById('btn-next-step');
         if (checkedBoxes.length > 0) {
             btnNext.disabled = false;
-            btnNext.classList.remove('bg-[#fae8b6]', 'text-[#966d24]', 'cursor-not-allowed');
-            btnNext.classList.add('!bg-[#f5b838]', 'hover:!bg-[#eaad2b]', '!text-white', 'shadow-lg', 'cursor-pointer', 'active:scale-[0.99]');
+            btnNext.classList.remove('bg-[#e5a93c]/35', 'text-white/70', 'cursor-not-allowed');
+            btnNext.classList.add('!bg-[#e5a93c]', 'hover:!bg-[#d99b2e]', '!text-white', 'shadow-lg', 'cursor-pointer', 'active:scale-[0.99]');
         } else {
             btnNext.disabled = true;
-            btnNext.classList.add('bg-[#fae8b6]', 'text-[#966d24]', 'cursor-not-allowed');
-            btnNext.classList.remove('!bg-[#f5b838]', 'hover:!bg-[#eaad2b]', '!text-white', 'shadow-lg', 'cursor-pointer', 'active:scale-[0.99]');
+            btnNext.classList.add('bg-[#e5a93c]/35', 'text-white/70', 'cursor-not-allowed');
+            btnNext.classList.remove('!bg-[#e5a93c]', 'hover:!bg-[#d99b2e]', '!text-white', 'shadow-lg', 'cursor-pointer', 'active:scale-[0.99]');
         }
     }
 

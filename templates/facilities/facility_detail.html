@@ -2,364 +2,318 @@
 
 {% block title %}ĐẶT LỊCH THEO SÂN - TRỰC QUAN - {{ facility.name }}{% endblock %}
 
-{% block body_class %}h-screen w-screen overflow-hidden bg-[#eafaf1] flex flex-col font-['Nunito',sans-serif] m-0 p-0
-select-none{% endblock %}
+{% block body_class %}h-screen w-screen overflow-hidden bg-[#edfff6] flex flex-col font-['Nunito',sans-serif] m-0 p-0 select-none{% endblock %}
 {% block site_header %}{% endblock %}
 {% block site_footer %}{% endblock %}
 {% block main_class %}h-full w-full overflow-hidden flex flex-col justify-between p-0 m-0{% endblock %}
 
 {% block content %}
-<div class="h-full w-full flex flex-col justify-between overflow-hidden">
+<div class="h-full w-full flex flex-col justify-between overflow-hidden bg-[#edfff6]">
 
-    <!-- TOP SECTION: HEADER + LEGEND + NOTICE BANNER -->
-    <div class="flex-none shadow-sm">
-        <!-- Top Alobo Dark Green Header -->
-        <div class="bg-[#006837] text-white w-full">
-            <div class="w-full px-4 sm:px-8 py-2.5 flex items-center justify-between">
-                <a href="{% url 'facilities:facility_list' %}" title="Quay lại danh sách cụm sân"
-                    class="flex items-center gap-1.5 text-white hover:text-emerald-200 transition font-bold text-sm sm:text-base">
-                    <i class="fa-solid fa-chevron-left text-lg"></i>
-                </a>
+    <!-- 1. TOP HEADER & STATUS LEGEND (Màu xanh đậm #006d38 chuẩn ảnh tham khảo) -->
+    <div class="flex-none bg-[#006d38] text-white w-full shadow-sm">
+        
+        <!-- Hàng 1: Nút Back, Tiêu đề, Chọn Ngày -->
+        <div class="w-full px-4 sm:px-8 py-2.5 flex items-center justify-between">
+            <a href="{% url 'facilities:facility_list' %}" title="Quay lại danh sách cụm sân" class="text-white hover:text-emerald-200 transition font-bold text-base sm:text-lg">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
 
-                <h1 class="text-sm sm:text-base font-extrabold tracking-wide uppercase text-center flex-1 mx-2">
-                    ĐẶT LỊCH THEO SÂN - TRỰC QUAN
-                </h1>
+            <h1 class="text-xs sm:text-base font-extrabold tracking-wide uppercase text-center flex-1 mx-2">
+                ĐẶT LỊCH THEO SÂN - TRỰC QUAN
+            </h1>
 
-                <!-- Date Selector: Cuốn Lịch Thông Minh (Interactive Calendar Widget) -->
-                <div class="relative">
-                    <button type="button" id="calendar-trigger-btn" onclick="toggleCalendarWidget()"
-                        class="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition active:scale-95">
-                        <span>{{ target_date|date:"d/m/Y" }}</span>
-                        <i class="fa-solid fa-calendar-days text-[#ffec88]"></i>
-                    </button>
+            <!-- Nút chọn ngày dạng Cuốn Lịch để bàn -->
+            <div class="relative">
+                <button type="button" id="calendar-trigger-btn" onclick="toggleCalendarWidget()"
+                    class="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition active:scale-95">
+                    <span>{{ target_date|date:"d/m/Y" }}</span>
+                    <i class="fa-solid fa-calendar-days text-[#ffec88]"></i>
+                </button>
 
-                    <!-- Popup Cuốn Lịch Để Bàn (Desk Calendar Popover) -->
-                    <div id="calendar-widget"
-                        class="hidden absolute right-0 mt-3 w-80 sm:w-88 bg-white text-slate-800 rounded-3xl shadow-2xl py-4 px-4 z-50 border border-slate-200/90 transition-all transform origin-top-right">
+                <!-- Popup Cuốn Lịch Để Bàn (Desk Calendar Popover) -->
+                <div id="calendar-widget"
+                    class="hidden absolute right-0 mt-3 w-80 sm:w-88 bg-white text-slate-800 rounded-3xl shadow-2xl py-4 px-4 z-50 border border-slate-200/90 transition-all transform origin-top-right">
 
-                        <!-- Hiệu ứng khoen gáy cuốn lịch (Calendar Binder Rings) -->
-                        <div class="absolute -top-3 left-10 flex gap-12 pointer-events-none">
-                            <span
-                                class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
-                            <span
-                                class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
-                            <span
-                                class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
-                        </div>
-
-                        <!-- Top Header Cuốn Lịch (Tháng, Năm + Nút Chuyển Tháng) -->
-                        <div class="flex items-center justify-between pb-3 mb-2 border-b border-slate-100 pt-1">
-                            <button type="button" onclick="changeCalendarMonth(-1)"
-                                class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-600 transition">
-                                <i class="fa-solid fa-chevron-left text-xs"></i>
-                            </button>
-                            <div class="text-center">
-                                <h3 id="cal-month-year"
-                                    class="font-extrabold text-sm sm:text-base text-slate-800 tracking-wide">
-                                    Tháng 10, 2026
-                                </h3>
-                                <span class="text-[10px] text-emerald-700 font-bold block uppercase tracking-wider">Cuốn
-                                    Lịch Đặt Sân</span>
-                            </div>
-                            <button type="button" onclick="changeCalendarMonth(1)"
-                                class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-600 transition">
-                                <i class="fa-solid fa-chevron-right text-xs"></i>
-                            </button>
-                        </div>
-
-                        <!-- Hàng Thứ Trong Tuần (T2 -> CN) -->
-                        <div class="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 mb-1">
-                            <span class="py-1">T2</span>
-                            <span class="py-1">T3</span>
-                            <span class="py-1">T4</span>
-                            <span class="py-1">T5</span>
-                            <span class="py-1">T6</span>
-                            <span class="py-1 text-[#ffec88] font-black">T7</span>
-                            <span class="py-1 text-rose-600 font-black">CN</span>
-                        </div>
-
-                        <!-- Lưới Các Ngày Trong Tháng (Được sinh tự động bởi JavaScript) -->
-                        <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs mb-3 font-semibold">
-                            <!-- Days render dynamically -->
-                        </div>
-
-                        <!-- Quick Action Pills (Chọn nhanh hôm nay, ngày mai, cuối tuần) -->
-                        <div
-                            class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1 text-[11px] font-bold">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <a href="?date={{ today|date:'Y-m-d' }}"
-                                    class="px-2.5 py-1 rounded-full bg-emerald-50 text-[#006837] hover:bg-emerald-100 border border-emerald-200 transition">
-                                    Hôm nay
-                                </a>
-                                {% if upcoming_dates.1 %}
-                                <a href="?date={{ upcoming_dates.1|date:'Y-m-d' }}"
-                                    class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
-                                    Ngày mai
-                                </a>
-                                {% endif %}
-                            </div>
-                            <button type="button" onclick="toggleCalendarWidget()"
-                                class="text-slate-400 hover:text-slate-700 px-2 py-1">
-                                Đóng
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alobo Status Legend Bar (Chính xác từng chi tiết theo Ảnh tham khảo) -->
-            <div class="px-4 sm:px-8 py-2 border-t border-white/10 text-xs sm:text-[13px] font-bold text-white w-full">
-                <div class="w-full flex items-center justify-between flex-wrap gap-3">
-                    <div class="flex items-center gap-5 sm:gap-7 flex-wrap">
-                        <!-- Trống: Khối bo tròn màu trắng -->
-                        <div class="flex items-center gap-2">
-                            <span class="w-[18px] h-[18px] bg-white rounded-md inline-block shadow-sm"></span>
-                            <span class="font-bold">Trống</span>
-                        </div>
-
-                        <!-- Đã đặt: Khối bo tròn màu san hô tươi -->
-                        <div class="flex items-center gap-2">
-                            <span class="w-[18px] h-[18px] bg-[#ff5353] rounded-md inline-block shadow-sm"></span>
-                            <span class="font-bold">Đã đặt</span>
-                        </div>
-
-                        <!-- Khoá: Khối bo tròn màu xám -->
-                        <div class="flex items-center gap-2">
-                            <span class="w-[18px] h-[18px] bg-[#8e8e93] rounded-md inline-block shadow-sm"></span>
-                            <span class="font-bold">Khoá</span>
-                        </div>
-
-                        <!-- Sự kiện: Khối bo tròn màu tím phong lan có dấu chấm than ! -->
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="w-[18px] h-[18px] bg-[#e056fd] text-slate-900 font-black text-[12px] rounded-md inline-flex items-center justify-center shadow-sm">!</span>
-                            <span class="font-bold">Sự kiện</span>
-                        </div>
+                    <!-- Khoen gáy cuốn lịch trang trí -->
+                    <div class="absolute -top-3 left-10 flex gap-12 pointer-events-none">
+                        <span class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
+                        <span class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
+                        <span class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
                     </div>
 
-                    <!-- Xem sân & bảng giá: Chuẩn màu vàng kem sáng #ffec88 theo Ảnh tham khảo 2 -->
-                    <button type="button" onclick="document.getElementById('pricing-modal').classList.remove('hidden')"
-                        class="text-[#ffec88] hover:text-white transition text-xs sm:text-[13px] font-bold underline underline-offset-4 decoration-[#ffec88] decoration-2 flex items-center gap-1.5">
-                        Xem sân & bảng giá
-                    </button>
+                    <!-- Header Cuốn Lịch: Tháng, Năm + Nút Chuyển Tháng -->
+                    <div class="flex items-center justify-between pb-3 mb-2 border-b border-slate-100 pt-1">
+                        <button type="button" onclick="changeCalendarMonth(-1)"
+                            class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-600 transition">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <div class="text-center">
+                            <h3 id="cal-month-year" class="font-extrabold text-sm sm:text-base text-slate-800 tracking-wide">
+                                Tháng 10, 2026
+                            </h3>
+                            <span class="text-[10px] text-emerald-700 font-bold block uppercase tracking-wider">Cuốn Lịch Đặt Sân</span>
+                        </div>
+                        <button type="button" onclick="changeCalendarMonth(1)"
+                            class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-600 transition">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Hàng Thứ (T2 -> CN) -->
+                    <div class="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 mb-1">
+                        <span class="py-1">T2</span>
+                        <span class="py-1">T3</span>
+                        <span class="py-1">T4</span>
+                        <span class="py-1">T5</span>
+                        <span class="py-1">T6</span>
+                        <span class="py-1 text-[#ffec88] font-black">T7</span>
+                        <span class="py-1 text-rose-600 font-black">CN</span>
+                    </div>
+
+                    <!-- Lưới Ngày Trong Tháng -->
+                    <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs mb-3 font-semibold">
+                        <!-- Sinh tự động bởi JS -->
+                    </div>
+
+                    <!-- Chọn nhanh hôm nay, ngày mai -->
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1 text-[11px] font-bold">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <a href="?date={{ today|date:'Y-m-d' }}" 
+                               class="px-2.5 py-1 rounded-full bg-emerald-50 text-[#006d38] hover:bg-emerald-100 border border-emerald-200 transition">
+                                Hôm nay
+                            </a>
+                            {% if upcoming_dates.1 %}
+                            <a href="?date={{ upcoming_dates.1|date:'Y-m-d' }}" 
+                               class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+                                Ngày mai
+                            </a>
+                            {% endif %}
+                        </div>
+                        <button type="button" onclick="toggleCalendarWidget()" class="text-slate-400 hover:text-slate-700 px-2 py-1">
+                            Đóng
+                        </button>
+                    </div>
+
                 </div>
             </div>
         </div>
 
-        <!-- Notice Banner (Lưu ý: Nếu bạn cần đặt lịch cố định...) -->
-        <div
-            class="bg-[#fcfdfd] border-b border-emerald-100/80 px-4 sm:px-8 py-1.5 text-center text-xs sm:text-[13px] font-semibold text-slate-700 w-full shadow-sm">
-            <span class="text-[#c27803] font-bold">Lưu ý:</span> Nếu bạn cần đặt lịch cố định vui lòng liên hệ:
-            <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{ facility.phone_contact }}</a> để được hỗ trợ.
+        <!-- Hàng 2: Status Legend Bar (Chính xác từng khối theo ảnh tham khảo) -->
+        <div class="px-4 sm:px-8 py-2 border-t border-white/10 text-xs sm:text-[13px] font-bold text-white w-full">
+            <div class="w-full flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-5 sm:gap-7 flex-wrap">
+                    <!-- Trống: Khối bo tròn màu trắng -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-[18px] h-[18px] bg-white rounded-md inline-block shadow-sm"></span>
+                        <span class="font-bold">Trống</span>
+                    </div>
+
+                    <!-- Đã đặt: Khối bo tròn màu đỏ san hô -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-[18px] h-[18px] bg-[#ff5252] rounded-md inline-block shadow-sm"></span>
+                        <span class="font-bold">Đã đặt</span>
+                    </div>
+
+                    <!-- Khoá: Khối bo tròn màu xám -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-[18px] h-[18px] bg-[#8e8e93] rounded-md inline-block shadow-sm"></span>
+                        <span class="font-bold">Khoá</span>
+                    </div>
+
+                    <!-- Sự kiện: Khối bo tròn màu tím phong lan có dấu chấm than ! -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-[18px] h-[18px] bg-[#e056fd] text-slate-900 font-black text-[12px] rounded-md inline-flex items-center justify-center shadow-sm">!</span>
+                        <span class="font-bold">Sự kiện</span>
+                    </div>
+                </div>
+
+                <!-- Xem sân & bảng giá: Màu vàng kem sáng #ffec88 gạch chân -->
+                <button type="button" onclick="document.getElementById('pricing-modal').classList.remove('hidden')"
+                    class="text-[#ffec88] hover:text-white transition text-xs sm:text-[13px] font-bold underline underline-offset-4 decoration-[#ffec88] decoration-2 flex items-center gap-1.5">
+                    Xem sân & bảng giá
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- MIDDLE SECTION: CONTINUOUS MATRIX GRID (Cố định trong viewport, vừa khít màn hình) -->
+    <!-- 2. NOTICE BANNER (Nền xanh ngọc pastel cực nhạt #e5f8ef chuẩn ảnh tham khảo) -->
+    <div class="flex-none bg-[#e5f8ef] border-b border-emerald-100/80 px-4 sm:px-8 py-1.5 text-center text-xs sm:text-[13px] font-semibold text-slate-700 w-full shadow-sm">
+        <span class="text-[#c25e1a] font-bold">Lưu ý:</span> Nếu bạn cần đặt lịch cố định vui lòng liên hệ: 
+        <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{ facility.phone_contact }}</a> để được hỗ trợ.
+    </div>
+
+    <!-- 3. MIDDLE SECTION: MA TRẬN ĐẶT SÂN (Continuous Matrix Timeline Grid) -->
     <div class="flex-1 min-h-0 w-full px-2 sm:px-4 lg:px-6 py-2 flex flex-col overflow-hidden">
-        <form id="booking-form" method="post" action="{% url 'bookings:lock_slots' %}"
-            class="h-full flex flex-col justify-between overflow-hidden">
+        <form id="booking-form" method="post" action="{% url 'bookings:lock_slots' %}" class="h-full flex flex-col justify-between overflow-hidden">
             {% csrf_token %}
             <input type="hidden" name="facility_id" value="{{ facility.id }}">
             <input type="hidden" name="date" value="{{ target_date|date:'Y-m-d' }}">
 
-            <!-- Khung Chứa Bảng Ma Trận (Nền xanh pastel đồng nhất, không bị vệt trắng thô) -->
-            <div
-                class="flex-1 min-h-0 bg-[#eafaf1] rounded-lg overflow-hidden border border-[#b2d8c7] shadow-sm flex flex-col">
-
-                <!-- Horizontal & Vertical Scrollable Container -->
-                <div id="matrix-scroll-container"
-                    class="flex-1 min-h-0 overflow-x-auto overflow-y-auto relative bg-[#f4fbf7]">
+            <!-- Khung Bảng Ma Trận -->
+            <div class="flex-1 min-h-0 bg-transparent rounded-lg overflow-hidden border border-[#b2d8c7] shadow-sm flex flex-col">
+                <div id="matrix-scroll-container" class="flex-1 min-h-0 overflow-x-auto overflow-y-auto relative bg-[#edfff6]">
                     <table class="border-collapse text-center select-none w-full">
-
-                        <!-- Timeline Header Row -->
+                        
+                        <!-- Timeline Header Row: Nền xanh ngọc nhạt #b2eefb -->
                         <thead>
-                            <tr
-                                class="bg-[#c8ede1] text-[10px] sm:text-[11px] font-bold text-slate-800 border-b border-[#a9dfbf] sticky top-0 z-40">
-
+                            <tr class="bg-[#b2eefb] text-[10px] sm:text-[11px] font-bold text-slate-800 border-b border-[#a9dfbf] sticky top-0 z-40">
+                                
                                 <!-- Cột 1: Khu Vực -->
-                                <th
-                                    class="sticky left-0 bg-[#b8e8d6] border-r border-[#a9dfbf] py-2.5 px-1 text-center z-50 w-20 min-w-[75px]">
-                                    <span class="text-[10px] text-[#006837] font-bold uppercase">Khu Vực</span>
+                                <th class="sticky left-0 bg-[#d5f5e3] border-r border-[#a9dfbf] py-2.5 px-1 text-center z-50 w-20 min-w-[75px]">
+                                    <span class="text-[10px] text-[#1c583b] font-bold uppercase">Khu Vực</span>
                                 </th>
 
                                 <!-- Cột 2: Sân Đấu -->
-                                <th
-                                    class="sticky left-[75px] bg-[#c3ecdc] border-r border-[#a9dfbf] py-2.5 px-1 text-center z-50 w-16 min-w-[65px]">
-                                    <span class="text-[10px] text-[#006837] font-bold uppercase">Sân</span>
+                                <th class="sticky left-[75px] bg-[#e8f8f5] border-r border-[#a9dfbf] py-2.5 px-1 text-center z-50 w-16 min-w-[65px]">
+                                    <span class="text-[10px] text-[#1c583b] font-bold uppercase">Sân</span>
                                 </th>
 
-                                <!-- Vạch các mốc giờ: Chuẩn màu vàng sáng #ffec88 theo Ảnh tham khảo 2 -->
+                                <!-- Mốc giờ có vạch tick cam vàng #e5a93c ở trên -->
                                 {% for start_t, end_t in time_headers %}
-                                <th
-                                    class="py-2.5 px-1 border-r border-[#a9dfbf] min-w-[42px] sm:min-w-[48px] text-center font-bold relative bg-[#c8ede1]">
-                                    <div class="w-full h-1 bg-[#ffec88] absolute top-0 left-0"></div>
+                                <th class="py-2.5 px-1 border-r border-[#a9dfbf] min-w-[42px] sm:min-w-[48px] text-center font-bold relative bg-[#b2eefb]">
+                                    <div class="w-full h-1 bg-[#e5a93c] absolute top-0 left-0"></div>
                                     <span>{{ start_t|time:"H:i" }}</span>
                                 </th>
                                 {% endfor %}
                             </tr>
                         </thead>
 
-                        <!-- Court Rows phân theo Khu vực (Sân trong nhà vs Sân ngoài trời) -->
+                        <!-- Các hàng sân phân theo Khu vực (Sân trong nhà vs Sân ngoài trời) -->
                         <tbody class="divide-y divide-[#c4e3d5] text-xs">
                             {% for group in area_groups %}
-
-                            <!-- Dải phân cách nhẹ giữa các khu vực nếu không phải nhóm đầu -->
-                            {% if not forloop.first %}
-                            <tr class="h-2.5 bg-[#a9dfbf]/40 border-y border-[#a9dfbf]">
-                                <td colspan="{{ time_headers|length|add:2 }}" class="p-0"></td>
-                            </tr>
-                            {% endif %}
-
-                            {% for row in group.rows %}
-                            <tr class="h-11 sm:h-12 bg-white">
-
-                                <!-- Cột 1: Tên Khu Vực (Chỉ render 1 lần với rowspan gom nhiều sân) -->
-                                {% if forloop.first %}
-                                <td rowspan="{{ group.rowspan }}"
-                                    class="sticky left-0 bg-[#d5f5e3] border-r border-[#a9dfbf] py-2 px-1 text-center z-30 w-20 min-w-[75px] align-middle font-bold text-xs text-[#145a32]">
-                                    <div class="leading-snug px-0.5">
-                                        {{ group.area_name }}
-                                    </div>
-                                </td>
+                                
+                                <!-- Hàng phân cách giữa 2 khu vực màu xám xanh #a1ada7 chuẩn ảnh tham khảo -->
+                                {% if not forloop.first %}
+                                <tr class="h-3.5 bg-[#a1ada7] border-y border-[#8e9c96]">
+                                    <td colspan="{{ time_headers|length|add:2 }}" class="p-0"></td>
+                                </tr>
                                 {% endif %}
 
-                                <!-- Cột 2: Tên Sân Đơn (Sân 1, Sân 2, Sân 3...) -->
-                                <td
-                                    class="sticky left-[75px] bg-[#e8f8f5] border-r border-[#a9dfbf] py-1 px-1 z-20 text-center w-16 min-w-[65px]">
-                                    <div class="font-bold text-slate-800 text-xs truncate">
-                                        {{ row.court.court_name }}
-                                    </div>
-                                </td>
-
-                                <!-- Các Ô Slot Giờ Phẳng Liền Mạch Theo Ảnh Mẫu -->
-                                {% for cell in row.cells %}
-                                {% with slot=cell.slot is_past=cell.is_past %}
-                                <td
-                                    class="p-0 border-r border-[#c4e3d5] min-w-[42px] sm:min-w-[48px] h-11 sm:h-12 relative">
-                                    {% if slot %}
-                                    {% if is_past %}
-                                    <!-- ĐÃ QUA THỜI GIAN THỰC TẾ (KHỐI XÁM ĐẶC ĐỒNG NHẤT NHƯ ẢNH MẪU) -->
-                                    <div title="Khung giờ {{ slot.start_time|time:'H:i' }} đã trôi qua"
-                                        class="w-full h-full bg-[#a6acaf] cursor-not-allowed">
-                                    </div>
-
-                                    {% elif slot.booking and slot.booking.status == 'WAITING_APPROVAL' or
-                                    slot.booking.status == 'CONFIRMED' %}
-                                    <!-- ĐÃ ĐẶT (KHỐI ĐỎ GẠCH SAN HÔ ĐẶC PHẲNG - CHÍNH XÁC NHƯ ẢNH ALOBO) -->
-                                    <div title="Đã đặt: {{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }}"
-                                        class="w-full h-full bg-[#b7484b] cursor-not-allowed">
-                                    </div>
-
-                                    {% elif slot.is_locked %}
-                                    <!-- ĐANG KHÓA TẠM THỜI (XÁM) -->
-                                    <div title="Đang được khách khác giữ chỗ"
-                                        class="w-full h-full bg-[#8e8e93] cursor-not-allowed flex items-center justify-center">
-                                        <i class="fa-solid fa-lock text-[10px] text-white/70"></i>
-                                    </div>
-
-                                    {% else %}
-                                    <!-- TRỐNG KHẢ DỤNG (KHỐI TRẮNG TINH - CLICK ĐỂ CHỌN) -->
-                                    <label
-                                        class="slot-cell block w-full h-full bg-white hover:bg-emerald-100 cursor-pointer transition relative group flex items-center justify-center"
-                                        title="{{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }} | Giá: {{ slot.price|floatformat:0 }} đ (Bấm để chọn)">
-                                        <input type="checkbox" name="slot_ids" value="{{ slot.id }}"
-                                            data-price="{{ slot.price }}" data-duration="60"
-                                            onchange="handleSlotSelection()" class="hidden slot-check">
-                                        <span class="check-mark hidden text-white text-xs font-black">
-                                            <i class="fa-solid fa-check"></i>
-                                        </span>
-                                    </label>
+                                {% for row in group.rows %}
+                                <tr class="h-11 sm:h-12 bg-white">
+                                    
+                                    <!-- Cột 1: Tên Khu Vực (Rowspan gộp nhiều sân) -->
+                                    {% if forloop.first %}
+                                    <td rowspan="{{ group.rowspan }}" 
+                                        class="sticky left-0 bg-[#d5f5e3] border-r border-[#a9dfbf] py-2 px-1 text-center z-30 w-20 min-w-[75px] align-middle font-bold text-xs text-[#1c583b]">
+                                        <div class="leading-snug px-0.5 font-bold">
+                                            {{ group.area_name }}
+                                        </div>
+                                    </td>
                                     {% endif %}
-                                    {% else %}
-                                    <div class="w-full h-full bg-slate-100"></div>
-                                    {% endif %}
-                                </td>
-                                {% endwith %}
+
+                                    <!-- Cột 2: Tên Sân (Sân 1, Sân 2...) -->
+                                    <td class="sticky left-[75px] bg-[#e8f8f5] border-r border-[#a9dfbf] py-1 px-1 z-20 text-center w-16 min-w-[65px]">
+                                        <div class="font-bold text-slate-800 text-xs truncate">
+                                            {{ row.court.court_name }}
+                                        </div>
+                                    </td>
+
+                                    <!-- Các ô slot giờ phẳng liền mạch -->
+                                    {% for cell in row.cells %}
+                                        {% with slot=cell.slot is_past=cell.is_past %}
+                                        <td class="p-0 border-r border-[#c4e3d5] min-w-[42px] sm:min-w-[48px] h-11 sm:h-12 relative">
+                                            {% if slot %}
+                                                {% if is_past %}
+                                                    <!-- ĐÃ QUA THỜI GIAN THỰC TẾ (KHỐI XÁM ĐẶC #b2b2b2 ĐỒNG NHẤT NHƯ ẢNH MẪU) -->
+                                                    <div title="Khung giờ {{ slot.start_time|time:'H:i' }} đã trôi qua" 
+                                                         class="w-full h-full bg-[#b2b2b2] cursor-not-allowed">
+                                                    </div>
+
+                                                {% elif slot.booking and slot.booking.status == 'WAITING_APPROVAL' or slot.booking.status == 'CONFIRMED' %}
+                                                    <!-- ĐÃ ĐẶT (KHỐI ĐỎ SAN HÔ GẠCH #b54848 ĐẶC PHẲNG LIỀN MẢNG CHÍNH XÁC NHƯ ẢNH MẪU) -->
+                                                    <div title="Đã đặt: {{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }}" 
+                                                         class="w-full h-full bg-[#b54848] cursor-not-allowed">
+                                                    </div>
+
+                                                {% elif slot.is_locked %}
+                                                    <!-- ĐANG KHÓA TẠM THỜI -->
+                                                    <div title="Đang được khách khác giữ chỗ" 
+                                                         class="w-full h-full bg-[#8e8e93] cursor-not-allowed flex items-center justify-center">
+                                                        <i class="fa-solid fa-lock text-[10px] text-white/70"></i>
+                                                    </div>
+
+                                                {% else %}
+                                                    <!-- TRỐNG KHẢ DỤNG (KHỐI TRẮNG TINH - CLICK ĐỂ CHỌN) -->
+                                                    <label class="slot-cell block w-full h-full bg-white hover:bg-emerald-100 cursor-pointer transition relative group flex items-center justify-center"
+                                                           title="{{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }} | Giá: {{ slot.price|floatformat:0 }} đ (Bấm để chọn)">
+                                                        <input type="checkbox" name="slot_ids" value="{{ slot.id }}" 
+                                                               data-price="{{ slot.price }}"
+                                                               data-duration="60"
+                                                               onchange="handleSlotSelection()" 
+                                                               class="hidden slot-check">
+                                                        <span class="check-mark hidden text-white text-xs font-black">
+                                                            <i class="fa-solid fa-check"></i>
+                                                        </span>
+                                                    </label>
+                                                {% endif %}
+                                            {% else %}
+                                                <div class="w-full h-full bg-slate-100"></div>
+                                            {% endif %}
+                                        </td>
+                                        {% endwith %}
+                                    {% endfor %}
+                                </tr>
                                 {% endfor %}
-                            </tr>
-                            {% endfor %}
                             {% endfor %}
                         </tbody>
 
                     </table>
                 </div>
-
             </div>
 
-            <!-- Thanh Trượt Slider Viên Thuốc Tinh Tế (Giống Hệt Góc Phải Ảnh Tham Khảo) -->
+            <!-- 4. THANH TRƯỢT SLIDER VIÊN THUỐC TINH TẾ (Nút xanh tròn #4caf50 chuẩn ảnh tham khảo) -->
             <div class="flex-none w-full flex justify-end py-1.5 px-1">
-                <div
-                    class="bg-white rounded-full px-4 py-1 border border-slate-300 shadow-sm inline-flex items-center gap-3">
-                    <span class="text-[11px] font-bold text-slate-500 hidden sm:inline">Kéo trượt giờ:</span>
-                    <input type="range" id="matrix-range" min="0" max="100" value="0"
-                        class="w-44 sm:w-60 accent-[#27ae60] cursor-pointer" oninput="syncScroll(this.value)">
+                <div class="bg-white rounded-full px-3 py-1 border border-slate-300 shadow-sm inline-flex items-center w-56 sm:w-64">
+                    <input type="range" id="matrix-range" min="0" max="100" value="0" 
+                           class="w-full accent-[#4caf50] cursor-pointer" 
+                           oninput="syncScroll(this.value)">
                 </div>
             </div>
 
-            <!-- Bottom Submit Button Wrapper (Được kích hoạt khi chọn slot) -->
             <button type="submit" id="hidden-submit-btn" class="hidden"></button>
         </form>
     </div>
 
-    <!-- BOTTOM SECTION: STICKY BOTTOM ACTION BAR (Cố định ở đáy màn hình) -->
-    <div class="flex-none bg-[#005028] text-white shadow-2xl border-t border-emerald-900 w-full z-40">
-        <div class="w-full">
-
-            <!-- Dòng hiển thị Tổng giờ & Tổng tiền: Chuẩn màu vàng sáng #ffec88 theo Ảnh tham khảo 2 -->
-            <div class="px-5 sm:px-8 py-2 flex items-center justify-between text-xs sm:text-sm font-bold">
-                <div class="flex items-center gap-2">
-                    <span class="text-emerald-200">Tổng giờ:</span>
-                    <span id="summary-duration" class="text-white text-sm sm:text-base font-black">0h00</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-emerald-200">Tổng tiền:</span>
-                    <span id="summary-total" class="text-[#ffec88] text-base sm:text-lg font-black">0 đ</span>
-                </div>
-            </div>
-
-            <!-- Nút Vàng Tươi Rực Rỡ TIẾP THEO Full-Width (Chữ Trắng Nổi Bật) -->
-            <button type="button" id="btn-next-step" onclick="handleNextClick()"
-                class="w-full py-3.5 text-center font-black text-sm sm:text-base tracking-widest uppercase text-white bg-[#f59e0b] hover:bg-[#d97706] transition duration-150 flex items-center justify-center gap-2 shadow-lg cursor-pointer">
-                <span class="text-white drop-shadow-sm font-black">TIẾP THEO</span>
-                <i class="fa-solid fa-chevron-right text-xs text-white"></i>
-            </button>
-        </div>
+    <!-- 5. THANH ĐÁY: NÚT VÀNG MẬT ONG TIẾP THEO (Full-width, chữ trắng chuẩn ảnh tham khảo) -->
+    <div class="flex-none w-full">
+        <!-- Nút Vàng Mật Ong #e5b63d / #ebc667 Full-Width Chữ Trắng In Hoa -->
+        <button type="button" id="btn-next-step" onclick="handleNextClick()"
+            class="w-full py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-white bg-[#e5b63d] hover:bg-[#d9a528] active:scale-[0.99] transition duration-150 flex items-center justify-center gap-2 shadow-lg cursor-pointer">
+            <span class="text-white drop-shadow-sm font-black">TIẾP THEO</span>
+            <i class="fa-solid fa-chevron-right text-xs text-white"></i>
+        </button>
     </div>
 
 </div>
 
 <!-- Modal Bảng Giá Cụm Sân -->
-<div id="pricing-modal"
-    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden font-['Nunito',sans-serif]">
+<div id="pricing-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden font-['Nunito',sans-serif]">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
         <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
             <h3 class="font-extrabold text-slate-800 text-sm uppercase">BẢNG GIÁ & QUY ĐỊNH SÂN</h3>
-            <button onclick="document.getElementById('pricing-modal').classList.add('hidden')"
-                class="text-slate-400 hover:text-slate-700 text-lg">
+            <button onclick="document.getElementById('pricing-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 text-lg">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
         <div class="space-y-3 text-xs text-slate-600 mb-5">
-            <div class="p-3 bg-emerald-50 rounded-xl text-[#006837] font-bold">
-                🏸 Giờ hoạt động: <strong>{{ facility.open_time|time:"H:i" }} - {{ facility.close_time|time:"H:i"
-                    }}</strong>
+            <div class="p-3 bg-emerald-50 rounded-xl text-[#006d38] font-bold">
+                🏸 Giờ hoạt động: <strong>{{ facility.open_time|time:"H:i" }} - {{ facility.close_time|time:"H:i" }}</strong>
             </div>
             <div class="space-y-1.5">
                 <span class="font-bold text-slate-700 block">Quy tắc định giá:</span>
                 {% for rule in facility.pricing_rules.all %}
-                <div class="flex justify-between py-1.5 border-b border-slate-100">
-                    <span>{{ rule.get_day_of_week_display }} ({{ rule.start_time|time:"H:i" }}-{{
-                        rule.end_time|time:"H:i" }}):</span>
-                    <strong class="text-[#006837] font-extrabold">{{ rule.price_per_hour|floatformat:0 }} đ/h</strong>
-                </div>
+                    <div class="flex justify-between py-1.5 border-b border-slate-100">
+                        <span>{{ rule.get_day_of_week_display }} ({{ rule.start_time|time:"H:i" }}-{{ rule.end_time|time:"H:i" }}):</span>
+                        <strong class="text-[#006d38] font-extrabold">{{ rule.price_per_hour|floatformat:0 }} đ/h</strong>
+                    </div>
                 {% empty %}
-                <p class="text-slate-400">Đang cập nhật bảng giá chi tiết.</p>
+                    <p class="text-slate-400">Đang cập nhật bảng giá chi tiết.</p>
                 {% endfor %}
             </div>
         </div>
-        <button onclick="document.getElementById('pricing-modal').classList.add('hidden')"
-            class="w-full py-2.5 rounded-xl font-bold bg-[#006837] hover:bg-[#005028] text-white text-xs transition">
+        <button onclick="document.getElementById('pricing-modal').classList.add('hidden')" class="w-full py-2.5 rounded-xl font-bold bg-[#006d38] hover:bg-[#005028] text-white text-xs transition">
             Đóng
         </button>
     </div>
@@ -396,14 +350,11 @@ select-none{% endblock %}
         const mins = totalMinutes % 60;
         const durationText = `${hours}h${mins < 10 ? '0' : ''}${mins}`;
 
-        document.getElementById('summary-duration').innerText = durationText;
-        document.getElementById('summary-total').innerText = `${new Intl.NumberFormat('vi-VN').format(totalMoney)} đ`;
-
         const btnNext = document.getElementById('btn-next-step');
         if (checkedBoxes.length > 0) {
-            btnNext.classList.add('shadow-2xl', 'scale-[1.002]', 'brightness-105');
+            btnNext.classList.add('shadow-2xl', 'brightness-105');
         } else {
-            btnNext.classList.remove('shadow-2xl', 'scale-[1.002]', 'brightness-105');
+            btnNext.classList.remove('shadow-2xl', 'brightness-105');
         }
     }
 
@@ -436,10 +387,9 @@ select-none{% endblock %}
     const TARGET_DATE_STR = '{{ target_date|date:"Y-m-d" }}';
     const TODAY_STR = '{{ today|date:"Y-m-d" }}';
 
-    // Parse target date ban đầu
     const initialParts = TARGET_DATE_STR.split('-');
     let calYear = parseInt(initialParts[0]);
-    let calMonth = parseInt(initialParts[1]) - 1; // 0-indexed
+    let calMonth = parseInt(initialParts[1]) - 1;
 
     function toggleCalendarWidget() {
         const widget = document.getElementById('calendar-widget');
@@ -469,23 +419,17 @@ select-none{% endblock %}
         monthYearEl.innerText = `Tháng ${calMonth + 1}, ${calYear}`;
         gridEl.innerHTML = '';
 
-        // Tính ngày đầu tiên của tháng và thứ trong tuần
         const firstDay = new Date(calYear, calMonth, 1);
-        let firstDayIndex = firstDay.getDay(); // 0: CN, 1: T2, ..., 6: T7
-        // Chuyển sang chuẩn T2 = 0, ..., CN = 6
+        let firstDayIndex = firstDay.getDay();
         const offset = (firstDayIndex === 0) ? 6 : (firstDayIndex - 1);
-
-        // Số ngày trong tháng
         const totalDays = new Date(calYear, calMonth + 1, 0).getDate();
 
-        // 1. Thêm các ô trống trước ngày 1
         for (let i = 0; i < offset; i++) {
             const blank = document.createElement('div');
             blank.className = 'py-2';
             gridEl.appendChild(blank);
         }
 
-        // 2. Thêm từng ngày trong tháng
         for (let day = 1; day <= totalDays; day++) {
             const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const isToday = (dateStr === TODAY_STR);
@@ -501,24 +445,20 @@ select-none{% endblock %}
             dayBtn.className = 'w-8 h-8 rounded-full flex flex-col items-center justify-center text-xs transition duration-150 relative';
 
             if (isTarget) {
-                // Ngày đang chọn: Khối tròn xanh đậm nổi bật
-                dayBtn.className += ' bg-[#006837] text-white font-extrabold shadow-md scale-105';
+                dayBtn.className += ' bg-[#006d38] text-white font-extrabold shadow-md scale-105';
             } else if (isPast) {
-                // Ngày đã trôi qua trong quá khứ: Làm mờ, khóa click
                 dayBtn.className += ' text-slate-300 cursor-not-allowed';
                 dayBtn.disabled = true;
             } else {
-                // Ngày tương lai có thể đặt: Nổi bật khi hover
-                dayBtn.className += ' text-slate-700 hover:bg-emerald-100 hover:text-[#006837] font-bold cursor-pointer';
+                dayBtn.className += ' text-slate-700 hover:bg-emerald-100 hover:text-[#006d38] font-bold cursor-pointer';
                 if (isToday) {
                     dayBtn.className += ' ring-2 ring-emerald-500 font-extrabold text-emerald-800';
                 }
-                dayBtn.onclick = function () {
+                dayBtn.onclick = function() {
                     window.location.href = `?date=${dateStr}`;
                 };
             }
 
-            // Chấm nhỏ đánh dấu ngày hôm nay
             if (isToday && !isTarget) {
                 const dot = document.createElement('span');
                 dot.className = 'w-1 h-1 bg-emerald-600 rounded-full absolute bottom-1';
@@ -530,8 +470,7 @@ select-none{% endblock %}
         }
     }
 
-    // Đóng Cuốn Lịch khi click ra ngoài
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function(e) {
         const widget = document.getElementById('calendar-widget');
         const trigger = document.getElementById('calendar-trigger-btn');
         if (widget && trigger && !widget.contains(e.target) && !trigger.contains(e.target)) {
@@ -539,8 +478,7 @@ select-none{% endblock %}
         }
     });
 
-    // Khởi tạo render cuốn lịch sẵn
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         renderCalendar();
     });
 </script>

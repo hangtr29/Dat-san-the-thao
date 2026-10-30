@@ -151,8 +151,7 @@ select-none{% endblock %}
         <div
             class="bg-[#fcfdfd] border-b border-emerald-100/80 px-4 sm:px-8 py-1.5 text-center text-xs sm:text-[13px] font-semibold text-slate-700 w-full shadow-sm">
             <span class="text-[#c27803] font-bold">Lưu ý:</span> Nếu bạn cần đặt lịch cố định vui lòng liên hệ:
-            <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{
-                facility.phone_contact }}</a> để được hỗ trợ.
+            <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{ facility.phone_contact }}</a> để được hỗ trợ.
         </div>
     </div>
 
@@ -319,12 +318,11 @@ select-none{% endblock %}
                 </div>
             </div>
 
-            <!-- Nút Vàng TIẾP THEO Full-Width: Chuẩn Màu Vàng Mật Ong #e5b63d theo Ảnh tham khảo 1 -->
-            <button type="button" id="btn-next-step" onclick="document.getElementById('booking-form').requestSubmit()"
-                disabled
-                class="w-full py-3.5 text-center font-black text-sm sm:text-base tracking-widest uppercase text-white bg-[#e5b63d] opacity-80 cursor-not-allowed transition duration-150 flex items-center justify-center gap-2 shadow-md">
-                <span>TIẾP THEO</span>
-                <i class="fa-solid fa-chevron-right text-xs"></i>
+            <!-- Nút Vàng Tươi Rực Rỡ TIẾP THEO Full-Width (Chữ Trắng Nổi Bật) -->
+            <button type="button" id="btn-next-step" onclick="handleNextClick()"
+                class="w-full py-3.5 text-center font-black text-sm sm:text-base tracking-widest uppercase text-white bg-[#f59e0b] hover:bg-[#d97706] transition duration-150 flex items-center justify-center gap-2 shadow-lg cursor-pointer">
+                <span class="text-white drop-shadow-sm font-black">TIẾP THEO</span>
+                <i class="fa-solid fa-chevron-right text-xs text-white"></i>
             </button>
         </div>
     </div>
@@ -403,14 +401,19 @@ select-none{% endblock %}
 
         const btnNext = document.getElementById('btn-next-step');
         if (checkedBoxes.length > 0) {
-            btnNext.disabled = false;
-            btnNext.classList.remove('opacity-80', 'cursor-not-allowed');
-            btnNext.classList.add('opacity-100', 'hover:bg-[#d4a52c]', 'cursor-pointer', 'shadow-xl', 'active:scale-[0.99]');
+            btnNext.classList.add('shadow-2xl', 'scale-[1.002]', 'brightness-105');
         } else {
-            btnNext.disabled = true;
-            btnNext.classList.add('opacity-80', 'cursor-not-allowed');
-            btnNext.classList.remove('opacity-100', 'hover:bg-[#d4a52c]', 'cursor-pointer', 'shadow-xl', 'active:scale-[0.99]');
+            btnNext.classList.remove('shadow-2xl', 'scale-[1.002]', 'brightness-105');
         }
+    }
+
+    function handleNextClick() {
+        const checkedBoxes = document.querySelectorAll('.slot-check:checked');
+        if (checkedBoxes.length === 0) {
+            alert('Vui lòng click chọn ít nhất 1 khung giờ trống trên bảng để tiếp tục!');
+            return;
+        }
+        document.getElementById('booking-form').requestSubmit();
     }
 
     function syncScroll(value) {

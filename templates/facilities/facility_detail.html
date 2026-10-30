@@ -23,20 +23,75 @@
                     ĐẶT LỊCH THEO SÂN - TRỰC QUAN
                 </h1>
 
-                <!-- Date Selector Pill (30/10/2026 📅) -->
-                <div class="relative group">
-                    <button class="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition">
+                <!-- Date Selector: Cuốn Lịch Thông Minh (Interactive Calendar Widget) -->
+                <div class="relative">
+                    <button type="button" id="calendar-trigger-btn" onclick="toggleCalendarWidget()" 
+                            class="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition active:scale-95">
                         <span>{{ target_date|date:"d/m/Y" }}</span>
                         <i class="fa-solid fa-calendar-days text-amber-300"></i>
                     </button>
-                    <div class="absolute right-0 mt-2 w-52 bg-white text-slate-800 rounded-2xl shadow-xl py-2 hidden group-hover:block z-50 border border-slate-200">
-                        <div class="px-4 py-1.5 text-[11px] font-bold text-slate-400 uppercase">Chọn ngày đặt sân</div>
-                        {% for d in upcoming_dates %}
-                            <a href="?date={{ d|date:'Y-m-d' }}" 
-                               class="block px-4 py-2 text-xs font-semibold hover:bg-emerald-50 {% if d == target_date %} text-[#006837] font-black bg-emerald-50/50 {% endif %}">
-                                {{ d|date:"d/m/Y" }} {% if d == today %}(Hôm nay){% endif %}
-                            </a>
-                        {% endfor %}
+
+                    <!-- Popup Cuốn Lịch Để Bàn (Desk Calendar Popover) -->
+                    <div id="calendar-widget" class="hidden absolute right-0 mt-3 w-80 sm:w-88 bg-white text-slate-800 rounded-3xl shadow-2xl py-4 px-4 z-50 border border-slate-200/90 transition-all transform origin-top-right">
+                        
+                        <!-- Hiệu ứng khoen gáy cuốn lịch (Calendar Binder Rings) -->
+                        <div class="absolute -top-3 left-10 flex gap-12 pointer-events-none">
+                            <span class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
+                            <span class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
+                            <span class="w-3.5 h-6 bg-gradient-to-b from-slate-400 to-slate-200 rounded-full border border-slate-500 shadow-sm block"></span>
+                        </div>
+
+                        <!-- Top Header Cuốn Lịch (Tháng, Năm + Nút Chuyển Tháng) -->
+                        <div class="flex items-center justify-between pb-3 mb-2 border-b border-slate-100 pt-1">
+                            <button type="button" onclick="changeCalendarMonth(-1)" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-600 transition">
+                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            </button>
+                            <div class="text-center">
+                                <h3 id="cal-month-year" class="font-extrabold text-sm sm:text-base text-slate-800 tracking-wide">
+                                    Tháng 10, 2026
+                                </h3>
+                                <span class="text-[10px] text-emerald-700 font-bold block uppercase tracking-wider">Cuốn Lịch Đặt Sân</span>
+                            </div>
+                            <button type="button" onclick="changeCalendarMonth(1)" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-600 transition">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+
+                        <!-- Hàng Thứ Trong Tuần (T2 -> CN) -->
+                        <div class="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 mb-1">
+                            <span class="py-1">T2</span>
+                            <span class="py-1">T3</span>
+                            <span class="py-1">T4</span>
+                            <span class="py-1">T5</span>
+                            <span class="py-1">T6</span>
+                            <span class="py-1 text-amber-600 font-black">T7</span>
+                            <span class="py-1 text-rose-600 font-black">CN</span>
+                        </div>
+
+                        <!-- Lưới Các Ngày Trong Tháng (Được sinh tự động bởi JavaScript) -->
+                        <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs mb-3 font-semibold">
+                            <!-- Days render dynamically -->
+                        </div>
+
+                        <!-- Quick Action Pills (Chọn nhanh hôm nay, ngày mai, cuối tuần) -->
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1 text-[11px] font-bold">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <a href="?date={{ today|date:'Y-m-d' }}" 
+                                   class="px-2.5 py-1 rounded-full bg-emerald-50 text-[#006837] hover:bg-emerald-100 border border-emerald-200 transition">
+                                    Hôm nay
+                                </a>
+                                {% if upcoming_dates.1 %}
+                                <a href="?date={{ upcoming_dates.1|date:'Y-m-d' }}" 
+                                   class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+                                    Ngày mai
+                                </a>
+                                {% endif %}
+                            </div>
+                            <button type="button" onclick="toggleCalendarWidget()" class="text-slate-400 hover:text-slate-700 px-2 py-1">
+                                Đóng
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -340,6 +395,120 @@
             const percent = (this.scrollLeft / maxScroll) * 100;
             document.getElementById('matrix-range').value = percent;
         }
+    });
+
+    /* ========================================================
+       LOGIC CUỐN LỊCH ĐẶT SÂN THÔNG MINH (DESK CALENDAR WIDGET)
+       ======================================================== */
+    const TARGET_DATE_STR = '{{ target_date|date:"Y-m-d" }}';
+    const TODAY_STR = '{{ today|date:"Y-m-d" }}';
+
+    // Parse target date ban đầu
+    const initialParts = TARGET_DATE_STR.split('-');
+    let calYear = parseInt(initialParts[0]);
+    let calMonth = parseInt(initialParts[1]) - 1; // 0-indexed
+
+    function toggleCalendarWidget() {
+        const widget = document.getElementById('calendar-widget');
+        widget.classList.toggle('hidden');
+        if (!widget.classList.contains('hidden')) {
+            renderCalendar();
+        }
+    }
+
+    function changeCalendarMonth(delta) {
+        calMonth += delta;
+        if (calMonth < 0) {
+            calMonth = 11;
+            calYear--;
+        } else if (calMonth > 11) {
+            calMonth = 0;
+            calYear++;
+        }
+        renderCalendar();
+    }
+
+    function renderCalendar() {
+        const monthYearEl = document.getElementById('cal-month-year');
+        const gridEl = document.getElementById('cal-days-grid');
+        if (!monthYearEl || !gridEl) return;
+
+        monthYearEl.innerText = `Tháng ${calMonth + 1}, ${calYear}`;
+        gridEl.innerHTML = '';
+
+        // Tính ngày đầu tiên của tháng và thứ trong tuần
+        const firstDay = new Date(calYear, calMonth, 1);
+        let firstDayIndex = firstDay.getDay(); // 0: CN, 1: T2, ..., 6: T7
+        // Chuyển sang chuẩn T2 = 0, ..., CN = 6
+        const offset = (firstDayIndex === 0) ? 6 : (firstDayIndex - 1);
+
+        // Số ngày trong tháng
+        const totalDays = new Date(calYear, calMonth + 1, 0).getDate();
+
+        // 1. Thêm các ô trống trước ngày 1
+        for (let i = 0; i < offset; i++) {
+            const blank = document.createElement('div');
+            blank.className = 'py-2';
+            gridEl.appendChild(blank);
+        }
+
+        // 2. Thêm từng ngày trong tháng
+        for (let day = 1; day <= totalDays; day++) {
+            const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isToday = (dateStr === TODAY_STR);
+            const isTarget = (dateStr === TARGET_DATE_STR);
+            const isPast = (dateStr < TODAY_STR);
+
+            const dayCell = document.createElement('div');
+            dayCell.className = 'py-1.5 flex items-center justify-center';
+
+            const dayBtn = document.createElement('button');
+            dayBtn.type = 'button';
+            dayBtn.innerText = day;
+            dayBtn.className = 'w-8 h-8 rounded-full flex flex-col items-center justify-center text-xs transition duration-150 relative';
+
+            if (isTarget) {
+                // Ngày đang chọn: Khối tròn xanh đậm nổi bật
+                dayBtn.className += ' bg-[#006837] text-white font-extrabold shadow-md scale-105';
+            } else if (isPast) {
+                // Ngày đã trôi qua trong quá khứ: Làm mờ, khóa click
+                dayBtn.className += ' text-slate-300 cursor-not-allowed';
+                dayBtn.disabled = true;
+            } else {
+                // Ngày tương lai có thể đặt: Nổi bật khi hover
+                dayBtn.className += ' text-slate-700 hover:bg-emerald-100 hover:text-[#006837] font-bold cursor-pointer';
+                if (isToday) {
+                    dayBtn.className += ' ring-2 ring-emerald-500 font-extrabold text-emerald-800';
+                }
+                dayBtn.onclick = function() {
+                    window.location.href = `?date=${dateStr}`;
+                };
+            }
+
+            // Chấm nhỏ đánh dấu ngày hôm nay
+            if (isToday && !isTarget) {
+                const dot = document.createElement('span');
+                dot.className = 'w-1 h-1 bg-emerald-600 rounded-full absolute bottom-1';
+                dayBtn.appendChild(dot);
+            }
+
+            dayCell.appendChild(dayBtn);
+            gridEl.appendChild(dayCell);
+        }
+    }
+
+    // Đóng Cuốn Lịch khi click ra ngoài
+    document.addEventListener('click', function(e) {
+        const widget = document.getElementById('calendar-widget');
+        const trigger = document.getElementById('calendar-trigger-btn');
+        if (widget && trigger && !widget.contains(e.target) && !trigger.contains(e.target)) {
+            widget.classList.add('hidden');
+        }
+    });
+
+    // Khởi tạo render cuốn lịch sẵn
+    document.addEventListener('DOMContentLoaded', function() {
+        renderCalendar();
     });
 </script>
 {% endblock %}

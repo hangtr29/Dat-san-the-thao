@@ -240,9 +240,9 @@
                 </div>
             </div>
 
-            <!-- Nút Vàng Nghệ Mật Ong TIẾP THEO Full-Width -->
+            <!-- Nút Vàng Pastel TIẾP THEO Full-Width -->
             <button type="button" id="btn-next-step" onclick="document.getElementById('booking-form').requestSubmit()" disabled
-                class="w-full py-3 sm:py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-white bg-[#d1b272] cursor-not-allowed transition duration-150 flex items-center justify-center gap-2 shadow-inner">
+                class="w-full py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-[#966d24] bg-[#fae8b6] cursor-not-allowed transition duration-200 flex items-center justify-center gap-2">
                 <span>TIẾP THEO</span>
                 <i class="fa-solid fa-chevron-right text-xs"></i>
             </button>
@@ -319,12 +319,12 @@
         const btnNext = document.getElementById('btn-next-step');
         if (checkedBoxes.length > 0) {
             btnNext.disabled = false;
-            btnNext.classList.remove('bg-[#d1b272]', 'cursor-not-allowed');
-            btnNext.classList.add('!bg-[#e5a93c]', 'hover:!bg-[#d89b30]', 'text-white', 'shadow-lg', 'cursor-pointer');
+            btnNext.classList.remove('bg-[#fae8b6]', 'text-[#966d24]', 'cursor-not-allowed');
+            btnNext.classList.add('!bg-[#f5b838]', 'hover:!bg-[#eaad2b]', '!text-white', 'shadow-lg', 'cursor-pointer', 'active:scale-[0.99]');
         } else {
             btnNext.disabled = true;
-            btnNext.classList.add('bg-[#d1b272]', 'cursor-not-allowed');
-            btnNext.classList.remove('!bg-[#e5a93c]', 'hover:!bg-[#d89b30]', 'text-white', 'shadow-lg', 'cursor-pointer');
+            btnNext.classList.add('bg-[#fae8b6]', 'text-[#966d24]', 'cursor-not-allowed');
+            btnNext.classList.remove('!bg-[#f5b838]', 'hover:!bg-[#eaad2b]', '!text-white', 'shadow-lg', 'cursor-pointer', 'active:scale-[0.99]');
         }
     }
 

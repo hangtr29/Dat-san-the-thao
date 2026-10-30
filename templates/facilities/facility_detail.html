@@ -140,7 +140,6 @@
             <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{ facility.phone_contact }}</a> để được hỗ trợ.
         </div>
     </div>
-    </div>
 
     <!-- MIDDLE SECTION: CONTINUOUS MATRIX GRID (Cố định trong viewport, vừa khít màn hình) -->
     <div class="flex-1 min-h-0 w-full px-2 sm:px-4 lg:px-6 py-2 flex flex-col overflow-hidden">
@@ -296,14 +295,9 @@
                 </div>
             </div>
 
-            <!-- Nút Vàng TIẾP THEO Full-Width (Chuẩn 1 tone màu vàng #e5a93c đồng nhất) -->
+            <!-- Nút Vàng TIẾP THEO Full-Width (Chuẩn Màu Vàng Rực Rỡ Đẹp Mắt #e5a93c) -->
             <button type="button" id="btn-next-step" onclick="document.getElementById('booking-form').requestSubmit()" disabled
-                class="w-full py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-white/70 bg-[#e5a93c]/35 cursor-not-allowed transition duration-200 flex items-center justify-center gap-2">
-                <span>TIẾP THEO</span>
-                <i class="fa-solid fa-chevron-right text-xs"></i>
-            </button>
-        </div>
-    </div>
+                class="w-full py-3.5 text-center font-black text-sm sm:text-base tracking-widest uppercase text-white bg-[#e5a93c] opacity-80 cursor-not-allowed transition duration-150 flex items-center justify-center gap-2 shadow-md">
                 <span>TIẾP THEO</span>
                 <i class="fa-solid fa-chevron-right text-xs"></i>
             </button>
@@ -380,12 +374,12 @@
         const btnNext = document.getElementById('btn-next-step');
         if (checkedBoxes.length > 0) {
             btnNext.disabled = false;
-            btnNext.classList.remove('bg-[#e5a93c]/35', 'text-white/70', 'cursor-not-allowed');
-            btnNext.classList.add('!bg-[#e5a93c]', 'hover:!bg-[#d99b2e]', '!text-white', 'shadow-lg', 'cursor-pointer', 'active:scale-[0.99]');
+            btnNext.classList.remove('opacity-80', 'cursor-not-allowed');
+            btnNext.classList.add('opacity-100', 'hover:bg-[#d99b2e]', 'cursor-pointer', 'shadow-xl', 'active:scale-[0.99]');
         } else {
             btnNext.disabled = true;
-            btnNext.classList.add('bg-[#e5a93c]/35', 'text-white/70', 'cursor-not-allowed');
-            btnNext.classList.remove('!bg-[#e5a93c]', 'hover:!bg-[#d99b2e]', '!text-white', 'shadow-lg', 'cursor-pointer', 'active:scale-[0.99]');
+            btnNext.classList.add('opacity-80', 'cursor-not-allowed');
+            btnNext.classList.remove('opacity-100', 'hover:bg-[#d99b2e]', 'cursor-pointer', 'shadow-xl', 'active:scale-[0.99]');
         }
     }
 

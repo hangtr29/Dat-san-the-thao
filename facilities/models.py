@@ -112,7 +112,7 @@ class Facility(models.Model):
         name_lower = self.name.lower()
         if 'sài gòn' in name_lower:
             return "2.3km"
-        return "2.7km"
+        return "3.8km"
 
     def __str__(self):
         return f"{self.name} - {self.address}"

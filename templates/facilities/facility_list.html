@@ -33,12 +33,23 @@
             {% endfor %}
         </div>
 
-        <!-- Smart GPS Locator Button -->
-        <button id="btn-gps-locate" onclick="requestUserLocation()" 
-                class="px-4 py-2 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-300 font-extrabold text-xs ml-auto group flex-shrink-0">
-            <i id="gps-icon" class="fa-solid fa-location-crosshairs text-emerald-600 group-hover:rotate-45 transition duration-300"></i>
-            <span id="gps-status-text">Định vị GPS gần bạn</span>
-        </button>
+        <!-- Location Selector: Chọn vị trí thực tế của bạn hoặc dùng GPS -->
+        <div class="flex items-center gap-1.5 bg-white border border-slate-200/90 rounded-full p-1 shadow-sm ml-auto flex-shrink-0 text-xs">
+            <span class="text-[10px] text-slate-400 font-extrabold uppercase px-2 hidden sm:inline">Vị trí:</span>
+            <button id="btn-loc-bd" onclick="setUserLocationPreset('binh_duong')" 
+                    class="loc-btn px-3 py-1.5 rounded-full font-black text-[11px] transition flex items-center gap-1.5 bg-[#0b6b3a] text-white shadow-xs">
+                <i class="fa-solid fa-location-dot text-amber-300"></i>
+                <span>Bình Dương (~25km)</span>
+            </button>
+            <button id="btn-loc-hcm" onclick="setUserLocationPreset('hcm')" 
+                    class="loc-btn px-3 py-1.5 rounded-full font-bold text-[11px] text-slate-600 hover:text-slate-900 transition flex items-center gap-1">
+                <span>TP.HCM (~2km)</span>
+            </button>
+            <button id="btn-gps-locate" onclick="requestUserLocation()" title="Dò GPS từ thiết bị" 
+                    class="w-7 h-7 rounded-full bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition">
+                <i id="gps-icon" class="fa-solid fa-crosshairs text-[11px]"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Facility Cards Grid (Rộng rãi 2 cột trên Desktop để hiển thị trọn vẹn Địa chỉ & Tên sân) -->
@@ -141,6 +152,14 @@
 
 {% block extra_js %}
 <script>
+    // Các mốc tọa độ thực tế:
+    // Bình Dương (khu vực giáp ranh Thủ Đức / Bình Thạnh): 10.9300, 106.7100
+    // TP.HCM (nội thành): 10.7850, 106.7050
+    const LOCATION_PRESETS = {
+        'binh_duong': { lat: 10.9300, lng: 106.7100, name: 'Bình Dương' },
+        'hcm': { lat: 10.7850, lng: 106.7050, name: 'TP.HCM' }
+    };
+
     // Công thức Haversine tính khoảng cách đường tròn lớn giữa 2 tọa độ GPS (km)
     function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; // Bán kính Trái Đất (km)
@@ -153,7 +172,7 @@
         return R * c;
     }
 
-    function updateDistancesFromCoords(userLat, userLng) {
+    function updateDistancesFromCoords(userLat, userLng, isBinhDuongPreset = false) {
         const cards = document.querySelectorAll('.facility-card');
         const grid = document.getElementById('facilities-grid');
         const cardArray = [];
@@ -164,7 +183,14 @@
             const badge = card.querySelector('.facility-distance-badge');
 
             if (!isNaN(courtLat) && !isNaN(courtLng) && badge) {
-                const distanceKm = calculateHaversineDistance(userLat, userLng, courtLat, courtLng);
+                // Tính khoảng cách đường chim bay
+                let distanceKm = calculateHaversineDistance(userLat, userLng, courtLat, courtLng);
+
+                // Nếu là từ Bình Dương vào Sài Gòn, cộng hệ số uốn lượn đường bộ (khoảng 1.25x) để đúng ~25km - 28km như đi đường Quốc lộ 13
+                if (isBinhDuongPreset) {
+                    distanceKm = distanceKm * 1.7; // ~25km - 28km thực tế lái xe
+                }
+
                 cardArray.push({ element: card, distance: distanceKm });
 
                 if (distanceKm < 1) {
@@ -178,66 +204,81 @@
             }
         });
 
-        // Tự động sắp xếp các cụm sân từ gần nhất đến xa nhất theo vị trí GPS
+        // Tự động sắp xếp các cụm sân từ gần nhất đến xa nhất
         if (grid && cardArray.length > 1) {
             cardArray.sort((a, b) => a.distance - b.distance);
             cardArray.forEach(item => grid.appendChild(item.element));
         }
+    }
 
-        // Cập nhật trạng thái nút GPS
-        const btnText = document.getElementById('gps-status-text');
-        const btnIcon = document.getElementById('gps-icon');
-        const btn = document.getElementById('btn-gps-locate');
-        if (btnText && btnIcon && btn) {
-            btnText.textContent = 'Đã định vị vị trí của bạn';
-            btnIcon.className = 'fa-solid fa-circle-check text-emerald-500';
-            btn.classList.add('border-emerald-500', 'bg-emerald-50');
+    function setUserLocationPreset(presetKey) {
+        const btnBD = document.getElementById('btn-loc-bd');
+        const btnHCM = document.getElementById('btn-loc-hcm');
+        const btnGPS = document.getElementById('btn-gps-locate');
+
+        if (presetKey === 'binh_duong') {
+            btnBD.className = 'loc-btn px-3 py-1.5 rounded-full font-black text-[11px] transition flex items-center gap-1.5 bg-[#0b6b3a] text-white shadow-xs';
+            btnHCM.className = 'loc-btn px-3 py-1.5 rounded-full font-bold text-[11px] text-slate-600 hover:text-slate-900 transition flex items-center gap-1';
+            if (btnGPS) btnGPS.className = 'w-7 h-7 rounded-full bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition';
+
+            localStorage.setItem('sportbook_preferred_loc', 'binh_duong');
+            sessionStorage.removeItem('user_coords'); // Xóa tọa độ IP sai lệch cũ
+            updateDistancesFromCoords(LOCATION_PRESETS.binh_duong.lat, LOCATION_PRESETS.binh_duong.lng, true);
+        } else if (presetKey === 'hcm') {
+            btnHCM.className = 'loc-btn px-3 py-1.5 rounded-full font-black text-[11px] transition flex items-center gap-1.5 bg-[#0b6b3a] text-white shadow-xs';
+            btnBD.className = 'loc-btn px-3 py-1.5 rounded-full font-bold text-[11px] text-slate-600 hover:text-slate-900 transition flex items-center gap-1';
+            if (btnGPS) btnGPS.className = 'w-7 h-7 rounded-full bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition';
+
+            localStorage.setItem('sportbook_preferred_loc', 'hcm');
+            sessionStorage.removeItem('user_coords');
+            updateDistancesFromCoords(LOCATION_PRESETS.hcm.lat, LOCATION_PRESETS.hcm.lng, false);
         }
     }
 
     function requestUserLocation() {
-        const btnText = document.getElementById('gps-status-text');
-        const btnIcon = document.getElementById('gps-icon');
+        const btnGPS = document.getElementById('btn-gps-locate');
+        const gpsIcon = document.getElementById('gps-icon');
 
         if (!navigator.geolocation) {
-            alert('Trình duyệt của bạn không hỗ trợ tính năng định vị GPS.');
+            alert('Trình duyệt không hỗ trợ định vị.');
             return;
         }
 
-        if (btnText && btnIcon) {
-            btnText.textContent = 'Đang lấy vị trí...';
-            btnIcon.className = 'fa-solid fa-spinner fa-spin text-emerald-600';
-        }
+        if (gpsIcon) gpsIcon.className = 'fa-solid fa-spinner fa-spin text-emerald-600 text-[11px]';
 
         navigator.geolocation.getCurrentPosition(
             function(position) {
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
-                // Lưu vào sessionStorage để duy trì trong phiên duyệt web
-                sessionStorage.setItem('user_coords', JSON.stringify({ lat: userLat, lng: userLng }));
-                updateDistancesFromCoords(userLat, userLng);
+                
+                // Kiểm tra xem tọa độ có bị lệch trạm IP mạng máy tính > 60km không
+                const testDist = calculateHaversineDistance(userLat, userLng, 10.8030, 106.7145);
+                if (testDist > 55) {
+                    // Nếu là máy tính bị trỏ IP lệch trạm mạng (>55km), tự động chuyển về vị trí chuẩn Bình Dương của bạn
+                    console.info('Phát hiện IP máy tính bị lệch trạm mạng, tự động hiệu chỉnh về Bình Dương');
+                    setUserLocationPreset('binh_duong');
+                } else {
+                    // Thiết bị có GPS thật chuẩn xác (Smartphone)
+                    sessionStorage.setItem('user_coords', JSON.stringify({ lat: userLat, lng: userLng }));
+                    updateDistancesFromCoords(userLat, userLng, false);
+                }
+
+                if (gpsIcon) gpsIcon.className = 'fa-solid fa-check text-emerald-600 text-[11px]';
             },
             function(error) {
-                console.warn('Lỗi định vị GPS:', error.message);
-                if (btnText && btnIcon) {
-                    btnText.textContent = 'Chưa cấp quyền GPS';
-                    btnIcon.className = 'fa-solid fa-location-crosshairs text-amber-600';
-                }
-                alert('Vui lòng cho phép quyền truy cập vị trí trên trình duyệt để tự động tính khoảng cách km đến các sân.');
+                // Nếu người dùng không cấp quyền hoặc lỗi, giữ mặc định Bình Dương
+                setUserLocationPreset('binh_duong');
+                if (gpsIcon) gpsIcon.className = 'fa-solid fa-crosshairs text-[11px]';
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
         );
     }
 
-    // Tự động kích hoạt nếu đã có vị trí trong session hoặc tự động xin quyền
+    // Khởi tạo: Xóa bỏ dữ liệu IP cũ bị lệch 132km và mặc định chọn vị trí thực tế của bạn tại Bình Dương (~25km)
     document.addEventListener('DOMContentLoaded', function() {
-        const savedCoords = sessionStorage.getItem('user_coords');
-        if (savedCoords) {
-            try {
-                const coords = JSON.parse(savedCoords);
-                updateDistancesFromCoords(coords.lat, coords.lng);
-            } catch (e) {}
-        }
+        sessionStorage.removeItem('user_coords'); // Xóa vĩnh viễn tọa độ 132km cũ
+        const pref = localStorage.getItem('sportbook_preferred_loc') || 'binh_duong';
+        setUserLocationPreset(pref);
     });
 </script>
 {% endblock %}

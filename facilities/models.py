@@ -63,6 +63,10 @@ class Facility(models.Model):
     close_time = models.TimeField(default=time(22, 0), verbose_name="Giờ đóng cửa")
     active_status = models.BooleanField(default=True, verbose_name="Đang hoạt động", db_index=True)
 
+    # Tọa độ GPS để tính khoảng cách thực tế từ vị trí người dùng
+    latitude = models.FloatField(default=10.7769, verbose_name="Vĩ độ (GPS Latitude)")
+    longitude = models.FloatField(default=106.7009, verbose_name="Kinh độ (GPS Longitude)")
+
     class Meta:
         verbose_name = "Cụm sân"
         verbose_name_plural = "Danh sách cụm sân"

@@ -5,38 +5,48 @@
 {% block content %}
 <div class="w-full px-4 sm:px-8 lg:px-12 py-6">
 
-    <!-- Categories Filter Chips (Cầu lông, Pickleball, Bóng bàn) -->
-    <div class="flex items-center gap-2.5 overflow-x-auto pb-2 mb-6 text-xs font-black">
-        <a href="{% url 'facilities:facility_list' %}"
-            class="px-5 py-2.5 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm 
-           {% if not selected_category %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
-            <i class="fa-solid fa-border-all"></i>
-            <span>Tất cả môn</span>
-            <span
-                class="text-[10px] px-2 py-0.5 rounded-full {% if not selected_category %} bg-emerald-800 text-white {% else %} bg-slate-100 text-slate-600 {% endif %}">
-                {{ total_facilities_count }}
-            </span>
-        </a>
-        {% for cat in categories %}
-        <a href="?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}"
-            class="px-5 py-2.5 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm
-               {% if selected_category == cat.slug %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
-            <span>{{ cat.icon_url|default:"🏸" }}</span>
-            <span>{{ cat.name }}</span>
-            <span
-                class="text-[10px] px-2 py-0.5 rounded-full {% if selected_category == cat.slug %} bg-emerald-800 text-white {% else %} bg-slate-100 text-slate-600 {% endif %}"
-                title="{{ cat.count_facilities }} cụm sân ({{ cat.count_courts }} sân thi đấu)">
-                {{ cat.count_facilities }}
-            </span>
-        </a>
-        {% endfor %}
+    <!-- Categories Filter Chips & Live GPS Locator Button -->
+    <div class="flex items-center justify-between gap-3 overflow-x-auto pb-2 mb-6 text-xs font-black">
+        <div class="flex items-center gap-2.5">
+            <a href="{% url 'facilities:facility_list' %}"
+                class="px-5 py-2.5 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm 
+               {% if not selected_category %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
+                <i class="fa-solid fa-border-all"></i>
+                <span>Tất cả môn</span>
+                <span
+                    class="text-[10px] px-2 py-0.5 rounded-full {% if not selected_category %} bg-emerald-800 text-white {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                    {{ total_facilities_count }}
+                </span>
+            </a>
+            {% for cat in categories %}
+            <a href="?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}"
+                class="px-5 py-2.5 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm
+                   {% if selected_category == cat.slug %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
+                <span>{{ cat.icon_url|default:"🏸" }}</span>
+                <span>{{ cat.name }}</span>
+                <span
+                    class="text-[10px] px-2 py-0.5 rounded-full {% if selected_category == cat.slug %} bg-emerald-800 text-white {% else %} bg-slate-100 text-slate-600 {% endif %}"
+                    title="{{ cat.count_facilities }} cụm sân ({{ cat.count_courts }} sân thi đấu)">
+                    {{ cat.count_facilities }}
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Smart GPS Locator Button -->
+        <button id="btn-gps-locate" onclick="requestUserLocation()" 
+                class="px-4 py-2 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-300 font-extrabold text-xs ml-auto group flex-shrink-0">
+            <i id="gps-icon" class="fa-solid fa-location-crosshairs text-emerald-600 group-hover:rotate-45 transition duration-300"></i>
+            <span id="gps-status-text">Định vị GPS gần bạn</span>
+        </button>
     </div>
 
     <!-- Facility Cards Grid (Rộng rãi 2 cột trên Desktop để hiển thị trọn vẹn Địa chỉ & Tên sân) -->
     {% if facilities %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 sm:gap-8">
+    <div id="facilities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 sm:gap-8">
         {% for fac in facilities %}
-        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-lg transition duration-200 flex flex-col group">
+        <div class="facility-card bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-lg transition duration-200 flex flex-col group"
+             data-id="{{ fac.id }}" data-lat="{{ fac.latitude }}" data-lng="{{ fac.longitude }}">
 
             <!-- Top Court Photo Banner with Overlays (Chuẩn ảnh tham khảo) -->
             <div class="h-48 sm:h-56 relative overflow-hidden bg-slate-100">
@@ -56,22 +66,23 @@
                     </span>
                 </div>
 
-                <!-- Top Right Action Icons: [♡] [🗺️] -->
+                <!-- Top Right Action Icons: [♡] [🗺️ Chỉ đường Google Maps] -->
                 <div class="absolute top-3 right-3 flex items-center gap-2 z-10">
                     <button type="button" title="Lưu yêu thích"
                         class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
                         <i class="fa-regular fa-heart"></i>
                     </button>
-                    <button type="button" title="Chỉ đường"
-                        class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 hover:bg-white text-[#065f46] hover:text-emerald-700 shadow-md flex items-center justify-center text-xs transition">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ fac.latitude }},{{ fac.longitude }}" 
+                       target="_blank" title="Chỉ đường Google Maps đến sân"
+                       class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 hover:bg-white text-[#065f46] hover:text-emerald-700 shadow-md flex items-center justify-center text-xs transition">
                         <i class="fa-solid fa-diamond-turn-right"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
 
             <!-- Bottom Info Card (Khung thông tin rộng rãi, thấy rõ địa chỉ) -->
             <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
-                <!-- Bên trái: Logo + Tên sân + Khoảng cách/Địa chỉ + Giờ mở cửa -->
+                <!-- Bên trái: Logo + Tên sân + Khoảng cách GPS thật/Địa chỉ + Giờ mở cửa -->
                 <div class="flex items-center gap-3.5 min-w-0 flex-1">
                     <!-- Circular Logo Thumbnail -->
                     <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-50 border border-slate-200 flex-shrink-0 flex items-center justify-center text-[#0b6b3a] font-black text-xs sm:text-sm shadow-sm uppercase overflow-hidden">
@@ -84,7 +95,7 @@
                             {{ fac.name }}
                         </h3>
                         <p class="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
-                            <span class="text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0">({{ fac.get_distance_display }})</span>
+                            <span class="facility-distance-badge text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0" data-default="({{ fac.get_distance_display }})">({{ fac.get_distance_display }})</span>
                             <span>{{ fac.address }}</span>
                         </p>
                         <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mt-1">
@@ -126,4 +137,107 @@
     {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Công thức Haversine tính khoảng cách đường tròn lớn giữa 2 tọa độ GPS (km)
+    function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Bán kính Trái Đất (km)
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    function updateDistancesFromCoords(userLat, userLng) {
+        const cards = document.querySelectorAll('.facility-card');
+        const grid = document.getElementById('facilities-grid');
+        const cardArray = [];
+
+        cards.forEach(card => {
+            const courtLat = parseFloat(card.getAttribute('data-lat'));
+            const courtLng = parseFloat(card.getAttribute('data-lng'));
+            const badge = card.querySelector('.facility-distance-badge');
+
+            if (!isNaN(courtLat) && !isNaN(courtLng) && badge) {
+                const distanceKm = calculateHaversineDistance(userLat, userLng, courtLat, courtLng);
+                cardArray.push({ element: card, distance: distanceKm });
+
+                if (distanceKm < 1) {
+                    const meters = Math.round(distanceKm * 1000);
+                    badge.textContent = `(~${meters}m)`;
+                } else if (distanceKm < 10) {
+                    badge.textContent = `(~${distanceKm.toFixed(1)}km)`;
+                } else {
+                    badge.textContent = `(~${Math.round(distanceKm)}km)`;
+                }
+            }
+        });
+
+        // Tự động sắp xếp các cụm sân từ gần nhất đến xa nhất theo vị trí GPS
+        if (grid && cardArray.length > 1) {
+            cardArray.sort((a, b) => a.distance - b.distance);
+            cardArray.forEach(item => grid.appendChild(item.element));
+        }
+
+        // Cập nhật trạng thái nút GPS
+        const btnText = document.getElementById('gps-status-text');
+        const btnIcon = document.getElementById('gps-icon');
+        const btn = document.getElementById('btn-gps-locate');
+        if (btnText && btnIcon && btn) {
+            btnText.textContent = 'Đã định vị vị trí của bạn';
+            btnIcon.className = 'fa-solid fa-circle-check text-emerald-500';
+            btn.classList.add('border-emerald-500', 'bg-emerald-50');
+        }
+    }
+
+    function requestUserLocation() {
+        const btnText = document.getElementById('gps-status-text');
+        const btnIcon = document.getElementById('gps-icon');
+
+        if (!navigator.geolocation) {
+            alert('Trình duyệt của bạn không hỗ trợ tính năng định vị GPS.');
+            return;
+        }
+
+        if (btnText && btnIcon) {
+            btnText.textContent = 'Đang lấy vị trí...';
+            btnIcon.className = 'fa-solid fa-spinner fa-spin text-emerald-600';
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                // Lưu vào sessionStorage để duy trì trong phiên duyệt web
+                sessionStorage.setItem('user_coords', JSON.stringify({ lat: userLat, lng: userLng }));
+                updateDistancesFromCoords(userLat, userLng);
+            },
+            function(error) {
+                console.warn('Lỗi định vị GPS:', error.message);
+                if (btnText && btnIcon) {
+                    btnText.textContent = 'Chưa cấp quyền GPS';
+                    btnIcon.className = 'fa-solid fa-location-crosshairs text-amber-600';
+                }
+                alert('Vui lòng cho phép quyền truy cập vị trí trên trình duyệt để tự động tính khoảng cách km đến các sân.');
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+    }
+
+    // Tự động kích hoạt nếu đã có vị trí trong session hoặc tự động xin quyền
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedCoords = sessionStorage.getItem('user_coords');
+        if (savedCoords) {
+            try {
+                const coords = JSON.parse(savedCoords);
+                updateDistancesFromCoords(coords.lat, coords.lng);
+            } catch (e) {}
+        }
+    });
+</script>
 {% endblock %}

@@ -276,11 +276,23 @@
         </form>
     </div>
 
-    <!-- 5. THANH ĐÁY: NÚT VÀNG MẬT ONG TIẾP THEO (Full-width, chữ trắng chuẩn ảnh tham khảo) -->
-    <div class="flex-none w-full">
-        <!-- Nút Vàng Mật Ong #e5b63d / #ebc667 Full-Width Chữ Trắng In Hoa -->
+    <!-- 5. THANH ĐÁY: DỰ TÍNH TIỀN & NÚT TIẾP THEO -->
+    <div class="flex-none w-full bg-[#005028] text-white shadow-2xl border-t border-emerald-950">
+        <!-- Dải thông tin dự tính: Tổng thời gian & Tiền tạm tính -->
+        <div class="px-5 sm:px-8 py-2 flex items-center justify-between text-xs sm:text-sm font-bold border-b border-white/10">
+            <div class="flex items-center gap-2">
+                <span class="text-emerald-200">Tổng thời gian:</span>
+                <span id="summary-duration" class="text-white text-sm sm:text-base font-black">0h00</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-emerald-200">Tiền dự tính:</span>
+                <span id="summary-total" class="text-[#ffec88] text-base sm:text-lg font-black">0 đ</span>
+            </div>
+        </div>
+
+        <!-- Nút Vàng Mật Ong #e5b63d Full-Width Chữ Trắng In Hoa -->
         <button type="button" id="btn-next-step" onclick="handleNextClick()"
-            class="w-full py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-white bg-[#e5b63d] hover:bg-[#d9a528] active:scale-[0.99] transition duration-150 flex items-center justify-center gap-2 shadow-lg cursor-pointer">
+            class="w-full py-3 sm:py-3.5 text-center font-extrabold text-sm sm:text-base tracking-widest uppercase text-white bg-[#e5b63d] hover:bg-[#d9a528] active:scale-[0.99] transition duration-150 flex items-center justify-center gap-2 shadow-lg cursor-pointer">
             <span class="text-white drop-shadow-sm font-black">TIẾP THEO</span>
             <i class="fa-solid fa-chevron-right text-xs text-white"></i>
         </button>
@@ -349,6 +361,12 @@
         const hours = Math.floor(totalMinutes / 60);
         const mins = totalMinutes % 60;
         const durationText = `${hours}h${mins < 10 ? '0' : ''}${mins}`;
+
+        // Cập nhật thời gian thực Tổng thời gian và Tiền dự tính
+        const summaryDuration = document.getElementById('summary-duration');
+        const summaryTotal = document.getElementById('summary-total');
+        if (summaryDuration) summaryDuration.innerText = durationText;
+        if (summaryTotal) summaryTotal.innerText = `${new Intl.NumberFormat('vi-VN').format(totalMoney)} đ`;
 
         const btnNext = document.getElementById('btn-next-step');
         if (checkedBoxes.length > 0) {

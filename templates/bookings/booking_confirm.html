@@ -2,31 +2,38 @@
 
 {% block title %}Đặt Lịch Theo Sân - Trực Quan | SportBook{% endblock %}
 
-{% block content %}
-<!-- Nền xanh lá thẫm bao trùm toàn bộ chuẩn ảnh tham khảo -->
-<div class="min-h-screen bg-[#023e1f] text-white pb-16 font-['Nunito',sans-serif]">
+{% block body_class %}bg-[#023e1f] text-white min-h-screen flex flex-col antialiased m-0 p-0 overflow-y-auto selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% endblock %}
 
-    <!-- Thanh Top Header: Nút back < và Tiêu đề ĐẶT LỊCH THEO SÂN - TRỰC QUAN -->
-    <div class="w-full bg-[#013319] border-b border-emerald-900/60 sticky top-0 z-30 shadow-md">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+<!-- LOẠI BỎ HOÀN TOÀN HEADER VÀ FOOTER CHUNG CỦA WEBSITE -->
+{% block site_header %}{% endblock %}
+{% block site_footer %}{% endblock %}
+
+{% block main_class %}flex-1 w-full p-0 m-0 flex flex-col min-h-screen bg-[#023e1f]{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col w-full bg-[#023e1f] text-white">
+
+    <!-- 1. THANH TOP HEADER CỐ ĐỊNH (STICKY TOP) KHÔNG BỊ XÊ DỊCH KHI THAO TÁC -->
+    <header class="w-full bg-[#013319] border-b border-emerald-900/80 sticky top-0 z-50 shadow-lg flex-none backdrop-blur-md">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
             <a href="{% url 'facilities:facility_detail' facility.id %}?date={{ first_slot.date|date:'Y-m-d' }}" 
                title="Quay lại chọn giờ"
-               class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95">
+               class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm">
                 <i class="fa-solid fa-chevron-left text-sm"></i>
             </a>
 
-            <h1 class="font-black text-sm sm:text-base uppercase tracking-wider text-white text-center flex-1 pr-9">
+            <h1 class="font-black text-sm sm:text-base md:text-lg uppercase tracking-wider text-white text-center flex-1 pr-9">
                 ĐẶT LỊCH THEO SÂN - TRỰC QUAN
             </h1>
         </div>
-    </div>
+    </header>
 
-    <!-- Main Container -->
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 pt-5 space-y-4">
+    <!-- 2. NỘI DUNG CHÍNH: CĂN ĐỀU RỘNG RÃI TRÊN TOÀN TRANG (KHÔNG BỊ TẬP TRUNG CO CỤM Ở GIỮA) -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8">
 
         <!-- THÔNG BÁO FLASH NẾU CÓ -->
         {% if messages %}
-        <div class="space-y-2">
+        <div class="mb-5 space-y-2">
             {% for message in messages %}
             <div class="px-4 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md
                         {% if message.tags == 'error' %} bg-rose-600 text-white {% else %} bg-emerald-600 text-white {% endif %}">
@@ -37,187 +44,205 @@
         </div>
         {% endif %}
 
-        <!-- 1. KHỐI THÔNG TIN SÂN -->
-        <div class="bg-[#034424] rounded-2xl p-4 sm:p-5 border border-emerald-800/40 shadow-lg text-xs sm:text-sm space-y-2">
-            <div class="flex items-center gap-2 text-[#facc15] font-black text-sm sm:text-base">
-                <i class="fa-solid fa-map-location-dot"></i>
-                <span>Thông tin sân</span>
-            </div>
-            <div class="text-emerald-100 font-semibold space-y-1 pt-1 leading-relaxed">
-                <div>
-                    <span class="text-emerald-200">Tên CLB:</span>
-                    <strong class="text-white ml-1 font-bold">{{ facility.name }}</strong>
-                </div>
-                <div>
-                    <span class="text-emerald-200">Địa chỉ:</span>
-                    <span class="text-white ml-1 font-bold">{{ facility.address }}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. KHỐI THÔNG TIN LỊCH ĐẶT -->
-        <div class="bg-[#034424] rounded-2xl p-4 sm:p-5 border border-emerald-800/40 shadow-lg text-xs sm:text-sm space-y-2.5">
-            <div class="flex items-center gap-2 text-[#facc15] font-black text-sm sm:text-base">
-                <i class="fa-solid fa-receipt"></i>
-                <span>Thông tin lịch đặt</span>
-            </div>
-
-            <div class="space-y-1.5 pt-1 text-emerald-100 leading-relaxed font-semibold">
-                <div>
-                    <span class="text-emerald-200">Ngày:</span>
-                    <strong class="text-white ml-1 font-bold">{{ first_slot.date|date:"d/m/Y" }}</strong>
-                </div>
-
-                <!-- Danh sách các slot đã chọn -->
-                <div class="space-y-1 py-1">
-                    {% for slot in slots %}
-                    <div class="text-white font-bold text-xs sm:text-[13px] flex items-center flex-wrap gap-1">
-                        <span>- {{ slot.court.court_name }}:</span>
-                        <span>{{ slot.start_time|time:"H\hi" }} - {{ slot.end_time|time:"H\hi" }}</span>
-                        <span class="text-[#facc15] font-black ml-1">| {{ slot.price|floatformat:0 }} đ</span>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <div>
-                    <span class="text-emerald-200">Đối tượng:</span>
-                    <strong class="text-white ml-1 font-bold">{{ sport_name }}</strong>
-                </div>
-
-                <div>
-                    <span class="text-emerald-200">Tổng giờ:</span>
-                    <strong class="text-white ml-1 font-bold">{{ total_hours_display }}</strong>
-                </div>
-
-                <div class="pt-1 border-t border-emerald-800/50 flex items-center justify-between">
-                    <span class="text-emerald-200 font-bold">Tổng tiền:</span>
-                    <span class="text-[#facc15] text-base sm:text-lg font-black">{{ booking.total_amount|floatformat:0 }} đ</span>
-                </div>
-            </div>
-
-            <!-- Nút Thêm dịch vụ -->
-            <button type="button" 
-                    onclick="alert('Tính năng gọi thêm nước uống và thuê vợt sẽ sớm ra mắt!')"
-                    class="w-full mt-2 py-2.5 rounded-xl border border-emerald-500/70 hover:bg-emerald-800/40 text-emerald-200 hover:text-white font-bold text-xs sm:text-sm transition text-center cursor-pointer">
-                Thêm dịch vụ
-            </button>
-        </div>
-
-        <!-- DẢI THÔNG BÁO VÀNG KEM -->
-        <div class="w-full bg-[#fef3c7] border border-amber-300/80 rounded-xl px-4 py-2.5 text-center text-xs sm:text-[13px] font-bold text-[#b45309] shadow-sm">
-            Vui lòng nhập thông tin để tiếp tục thanh toán
-        </div>
-
-        <!-- 3. FORM THÔNG TIN KHÁCH HÀNG (GUEST / ROLE TỰ DO) -->
-        <form method="post" enctype="multipart/form-data" class="space-y-4">
+        <form method="post" enctype="multipart/form-data" class="w-full">
             {% csrf_token %}
 
-            <!-- Field: TÊN CỦA BẠN -->
-            <div>
-                <label for="id_customer_name" class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
-                    TÊN CỦA BẠN <span class="text-rose-400">*</span>
-                </label>
-                <input type="text" id="id_customer_name" name="customer_name" required
-                       value="{{ request.user.get_full_name|default:booking.customer_name }}"
-                       placeholder="Nhập tên của bạn"
-                       class="w-full bg-white text-slate-800 rounded-xl px-4 py-3 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#facc15] shadow-inner placeholder-slate-400">
-            </div>
+            <!-- LƯỚI 2 CỘT CĂN ĐỀU RỘNG RÃI TRÊN DESKTOP (CỘT TRÁI: 5 PHẦN / CỘT PHẢI: 7 PHẦN) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
-            <!-- Field: SỐ ĐIỆN THOẠI -->
-            <div>
-                <label for="id_customer_phone" class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
-                    SỐ ĐIỆN THOẠI <span class="text-rose-400">*</span>
-                </label>
-                <div class="flex items-center bg-white rounded-xl overflow-hidden shadow-inner focus-within:ring-2 focus-within:ring-[#facc15]">
-                    <div class="flex items-center gap-1.5 px-3.5 py-3 bg-slate-100 border-r border-slate-200 text-xs sm:text-sm font-bold text-slate-700 flex-shrink-0 select-none">
-                        <span class="text-base">🇻🇳</span>
-                        <span>+ 84</span>
-                        <i class="fa-solid fa-caret-down text-[10px] text-slate-400"></i>
+                <!-- CỘT TRÁI (LG: 5 CỘT): THÔNG TIN SÂN & THÔNG TIN LỊCH ĐẶT -->
+                <div class="lg:col-span-5 space-y-5">
+
+                    <!-- KHỐI 1: THÔNG TIN SÂN -->
+                    <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-2.5">
+                        <div class="flex items-center gap-2 text-[#facc15] font-black text-sm sm:text-base">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>Thông tin sân</span>
+                        </div>
+                        <div class="text-emerald-100 font-semibold space-y-1.5 pt-1 text-xs sm:text-sm leading-relaxed">
+                            <div>
+                                <span class="text-emerald-200">Tên CLB:</span>
+                                <strong class="text-white ml-1 font-bold">{{ facility.name }}</strong>
+                            </div>
+                            <div>
+                                <span class="text-emerald-200">Địa chỉ:</span>
+                                <span class="text-white ml-1 font-bold">{{ facility.address }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <input type="tel" id="id_customer_phone" name="customer_phone" required
-                           value="{{ request.user.phone_number|default:booking.customer_phone }}"
-                           placeholder="Nhập số điện thoại"
-                           class="w-full px-4 py-3 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none placeholder-slate-400">
+
+                    <!-- KHỐI 2: THÔNG TIN LỊCH ĐẶT -->
+                    <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-3">
+                        <div class="flex items-center gap-2 text-[#facc15] font-black text-sm sm:text-base">
+                            <i class="fa-solid fa-receipt"></i>
+                            <span>Thông tin lịch đặt</span>
+                        </div>
+
+                        <div class="space-y-2 pt-1 text-emerald-100 text-xs sm:text-sm leading-relaxed font-semibold">
+                            <div>
+                                <span class="text-emerald-200">Ngày:</span>
+                                <strong class="text-white ml-1 font-bold">{{ first_slot.date|date:"d/m/Y" }}</strong>
+                            </div>
+
+                            <!-- Danh sách các khung giờ đã chọn -->
+                            <div class="space-y-1.5 py-1.5 border-y border-emerald-800/40">
+                                {% for slot in slots %}
+                                <div class="text-white font-bold flex items-center justify-between gap-2 bg-[#023e1f]/60 px-3 py-1.5 rounded-lg">
+                                    <span>- {{ slot.court.court_name }}: {{ slot.start_time|time:"H\hi" }} - {{ slot.end_time|time:"H\hi" }}</span>
+                                    <span class="text-[#facc15] font-black flex-shrink-0">{{ slot.price|floatformat:0 }} đ</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-emerald-200">Đối tượng:</span>
+                                <strong class="text-white font-bold">{{ sport_name }}</strong>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-emerald-200">Tổng giờ:</span>
+                                <strong class="text-white font-bold">{{ total_hours_display }}</strong>
+                            </div>
+
+                            <div class="pt-2 border-t border-emerald-800/60 flex items-center justify-between">
+                                <span class="text-emerald-200 font-bold text-sm">Tổng tiền:</span>
+                                <span class="text-[#facc15] text-lg sm:text-xl font-black">{{ booking.total_amount|floatformat:0 }} đ</span>
+                            </div>
+                        </div>
+
+                        <!-- Nút Thêm dịch vụ -->
+                        <button type="button" 
+                                onclick="alert('Tính năng gọi thêm nước uống và thuê vợt sẽ sớm ra mắt!')"
+                                class="w-full mt-2 py-3 rounded-xl border border-emerald-500/70 hover:bg-emerald-800/40 text-emerald-200 hover:text-white font-bold text-xs sm:text-sm transition text-center cursor-pointer shadow-sm">
+                            Thêm dịch vụ
+                        </button>
+                    </div>
+
                 </div>
-            </div>
 
-            <!-- Field: GHI CHÚ CHO CHỦ SÂN -->
-            <div>
-                <label for="id_customer_note" class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
-                    GHI CHÚ CHO CHỦ SÂN
-                </label>
-                <input type="text" id="id_customer_note" name="customer_note"
-                       value="{{ booking.customer_note }}"
-                       placeholder="Nhập ghi chú"
-                       class="w-full bg-white text-slate-800 rounded-xl px-4 py-3 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#facc15] shadow-inner placeholder-slate-400">
-            </div>
+                <!-- CỘT PHẢI (LG: 7 CỘT): FORM THÔNG TIN KHÁCH HÀNG & NÚT XÁC NHẬN -->
+                <div class="lg:col-span-7 space-y-4">
 
-            <!-- Field: THẺ HSSV -->
-            <div>
-                <label class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
-                    THẺ HSSV
-                </label>
-                <label for="student_card_input" 
-                       class="block w-full border-2 border-dashed border-emerald-500/80 rounded-2xl p-6 text-center hover:bg-emerald-900/30 transition cursor-pointer relative group">
-                    <input type="file" id="student_card_input" name="student_card_image" accept="image/*" class="hidden" onchange="handleStudentCardPreview(this)">
-                    
-                    <div id="upload-prompt" class="space-y-2">
-                        <div class="w-12 h-12 rounded-full bg-emerald-800/60 text-emerald-300 flex items-center justify-center mx-auto text-xl group-hover:scale-110 transition">
-                            <i class="fa-regular fa-image"></i>
+                    <!-- DẢI THÔNG BÁO VÀNG KEM -->
+                    <div class="w-full bg-[#fef3c7] border border-amber-300 rounded-xl px-4 py-3 text-center text-xs sm:text-[13px] font-bold text-[#b45309] shadow-sm">
+                        Vui lòng nhập thông tin để tiếp tục thanh toán
+                    </div>
+
+                    <!-- FORM FIELDS CONTAINER -->
+                    <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-4">
+                        
+                        <!-- Field: TÊN CỦA BẠN -->
+                        <div>
+                            <label for="id_customer_name" class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
+                                TÊN CỦA BẠN <span class="text-rose-400">*</span>
+                            </label>
+                            <input type="text" id="id_customer_name" name="customer_name" required
+                                   value="{{ request.user.get_full_name|default:booking.customer_name }}"
+                                   placeholder="Nhập tên của bạn"
+                                   class="w-full bg-white text-slate-800 rounded-xl px-4 py-3 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#facc15] shadow-inner placeholder-slate-400">
                         </div>
-                        <div class="font-extrabold text-xs sm:text-sm text-emerald-100">
-                            Tải ảnh xác minh HSSV
+
+                        <!-- Field: SỐ ĐIỆN THOẠI -->
+                        <div>
+                            <label for="id_customer_phone" class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
+                                SỐ ĐIỆN THOẠI <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="flex items-center bg-white rounded-xl overflow-hidden shadow-inner focus-within:ring-2 focus-within:ring-[#facc15]">
+                                <div class="flex items-center gap-1.5 px-3.5 py-3 bg-slate-100 border-r border-slate-200 text-xs sm:text-sm font-bold text-slate-700 flex-shrink-0 select-none">
+                                    <span class="text-base">🇻🇳</span>
+                                    <span>+ 84</span>
+                                    <i class="fa-solid fa-caret-down text-[10px] text-slate-400"></i>
+                                </div>
+                                <input type="tel" id="id_customer_phone" name="customer_phone" required
+                                       value="{{ request.user.phone_number|default:booking.customer_phone }}"
+                                       placeholder="Nhập số điện thoại"
+                                       class="w-full px-4 py-3 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none placeholder-slate-400">
+                            </div>
                         </div>
-                        <div class="text-[11px] text-emerald-300 font-semibold">
-                            PNG, JPG (tối đa 5MB)
+
+                        <!-- Field: GHI CHÚ CHO CHỦ SÂN -->
+                        <div>
+                            <label for="id_customer_note" class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
+                                GHI CHÚ CHO CHỦ SÂN
+                            </label>
+                            <input type="text" id="id_customer_note" name="customer_note"
+                                   value="{{ booking.customer_note }}"
+                                   placeholder="Nhập ghi chú"
+                                   class="w-full bg-white text-slate-800 rounded-xl px-4 py-3 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#facc15] shadow-inner placeholder-slate-400">
+                        </div>
+
+                        <!-- Field: THẺ HSSV -->
+                        <div>
+                            <label class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
+                                THẺ HSSV
+                            </label>
+                            <label for="student_card_input" 
+                                   class="block w-full border-2 border-dashed border-emerald-500/80 rounded-2xl p-5 text-center hover:bg-emerald-900/30 transition cursor-pointer relative group">
+                                <input type="file" id="student_card_input" name="student_card_image" accept="image/*" class="hidden" onchange="handleStudentCardPreview(this)">
+                                
+                                <div id="upload-prompt" class="space-y-1.5">
+                                    <div class="w-11 h-11 rounded-full bg-emerald-800/60 text-emerald-300 flex items-center justify-center mx-auto text-lg group-hover:scale-110 transition">
+                                        <i class="fa-regular fa-image"></i>
+                                    </div>
+                                    <div class="font-extrabold text-xs sm:text-sm text-emerald-100">
+                                        Tải ảnh xác minh HSSV
+                                    </div>
+                                    <div class="text-[11px] text-emerald-300 font-semibold">
+                                        PNG, JPG (tối đa 5MB)
+                                    </div>
+                                </div>
+
+                                <!-- Preview container nếu đã chọn ảnh -->
+                                <div id="image-preview-container" class="hidden flex flex-col items-center">
+                                    <img id="preview-img" src="" alt="Thẻ HSSV Preview" class="max-h-36 rounded-xl shadow-md border border-emerald-400">
+                                    <span class="text-xs text-amber-300 font-bold mt-2">Nhấn để chọn lại ảnh khác</span>
+                                </div>
+                            </label>
                         </div>
                     </div>
 
-                    <!-- Preview container nếu đã chọn ảnh -->
-                    <div id="image-preview-container" class="hidden flex flex-col items-center">
-                        <img id="preview-img" src="" alt="Thẻ HSSV Preview" class="max-h-40 rounded-xl shadow-md border border-emerald-400">
-                        <span class="text-xs text-amber-300 font-bold mt-2">Nhấn để chọn lại ảnh khác</span>
+                    <!-- KHỐI LƯU Ý -->
+                    <div class="bg-[#034424] rounded-2xl p-5 border border-emerald-800/40 shadow-xl text-xs leading-relaxed space-y-2 text-emerald-100">
+                        <div class="inline-flex items-center gap-1.5 bg-[#facc15] text-[#713f12] font-black text-xs px-2.5 py-0.5 rounded shadow-xs mb-1">
+                            <span>⚠️</span>
+                            <span>Lưu ý:</span>
+                        </div>
+                        <ul class="space-y-1.5 list-none font-semibold">
+                            <li class="flex items-start gap-1.5">
+                                <span class="text-emerald-400">•</span>
+                                <span>Việc thanh toán được thực hiện trực tiếp giữa bạn và chủ sân.</span>
+                            </li>
+                            <li class="flex items-start gap-1.5">
+                                <span class="text-emerald-400">•</span>
+                                <span>SportBook đóng vai trò kết nối, hỗ trợ bạn tìm và đặt sân dễ dàng hơn.</span>
+                            </li>
+                            <li class="flex items-start gap-1.5">
+                                <span class="text-emerald-400">•</span>
+                                <span>Mỗi sân có thể có quy định và chính sách riêng, hãy dành chút thời gian đọc kỹ để đảm bảo quyền lợi cho bạn nhé!</span>
+                            </li>
+                        </ul>
                     </div>
-                </label>
-            </div>
 
-            <!-- 4. KHỐI LƯU Ý -->
-            <div class="bg-[#034424] rounded-2xl p-4 sm:p-5 border border-emerald-800/40 shadow-lg text-xs leading-relaxed space-y-2 text-emerald-100">
-                <div class="inline-flex items-center gap-1.5 bg-[#facc15] text-[#713f12] font-black text-xs px-2.5 py-0.5 rounded shadow-xs mb-1">
-                    <span>⚠️</span>
-                    <span>Lưu ý:</span>
+                    <!-- Dòng thỏa thuận điều khoản -->
+                    <p class="text-[11px] sm:text-xs text-emerald-200 text-center font-semibold px-2">
+                        Bằng việc bấm Xác nhận và Thanh toán, bạn xác nhận đã đọc và đồng ý với 
+                        <a href="#" class="underline text-white hover:text-amber-300 font-bold">Điều khoản đặt sân</a> và 
+                        <a href="#" class="underline text-white hover:text-amber-300 font-bold">Chính sách hoàn tiền và huỷ lịch</a>.
+                    </p>
+
+                    <!-- NÚT VÀNG MẬT ONG XÁC NHẬN & THANH TOÁN -->
+                    <button type="submit"
+                            class="w-full py-4 rounded-xl font-black text-sm sm:text-base uppercase tracking-wider text-white bg-[#e5b63d] hover:bg-[#d8a834] active:scale-[0.99] transition duration-150 shadow-xl shadow-amber-500/25 cursor-pointer text-center block">
+                        XÁC NHẬN & THANH TOÁN
+                    </button>
+
                 </div>
-                <ul class="space-y-1.5 list-none font-semibold">
-                    <li class="flex items-start gap-1.5">
-                        <span class="text-emerald-400">•</span>
-                        <span>Việc thanh toán được thực hiện trực tiếp giữa bạn và chủ sân.</span>
-                    </li>
-                    <li class="flex items-start gap-1.5">
-                        <span class="text-emerald-400">•</span>
-                        <span>SportBook đóng vai trò kết nối, hỗ trợ bạn tìm và đặt sân dễ dàng hơn.</span>
-                    </li>
-                    <li class="flex items-start gap-1.5">
-                        <span class="text-emerald-400">•</span>
-                        <span>Mỗi sân có thể có quy định và chính sách riêng, hãy dành chút thời gian đọc kỹ để đảm bảo quyền lợi cho bạn nhé!</span>
-                    </li>
-                </ul>
+
             </div>
-
-            <!-- Dòng thỏa thuận điều khoản -->
-            <p class="text-[11px] sm:text-xs text-emerald-200 text-center font-semibold px-2">
-                Bằng việc bấm Xác nhận và Thanh toán, bạn xác nhận đã đọc và đồng ý với 
-                <a href="#" class="underline text-white hover:text-amber-300 font-bold">Điều khoản đặt sân</a> và 
-                <a href="#" class="underline text-white hover:text-amber-300 font-bold">Chính sách hoàn tiền và huỷ lịch</a>.
-            </p>
-
-            <!-- NÚT VÀNG MẬT ONG XÁC NHẬN & THANH TOÁN -->
-            <button type="submit"
-                    class="w-full py-3.5 sm:py-4 rounded-xl font-black text-sm sm:text-base uppercase tracking-wider text-white bg-[#e5b63d] hover:bg-[#d8a834] active:scale-[0.99] transition duration-150 shadow-xl shadow-amber-500/25 cursor-pointer text-center block">
-                XÁC NHẬN & THANH TOÁN
-            </button>
         </form>
 
-    </div>
+    </main>
+
 </div>
 
 <script>

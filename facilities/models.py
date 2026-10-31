@@ -96,6 +96,20 @@ class Facility(models.Model):
         """Lấy danh sách các sân đang hoạt động trong cụm sân"""
         return self.courts.filter(is_active=True)
 
+    def get_cover_image_url(self) -> str:
+        """Ảnh đại diện sân thi đấu sống động chuẩn phong cách thể thao Alobo"""
+        name_lower = self.name.lower()
+        if 'pickleball' in name_lower:
+            return "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&auto=format&fit=crop&q=80"
+
+    def get_distance_display(self) -> str:
+        """Khoảng cách mẫu hiển thị chuẩn ảnh tham khảo"""
+        name_lower = self.name.lower()
+        if 'sài gòn' in name_lower:
+            return "2.3km"
+        return "2.7km"
+
     def __str__(self):
         return f"{self.name} - {self.address}"
 

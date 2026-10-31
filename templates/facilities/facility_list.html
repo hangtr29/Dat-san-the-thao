@@ -36,90 +36,73 @@
     {% if facilities %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {% for fac in facilities %}
-        <div
-            class="bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-lg transition duration-200 flex flex-col group">
+        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition duration-200 flex flex-col group">
 
-            <!-- Top Court Photo Banner with Overlays -->
-            <div class="h-48 bg-gradient-to-tr from-slate-900 via-emerald-950 to-teal-900 relative overflow-hidden">
-                <!-- Background Pattern -->
-                <div
-                    class="absolute inset-0 opacity-40 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]">
-                </div>
+            <!-- Top Court Photo Banner with Overlays (Chuẩn ảnh tham khảo) -->
+            <div class="h-44 sm:h-48 relative overflow-hidden bg-slate-100">
+                <img src="{{ fac.get_cover_image_url }}" alt="{{ fac.name }}" 
+                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
 
-                <!-- Top Left Badges -->
-                <div class="absolute top-3 left-3 flex items-center gap-1.5 z-10">
-                    <span
-                        class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500 text-white flex items-center gap-1 shadow-sm">
-                        <i class="fa-solid fa-star text-[9px] text-amber-300"></i> Đơn ngày
+                <!-- Top Left Combined Badges: [⭐ 5] [Đơn ngày] [Sự kiện] -->
+                <div class="absolute top-2.5 left-2.5 flex items-center shadow-md rounded-full overflow-hidden text-[10px] font-extrabold z-10">
+                    <span class="bg-white text-slate-800 px-2 py-1 flex items-center gap-1">
+                        <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> 5
                     </span>
-                    <span
-                        class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-purple-600 text-white shadow-sm">
+                    <span class="bg-[#10b981] text-white px-2.5 py-1">
+                        Đơn ngày
+                    </span>
+                    <span class="bg-[#d946ef] text-white px-2.5 py-1">
                         Sự kiện
                     </span>
                 </div>
 
-                <!-- Top Right Action Icons -->
-                <div class="absolute top-3 right-3 flex items-center gap-2 z-10">
-                    <button title="Lưu yêu thích"
-                        class="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-600 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
+                <!-- Top Right Action Icons: [♡] [🗺️] -->
+                <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+                    <button type="button" title="Lưu yêu thích"
+                        class="w-8 h-8 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
                         <i class="fa-regular fa-heart"></i>
                     </button>
-                    <button title="Chỉ đường"
-                        class="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-600 hover:text-emerald-700 shadow-md flex items-center justify-center text-xs transition">
+                    <button type="button" title="Chỉ đường"
+                        class="w-8 h-8 rounded-full bg-white/95 hover:bg-white text-[#065f46] hover:text-emerald-700 shadow-md flex items-center justify-center text-xs transition">
                         <i class="fa-solid fa-diamond-turn-right"></i>
                     </button>
                 </div>
-
-                <!-- Bottom Gradient Fade -->
-                <div
-                    class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 to-transparent flex items-end p-3">
-                    <div class="text-[11px] text-emerald-300 font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-circle-check text-[10px]"></i> {{ fac.courts.count }} sân sẵn sàng hoạt
-                        động
-                    </div>
-                </div>
             </div>
 
-            <!-- Bottom Info Card -->
-            <div class="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-start gap-3">
-                        <!-- Circular Logo Thumbnail -->
-                        <div
-                            class="w-12 h-12 rounded-full bg-emerald-50 border-2 border-emerald-500 flex-shrink-0 flex items-center justify-center text-[#0b6b3a] font-black text-sm shadow-sm">
-                            {{ fac.name|slice:":2"|upper }}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3
-                                class="text-sm font-black text-slate-900 truncate group-hover:text-[#0b6b3a] transition">
-                                {{ fac.name }}
-                            </h3>
-                            <p class="text-[11px] text-slate-500 truncate mt-0.5">
-                                <span class="text-amber-600 font-bold">(Gần bạn)</span> {{ fac.address }}
-                            </p>
-                        </div>
+            <!-- Bottom Info Card (Đúng layout 2 bên và đúng các type thông tin ảnh tham khảo) -->
+            <div class="p-3.5 flex items-center justify-between gap-3">
+                <!-- Bên trái: Logo + Tên sân + Khoảng cách/Địa chỉ + Giờ mở cửa -->
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <!-- Circular Logo Thumbnail -->
+                    <div class="w-12 h-12 rounded-full bg-white border border-slate-200 flex-shrink-0 flex items-center justify-center text-[#0b6b3a] font-black text-xs shadow-sm uppercase overflow-hidden">
+                        {{ fac.name|slice:":2" }}
                     </div>
 
-                    <!-- Opening Hours -->
-                    <div
-                        class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 mt-3.5 pt-3 border-t border-slate-100">
-                        <i class="fa-regular fa-clock text-slate-400"></i>
-                        <span>{{ fac.open_time|time:"H:i" }} - {{ fac.close_time|time:"H:i" }}</span>
-                        <span class="text-slate-300 mx-1">•</span>
-                        <span class="text-slate-600 font-medium">Hotline: <strong class="text-slate-800">{{ fac.phone_contact }}</strong></span>
+                    <!-- Text Info -->
+                    <div class="min-w-0 flex-1">
+                        <h3 class="text-xs sm:text-sm font-black text-[#04331b] truncate group-hover:text-[#0b6b3a] transition">
+                            {{ fac.name }}
+                        </h3>
+                        <p class="text-[11px] text-slate-500 truncate mt-0.5 flex items-center gap-1">
+                            <span class="text-[#c2410c] font-bold flex-shrink-0">({{ fac.get_distance_display }})</span>
+                            <span class="truncate">{{ fac.address }}</span>
+                        </p>
+                        <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 mt-0.5">
+                            <i class="fa-regular fa-clock text-slate-400 text-[10px]"></i>
+                            <span>{{ fac.open_time|time:"H:i" }} - {{ fac.close_time|time:"H:i" }}</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Action Button: ĐẶT LỊCH (Alobo Gold/Amber Button) -->
-                <div class="mt-4 pt-3.5 flex items-center justify-between border-t border-slate-100">
-                    <div>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Ngân hàng</span>
-                        <span class="text-xs font-black text-slate-800 uppercase">{{ fac.bank_name }}</span>
-                    </div>
+                <!-- Bên phải: Badge Ưu đãi + Nút ĐẶT LỊCH -->
+                <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-xs">
+                        <i class="fa-solid fa-gift text-[8px]"></i> Ưu đãi 1
+                    </span>
+
                     <a href="{% url 'facilities:facility_detail' fac.id %}"
-                        class="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-900 bg-[#e6a23c] hover:bg-[#d6932e] shadow-md shadow-amber-500/20 transition duration-150 flex items-center gap-1.5">
-                        <span>ĐẶT LỊCH</span>
-                        <i class="fa-solid fa-angle-right text-[10px]"></i>
+                        class="px-4 py-2 rounded-lg font-black text-xs uppercase tracking-wide text-white bg-[#e5b63d] hover:bg-[#d8a834] shadow-sm transition active:scale-95 whitespace-nowrap">
+                        ĐẶT LỊCH
                     </a>
                 </div>
             </div>

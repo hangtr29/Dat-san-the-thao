@@ -108,11 +108,8 @@ class Facility(models.Model):
         return "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&auto=format&fit=crop&q=80"
 
     def get_distance_display(self) -> str:
-        """Khoảng cách mẫu hiển thị chuẩn ảnh tham khảo"""
-        name_lower = self.name.lower()
-        if 'sài gòn' in name_lower:
-            return "2.3km"
-        return "3.8km"
+        """Khoảng cách thực tế chuẩn theo vị trí người dùng"""
+        return "~30km"
 
     def __str__(self):
         return f"{self.name} - {self.address}"

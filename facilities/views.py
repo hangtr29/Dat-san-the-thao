@@ -1,11 +1,57 @@
 from datetime import datetime, date, timedelta
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from .models import Facility, SportCategory, Court, PricingRule
 from bookings.models import BookingSlot, BookingStatus
 from bookings.services import SlotGeneratorService, CleanExpiredLocksService
+
+def search_suggest(request):
+    """
+    API Gợi ý tìm kiếm (Auto-suggest) theo thời gian thực khi người dùng gõ từ khóa.
+    Trả về danh sách Cụm sân và Môn thể thao phù hợp.
+    """
+    query = request.GET.get('q', '').strip()
+    if not query or len(query) < 1:
+        return JsonResponse({'facilities': [], 'categories': []})
+
+    # 1. Tìm cụm sân theo tên hoặc địa chỉ
+    facilities = Facility.objects.filter(
+        Q(name__icontains=query) | Q(address__icontains=query),
+        active_status=True
+    ).prefetch_related('courts')[:5]
+
+    fac_data = []
+    for f in facilities:
+        fac_data.append({
+            'id': str(f.id),
+            'name': f.name,
+            'address': f.address,
+            'courts_count': f.courts.count(),
+            'url': f'/facilities/{f.id}/',
+        })
+
+    # 2. Tìm môn thể thao phù hợp
+    categories = SportCategory.objects.filter(name__icontains=query)[:3]
+    cat_data = []
+    for c in categories:
+        cat_data.append({
+            'name': c.name,
+            'icon': c.icon_url or '🏸',
+            'slug': c.slug,
+            'facilities_count': c.count_facilities(),
+            'url': f'/?category={c.slug}',
+        })
+
+    return JsonResponse({
+        'query': query,
+        'facilities': fac_data,
+        'categories': cat_data,
+    })
+
 
 def facility_list(request):
     """

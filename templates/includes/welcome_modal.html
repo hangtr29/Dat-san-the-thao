@@ -1,54 +1,13 @@
 {% load static %}
-<!-- Intro Splash Screen & Onboarding Carousel Modal -->
-<div id="splash-screen" class="fixed inset-0 z-[9999] bg-gradient-to-br from-[#04101e] via-[#07192f] to-[#02070e] flex flex-col items-center justify-center text-white overflow-hidden transition-opacity duration-700">
-    
-    <!-- Floating Background Icons -->
-    <div class="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
-        <span class="floating-icon absolute top-[12%] left-[10%] text-3xl">🏸</span>
-        <span class="floating-icon absolute top-[25%] right-[15%] text-2xl" style="animation-delay: 1.2s;">🏓</span>
-        <span class="floating-icon absolute bottom-[20%] left-[18%] text-3xl" style="animation-delay: 2.4s;">🎾</span>
-        <span class="floating-icon absolute bottom-[30%] right-[12%] text-2xl" style="animation-delay: 0.8s;">⚽</span>
-        <span class="floating-icon absolute top-[45%] left-[8%] text-xl" style="animation-delay: 1.8s;">🏀</span>
-        <span class="floating-icon absolute top-[15%] right-[35%] text-xl" style="animation-delay: 3s;">🏓</span>
-        <span class="floating-icon absolute bottom-[15%] right-[40%] text-2xl" style="animation-delay: 2.1s;">🏸</span>
-    </div>
-
-    <!-- Centered Brand Splash Box with Large Glowing SportBook Logo -->
-    <div id="splash-content" class="relative z-10 flex flex-col items-center text-center px-4 animate-scaleUp">
-        
-        <!-- Official Logo Image with Soft Ambient Glow -->
-        <div class="relative mb-4">
-            <div class="absolute -inset-8 bg-emerald-500/25 rounded-full blur-3xl animate-pulse"></div>
-            <img src="{% static 'images/logo_transparent.png' %}" alt="SportBook - Đặt Sân Nhanh Chóng" 
-                 class="relative max-w-[320px] sm:max-w-[420px] h-auto object-contain logo-glow-effect">
-        </div>
-
-        <div class="flex items-center justify-center gap-2 text-xs sm:text-sm font-black tracking-widest text-emerald-300 uppercase mt-2">
-            <span>Cầu Lông</span>
-            <span class="w-1 h-3 bg-emerald-500/70 rounded-full inline-block"></span>
-            <span>Pickleball</span>
-            <span class="w-1 h-3 bg-emerald-500/70 rounded-full inline-block"></span>
-            <span>Bóng Bàn</span>
-        </div>
-
-        <!-- Pulsating 3 Dots Loader -->
-        <div class="flex items-center gap-2 mt-8">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay: 0s;"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay: 0.2s;"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay: 0.4s;"></span>
-        </div>
-    </div>
-</div>
-
-<!-- Onboarding Modal (Gọn gàng, ít chữ, phân tách từ ngữ tinh tế hiện đại) -->
+<!-- Onboarding Modal (Chỉ xuất hiện khi người dùng chủ động bấm xem giới thiệu hoặc lần đầu truy cập, hoàn toàn không có splash screen logo chớp giật) -->
 <div id="onboarding-modal" class="fixed inset-0 z-[9990] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 relative animate-fadeInUp">
         
         <!-- Header: Bỏ qua -->
         <div class="absolute top-4 right-5 z-20">
             <button onclick="closeOnboarding()" class="text-xs font-bold text-slate-500 hover:text-slate-800 bg-slate-100/90 hover:bg-slate-200 px-3.5 py-1.5 rounded-full transition flex items-center gap-1 shadow-sm">
-                <span>Bỏ Qua</span>
-                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                <span>Đóng</span>
+                <i class="fa-solid fa-xmark text-xs ml-1"></i>
             </button>
         </div>
 
@@ -215,22 +174,8 @@
     const totalSlides = 3;
 
     function initWelcomeExperience() {
-        const hasVisited = sessionStorage.getItem('sportbook_welcome_seen');
-        const splash = document.getElementById('splash-screen');
-        const modal = document.getElementById('onboarding-modal');
-
-        if (!hasVisited) {
-            setTimeout(() => {
-                splash.classList.add('opacity-0');
-                setTimeout(() => {
-                    splash.classList.add('hidden');
-                    modal.classList.remove('hidden');
-                    setTimeout(() => modal.classList.remove('opacity-0'), 20);
-                }, 600);
-            }, 1200);
-        } else {
-            splash.classList.add('hidden');
-        }
+        // Hoàn toàn không tự động chặn màn hình bằng splash screen hay popup
+        // Modal chỉ hiển thị khi người dùng chủ động nhấn nút ngôi sao / hướng dẫn
     }
 
     function updateSlidesUI() {
@@ -276,19 +221,22 @@
 
     function closeOnboarding() {
         const modal = document.getElementById('onboarding-modal');
-        modal.classList.add('opacity-0');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            sessionStorage.setItem('sportbook_welcome_seen', 'true');
-        }, 300);
+        if (modal) {
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 250);
+        }
     }
 
     function replayWelcomeExperience() {
         currentSlide = 0;
         updateSlidesUI();
         const modal = document.getElementById('onboarding-modal');
-        modal.classList.remove('hidden');
-        setTimeout(() => modal.classList.remove('opacity-0'), 20);
+        if (modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 20);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', initWelcomeExperience);

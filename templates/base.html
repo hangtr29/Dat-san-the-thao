@@ -67,12 +67,26 @@
             filter: drop-shadow(0 10px 28px rgba(34, 197, 94, 1.0)) drop-shadow(0 0 20px rgba(250, 204, 21, 0.8));
             transform: scale(1.05) translateY(-3px);
         }
+        /* Hiệu ứng chuyển trang êm mượt (Smooth Page Transition) */
+        @keyframes pageFadeIn {
+            from {
+                opacity: 0.88;
+                transform: translateY(3px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        main {
+            animation: pageFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}text-slate-800 min-h-screen flex flex-col antialiased pb-20 md:pb-0{% endblock %}">
 
-    <!-- Splash Screen & Onboarding Carousel -->
+    <!-- Onboarding Guide Modal (Ẩn mặc định, không chặn tải trang) -->
     {% include 'includes/welcome_modal.html' %}
 
     {% block site_header %}

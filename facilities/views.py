@@ -17,6 +17,7 @@ def facility_list(request):
     selected_category_slug = request.GET.get('category')
     search_query = request.GET.get('q', '').strip()
 
+    total_facilities_count = Facility.objects.filter(active_status=True).count()
     facilities = Facility.objects.filter(active_status=True).prefetch_related('courts')
 
     if selected_category_slug:
@@ -30,6 +31,7 @@ def facility_list(request):
         'categories': categories,
         'selected_category': selected_category_slug,
         'search_query': search_query,
+        'total_facilities_count': total_facilities_count,
     }
     return render(request, 'facilities/facility_list.html', context)
 

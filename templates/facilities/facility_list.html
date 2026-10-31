@@ -12,6 +12,9 @@
            {% if not selected_category %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
             <i class="fa-solid fa-border-all"></i>
             <span>Tất cả môn</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full {% if not selected_category %} bg-emerald-800 text-white {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                {{ total_facilities_count }}
+            </span>
         </a>
         {% for cat in categories %}
             <a href="?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}" 
@@ -19,8 +22,8 @@
                {% if selected_category == cat.slug %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
                 <span>{{ cat.icon_url|default:"🏸" }}</span>
                 <span>{{ cat.name }}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full {% if selected_category == cat.slug %} bg-emerald-800 text-white {% else %} bg-slate-100 text-slate-600 {% endif %}">
-                    {{ cat.count_courts }}
+                <span class="text-[10px] px-2 py-0.5 rounded-full {% if selected_category == cat.slug %} bg-emerald-800 text-white {% else %} bg-slate-100 text-slate-600 {% endif %}" title="{{ cat.count_facilities }} cụm sân ({{ cat.count_courts }} sân thi đấu)">
+                    {{ cat.count_facilities }}
                 </span>
             </a>
         {% endfor %}

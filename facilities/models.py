@@ -23,8 +23,12 @@ class SportCategory(models.Model):
         super().save(*args, **kwargs)
 
     def count_courts(self) -> int:
-        """Đếm tổng số sân đang hoạt động của bộ môn này"""
+        """Đếm tổng số sân con đang hoạt động của bộ môn này"""
         return self.courts.filter(is_active=True).count()
+
+    def count_facilities(self) -> int:
+        """Đếm tổng số cụm sân (địa điểm) có phục vụ môn này"""
+        return self.get_active_facilities().count()
 
     def get_active_facilities(self):
         """Lấy danh sách các cụm sân có phục vụ môn này"""

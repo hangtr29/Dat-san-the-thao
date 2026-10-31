@@ -86,11 +86,11 @@
                     <div class="space-y-1.5 text-xs text-slate-600">
                         <div class="flex justify-between">
                             <span>Khách hàng:</span>
-                            <span class="font-bold text-slate-800">{{ booking.customer.get_full_name|default:booking.customer.username }}</span>
+                            <span class="font-bold text-slate-800">{{ booking.customer_name|default:booking.customer.get_full_name|default:booking.customer.username|default:"Khách vãng lai" }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span>Số điện thoại:</span>
-                            <span class="font-bold text-slate-800">{{ booking.customer.phone|default:"-" }}</span>
+                            <span class="font-bold text-slate-800">{{ booking.customer_phone|default:booking.customer.phone|default:"-" }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span>Thời điểm tạo:</span>

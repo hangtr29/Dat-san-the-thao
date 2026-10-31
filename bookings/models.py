@@ -35,9 +35,20 @@ class Booking(models.Model):
     )
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='bookings',
         verbose_name="Khách hàng"
+    )
+    customer_name = models.CharField(max_length=150, verbose_name="Tên khách hàng", blank=True, default="")
+    customer_phone = models.CharField(max_length=20, verbose_name="Số điện thoại", blank=True, default="")
+    customer_note = models.TextField(blank=True, default="", verbose_name="Ghi chú cho chủ sân")
+    student_card_image = models.ImageField(
+        upload_to='student_cards/%Y/%m/',
+        null=True,
+        blank=True,
+        verbose_name="Thẻ HSSV"
     )
     total_amount = models.DecimalField(max_digits=10, decimal_places=0, verbose_name="Tổng tiền (VNĐ)")
     payment_proof = models.ImageField(
@@ -112,7 +123,8 @@ class Booking(models.Model):
         return False
 
     def __str__(self):
-        return f"[{self.booking_code}] - {self.customer.get_full_name() or self.customer.username} ({self.get_status_display()})"
+        name = self.customer_name or (self.customer.get_full_name() or self.customer.username if self.customer else "Khách vãng lai")
+        return f"[{self.booking_code}] - {name} ({self.get_status_display()})"
 
 class BookingSlot(models.Model):
     """
@@ -143,6 +155,7 @@ class BookingSlot(models.Model):
         related_name='locked_slots',
         verbose_name="Người đang giữ chỗ"
     )
+    locked_session = models.CharField(max_length=64, null=True, blank=True, verbose_name="Session giữ chỗ")
     lock_time = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name="Thời điểm bắt đầu giữ chỗ")
 
     class Meta:
@@ -153,15 +166,17 @@ class BookingSlot(models.Model):
         ]
         ordering = ['date', 'start_time']
 
-    def lock_slot(self, user):
+    def lock_slot(self, user=None, session_key=None):
         """Khóa giữ chỗ trong 10 phút để khách thực hiện thanh toán"""
-        self.locked_by = user
+        self.locked_by = user if (user and user.is_authenticated) else None
+        self.locked_session = session_key
         self.lock_time = timezone.now()
         self.save()
 
     def release_slot(self):
         """Giải phóng khóa giữ chỗ"""
         self.locked_by = None
+        self.locked_session = None
         self.lock_time = None
         self.booking = None
         self.save()

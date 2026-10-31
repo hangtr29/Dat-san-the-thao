@@ -87,7 +87,24 @@
                     </span>
                 </div>
 
-                <div class="py-4 space-y-2 text-xs">
+                <div class="py-3 px-3.5 bg-slate-50 rounded-xl my-3 text-xs space-y-1.5 border border-slate-100">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500 font-semibold">Người đặt:</span>
+                        <strong class="text-slate-800">{{ booking.customer_name|default:booking.customer.get_full_name|default:booking.customer.username|default:"Khách vãng lai" }}</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500 font-semibold">Số điện thoại:</span>
+                        <strong class="text-emerald-700 font-mono">{{ booking.customer_phone|default:"Chưa có SĐT" }}</strong>
+                    </div>
+                    {% if booking.customer_note %}
+                    <div class="flex justify-between text-[11px]">
+                        <span class="text-slate-500 font-semibold">Ghi chú:</span>
+                        <span class="text-slate-700 italic">{{ booking.customer_note }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="py-2 space-y-2 text-xs">
                     <div class="text-slate-500 font-semibold mb-2">Các khung giờ đã giữ chỗ:</div>
                     {% for slot in slots %}
                         <div class="flex justify-between items-center p-2.5 rounded-lg bg-slate-50 border border-slate-100">

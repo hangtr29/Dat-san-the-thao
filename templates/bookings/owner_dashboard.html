@@ -82,8 +82,16 @@
                                     <span class="block text-[10px] font-normal text-slate-400 mt-0.5">{{ b.created_at|date:"d/m/Y H:i" }}</span>
                                 </td>
                                 <td class="py-4 px-4">
-                                    <div class="font-bold text-slate-800">{{ b.customer.get_full_name|default:b.customer.username }}</div>
-                                    <div class="text-[11px] text-emerald-600 font-semibold">{{ b.customer.phone|default:"Chưa có SĐT" }}</div>
+                                    <div class="font-bold text-slate-800">{{ b.customer_name|default:b.customer.get_full_name|default:b.customer.username|default:"Khách vãng lai" }}</div>
+                                    <div class="text-[11px] text-emerald-600 font-semibold">{{ b.customer_phone|default:b.customer.phone_number|default:"Chưa có SĐT" }}</div>
+                                    {% if b.customer_note %}
+                                        <div class="text-[10px] text-slate-500 italic mt-0.5">Ghi chú: {{ b.customer_note }}</div>
+                                    {% endif %}
+                                    {% if b.student_card_image %}
+                                        <a href="{{ b.student_card_image.url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline mt-0.5">
+                                            <i class="fa-solid fa-id-card"></i> Xem Thẻ HSSV
+                                        </a>
+                                    {% endif %}
                                 </td>
                                 <td class="py-4 px-4">
                                     {% for slot in b.slots.all %}

@@ -67,9 +67,9 @@ class BookingEngineService:
     LOCK_TIMEOUT_MINUTES = 10
 
     @classmethod
-    def lock_slots_and_create_booking(cls, user, slot_ids) -> tuple[bool, str, Booking | None]:
+    def lock_slots_and_create_booking(cls, user=None, slot_ids=None, session_key=None, customer_name="", customer_phone="") -> tuple[bool, str, Booking | None]:
         """
-        Khóa giữ chỗ đồng thời nhiều slot và tạo đơn đặt PENDING_BILL.
+        Khóa giữ chỗ đồng thời nhiều slot và tạo đơn đặt PENDING_BILL (Hỗ trợ cả khách vãng lai không cần đăng nhập).
         Sử dụng transaction.atomic() và select_for_update() để loại trừ race condition.
         """
         if not slot_ids:
@@ -85,6 +85,8 @@ class BookingEngineService:
             now = timezone.now()
             threshold = now - timedelta(minutes=cls.LOCK_TIMEOUT_MINUTES)
 
+            is_auth = (user and user.is_authenticated)
+
             # Kiểm tra trạng thái từng slot
             for slot in slots:
                 # 0. Khung giờ đã trôi qua
@@ -95,28 +97,38 @@ class BookingEngineService:
                 if slot.booking and slot.booking.status in [BookingStatus.WAITING_APPROVAL, BookingStatus.CONFIRMED]:
                     return False, f"Khung giờ {slot.start_time.strftime('%H:%M')} sân {slot.court.court_name} đã có người đặt.", None
                 
-                # 2. Đang bị người khác giữ chỗ trong thời gian hiệu lực
-                if slot.locked_by and slot.locked_by != user and slot.lock_time and slot.lock_time > threshold:
-                    return False, f"Khung giờ {slot.start_time.strftime('%H:%M')} sân {slot.court.court_name} đang được người khác giữ chỗ.", None
+                # 2. Đang bị người khác giữ chỗ trong thời gian hiệu lực (10 phút)
+                if slot.lock_time and slot.lock_time > threshold:
+                    if is_auth and slot.locked_by and slot.locked_by != user:
+                        return False, f"Khung giờ {slot.start_time.strftime('%H:%M')} sân {slot.court.court_name} đang được người khác giữ chỗ.", None
+                    if not is_auth and slot.locked_session and session_key and slot.locked_session != session_key:
+                        return False, f"Khung giờ {slot.start_time.strftime('%H:%M')} sân {slot.court.court_name} đang được người khác giữ chỗ.", None
 
             # Tính tổng tiền
             total_amount = sum(slot.price for slot in slots)
 
             # Tạo đơn đặt PENDING_BILL
+            booking_user = user if is_auth else None
+            initial_name = customer_name or (user.get_full_name() or user.username if is_auth else "")
+            initial_phone = customer_phone or (getattr(user, 'phone_number', '') if is_auth else "")
+
             booking = Booking.objects.create(
-                customer=user,
+                customer=booking_user,
+                customer_name=initial_name,
+                customer_phone=initial_phone,
                 total_amount=total_amount,
                 status=BookingStatus.PENDING_BILL
             )
 
             # Cập nhật lock và liên kết slot với booking
             for slot in slots:
-                slot.locked_by = user
+                slot.locked_by = booking_user
+                slot.locked_session = session_key
                 slot.lock_time = now
                 slot.booking = booking
                 slot.save()
 
-            return True, "Khóa slot thành công! Vui lòng hoàn tất thanh toán.", booking
+            return True, "Khóa slot thành công! Vui lòng hoàn tất thông tin đặt sân.", booking
 
 
 class CleanExpiredLocksService:

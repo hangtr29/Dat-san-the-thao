@@ -1,4 +1,4 @@
-import json
+from datetime import datetime, date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -8,11 +8,10 @@ from .models import Booking, BookingSlot, BookingStatus
 from .services import BookingEngineService, CleanExpiredLocksService
 from facilities.models import Facility
 
-@login_required
 def lock_and_book_slots(request):
     """
     Task 2.3: Xử lý khóa giữ chỗ tạm thời (Temporary Slot Locking)
-    trong 10 phút khi người dùng ấn "Tiến hành đặt".
+    trong 10 phút khi người dùng ấn "Tiếp theo" (Hỗ trợ cả khách vãng lai không cần đăng nhập).
     """
     if request.method != 'POST':
         return redirect('facilities:facility_list')
@@ -27,12 +26,23 @@ def lock_and_book_slots(request):
             return redirect(f"/facilities/{facility_id}/?date={date_str}")
         return redirect('facilities:facility_list')
 
-    # Gọi Core Booking Engine với Atomic Transaction & Concurrency Control
-    success, msg, booking = BookingEngineService.lock_slots_and_create_booking(request.user, slot_ids)
+    # Đảm bảo session key cho khách vãng lai
+    if not request.session.session_key:
+        request.session.save()
+    session_key = request.session.session_key
+
+    # Khách đăng nhập thì lấy user, chưa thì None
+    user = request.user if request.user.is_authenticated else None
+
+    # Gọi Core Booking Engine với Concurrency Control
+    success, msg, booking = BookingEngineService.lock_slots_and_create_booking(
+        user=user,
+        slot_ids=slot_ids,
+        session_key=session_key
+    )
 
     if success and booking:
-        messages.success(request, msg)
-        return redirect('bookings:checkout', booking_code=booking.booking_code)
+        return redirect('bookings:booking_confirm', booking_code=booking.booking_code)
     else:
         messages.error(request, msg)
         if facility_id:
@@ -40,18 +50,75 @@ def lock_and_book_slots(request):
         return redirect('facilities:facility_list')
 
 
-@login_required
-def checkout_view(request, booking_code):
+def booking_confirm(request, booking_code):
     """
-    Task 3.1: Trang Checkout & Sinh mã QR VietQR cá nhân của Chủ sân + Nội dung chuyển khoản.
+    Trang xác nhận đặt lịch & điền thông tin khách hàng (Chuẩn theo mẫu trực quan).
+    Khách hàng vãng lai không cần đăng nhập, chỉ cần điền Tên, Số điện thoại và Ghi chú cho chủ sân.
     """
     CleanExpiredLocksService.cleanup()
 
     booking = get_object_or_404(Booking, booking_code=booking_code)
-    
-    # Đảm bảo đúng khách hàng
-    if booking.customer != request.user and not request.user.is_staff:
-        return HttpResponseForbidden("Bạn không có quyền truy cập đơn đặt này.")
+
+    # Nếu đơn đã chuyển sang trạng thái chờ duyệt hoặc đã xác nhận
+    if booking.status in [BookingStatus.WAITING_APPROVAL, BookingStatus.CONFIRMED]:
+        return redirect('bookings:booking_detail', booking_code=booking.booking_code)
+
+    if booking.is_expired():
+        booking.cancel_booking()
+        messages.warning(request, "Đơn đặt của bạn đã hết hạn giữ chỗ (10 phút). Vui lòng đặt lại.")
+        return redirect('facilities:facility_list')
+
+    slots = booking.slots.select_related('court__facility', 'court__category').all()
+    first_slot = slots.first()
+    facility = first_slot.court.facility if first_slot else None
+
+    # Tính tổng thời gian
+    total_minutes = 0
+    for s in slots:
+        diff = (datetime.combine(date.today(), s.end_time) - datetime.combine(date.today(), s.start_time)).total_seconds() / 60
+        total_minutes += int(diff)
+    hours = total_minutes // 60
+    mins = total_minutes % 60
+    total_hours_display = f"{hours}h{mins:02d}"
+
+    sport_name = first_slot.court.category.name if (first_slot and first_slot.court.category) else "Thể thao"
+
+    if request.method == 'POST':
+        customer_name = request.POST.get('customer_name', '').strip()
+        customer_phone = request.POST.get('customer_phone', '').strip()
+        customer_note = request.POST.get('customer_note', '').strip()
+        student_card_image = request.FILES.get('student_card_image')
+
+        if not customer_name or not customer_phone:
+            messages.error(request, "Vui lòng nhập đầy đủ Tên của bạn và Số điện thoại liên hệ.")
+        else:
+            booking.customer_name = customer_name
+            booking.customer_phone = customer_phone
+            booking.customer_note = customer_note
+            if student_card_image:
+                booking.student_card_image = student_card_image
+            booking.save()
+            return redirect('bookings:checkout', booking_code=booking.booking_code)
+
+    context = {
+        'booking': booking,
+        'facility': facility,
+        'slots': slots,
+        'first_slot': first_slot,
+        'sport_name': sport_name,
+        'total_hours_display': total_hours_display,
+    }
+    return render(request, 'bookings/booking_confirm.html', context)
+
+
+def checkout_view(request, booking_code):
+    """
+    Task 3.1: Trang Checkout & Sinh mã QR VietQR cá nhân của Chủ sân + Nội dung chuyển khoản.
+    Hỗ trợ cả khách vãng lai lẫn người dùng đã đăng nhập.
+    """
+    CleanExpiredLocksService.cleanup()
+
+    booking = get_object_or_404(Booking, booking_code=booking_code)
 
     # Nếu đơn đã được xác nhận hoặc hủy
     if booking.status in [BookingStatus.WAITING_APPROVAL, BookingStatus.CONFIRMED]:
@@ -89,7 +156,6 @@ def checkout_view(request, booking_code):
     return render(request, 'bookings/checkout.html', context)
 
 
-@login_required
 def upload_payment_proof(request, booking_code):
     """
     Task 3.2: Khách hàng chuyển khoản qua ứng dụng Bank và tải ảnh chụp màn hình (Bill) lên hệ thống.
@@ -98,7 +164,7 @@ def upload_payment_proof(request, booking_code):
     if request.method != 'POST':
         return redirect('bookings:checkout', booking_code=booking_code)
 
-    booking = get_object_or_404(Booking, booking_code=booking_code, customer=request.user)
+    booking = get_object_or_404(Booking, booking_code=booking_code)
 
     if 'payment_proof' not in request.FILES:
         messages.error(request, "Vui lòng chọn ảnh chụp biên lai chuyển khoản (Bill).")
@@ -128,11 +194,13 @@ def booking_detail(request, booking_code):
     return render(request, 'bookings/booking_detail.html', context)
 
 
-@login_required
 def booking_history(request):
     """
     Task 4.1: Lập trình Lịch sử đặt sân (Booking History) cho Khách hàng.
+    Nếu chưa đăng nhập, chuyển sang trang Tra cứu đơn đặt theo mã đơn/SĐT.
     """
+    if not request.user.is_authenticated:
+        return redirect('bookings:booking_lookup')
     bookings = Booking.objects.filter(customer=request.user).order_by('-created_at')
     return render(request, 'bookings/booking_history.html', {'bookings': bookings})
 
@@ -141,13 +209,16 @@ def booking_lookup(request):
     """
     Task 4.1: Tra cứu đơn đặt sân nhanh qua mã đơn (booking_code) & số điện thoại.
     """
-    query_code = request.GET.get('code', '').strip().upper()
+    from django.db.models import Q
+    query_code = request.GET.get('code', '').strip()
     booking = None
     searched = False
 
     if query_code:
         searched = True
-        booking = Booking.objects.filter(booking_code=query_code).first()
+        booking = Booking.objects.filter(
+            Q(booking_code__iexact=query_code) | Q(customer_phone=query_code)
+        ).first()
 
     return render(request, 'bookings/booking_lookup.html', {
         'booking': booking,

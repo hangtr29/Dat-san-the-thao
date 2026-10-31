@@ -72,6 +72,24 @@ class Booking(models.Model):
         verbose_name_plural = "Danh sách đơn đặt sân"
         ordering = ['-created_at']
 
+    @property
+    def display_customer_name(self) -> str:
+        """Tên hiển thị an toàn của khách hàng (không bị lỗi khi customer là None)"""
+        if self.customer_name:
+            return self.customer_name
+        if self.customer:
+            return self.customer.get_full_name() or self.customer.username
+        return "Khách vãng lai"
+
+    @property
+    def display_customer_phone(self) -> str:
+        """Số điện thoại an toàn của khách hàng"""
+        if self.customer_phone:
+            return self.customer_phone
+        if self.customer and hasattr(self.customer, 'phone_number') and self.customer.phone_number:
+            return self.customer.phone_number
+        return "Chưa có SĐT"
+
     def upload_proof_and_submit(self, proof_image):
         """
         Tính đóng gói (Encapsulation): Khách hàng nộp ảnh bill và hệ thống
@@ -123,8 +141,7 @@ class Booking(models.Model):
         return False
 
     def __str__(self):
-        name = self.customer_name or (self.customer.get_full_name() or self.customer.username if self.customer else "Khách vãng lai")
-        return f"[{self.booking_code}] - {name} ({self.get_status_display()})"
+        return f"[{self.booking_code}] - {self.display_customer_name} ({self.get_status_display()})"
 
 class BookingSlot(models.Model):
     """

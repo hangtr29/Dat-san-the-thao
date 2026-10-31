@@ -32,20 +32,20 @@
         {% endfor %}
     </div>
 
-    <!-- Facility Cards Grid (Full-width, 3-4 cột rộng rãi) -->
+    <!-- Facility Cards Grid (Rộng rãi 2 cột trên Desktop để hiển thị trọn vẹn Địa chỉ & Tên sân) -->
     {% if facilities %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 sm:gap-8">
         {% for fac in facilities %}
-        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition duration-200 flex flex-col group">
+        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-lg transition duration-200 flex flex-col group">
 
             <!-- Top Court Photo Banner with Overlays (Chuẩn ảnh tham khảo) -->
-            <div class="h-44 sm:h-48 relative overflow-hidden bg-slate-100">
+            <div class="h-48 sm:h-56 relative overflow-hidden bg-slate-100">
                 <img src="{{ fac.get_cover_image_url }}" alt="{{ fac.name }}" 
                      class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
 
                 <!-- Top Left Combined Badges: [⭐ 5] [Đơn ngày] [Sự kiện] -->
-                <div class="absolute top-2.5 left-2.5 flex items-center shadow-md rounded-full overflow-hidden text-[10px] font-extrabold z-10">
-                    <span class="bg-white text-slate-800 px-2 py-1 flex items-center gap-1">
+                <div class="absolute top-3 left-3 flex items-center shadow-md rounded-full overflow-hidden text-[10px] sm:text-xs font-extrabold z-10">
+                    <span class="bg-white text-slate-800 px-2.5 py-1 flex items-center gap-1">
                         <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> 5
                     </span>
                     <span class="bg-[#10b981] text-white px-2.5 py-1">
@@ -57,51 +57,51 @@
                 </div>
 
                 <!-- Top Right Action Icons: [♡] [🗺️] -->
-                <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+                <div class="absolute top-3 right-3 flex items-center gap-2 z-10">
                     <button type="button" title="Lưu yêu thích"
-                        class="w-8 h-8 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
+                        class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
                         <i class="fa-regular fa-heart"></i>
                     </button>
                     <button type="button" title="Chỉ đường"
-                        class="w-8 h-8 rounded-full bg-white/95 hover:bg-white text-[#065f46] hover:text-emerald-700 shadow-md flex items-center justify-center text-xs transition">
+                        class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 hover:bg-white text-[#065f46] hover:text-emerald-700 shadow-md flex items-center justify-center text-xs transition">
                         <i class="fa-solid fa-diamond-turn-right"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Bottom Info Card (Đúng layout 2 bên và đúng các type thông tin ảnh tham khảo) -->
-            <div class="p-3.5 flex items-center justify-between gap-3">
+            <!-- Bottom Info Card (Khung thông tin rộng rãi, thấy rõ địa chỉ) -->
+            <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
                 <!-- Bên trái: Logo + Tên sân + Khoảng cách/Địa chỉ + Giờ mở cửa -->
-                <div class="flex items-center gap-3 min-w-0 flex-1">
+                <div class="flex items-center gap-3.5 min-w-0 flex-1">
                     <!-- Circular Logo Thumbnail -->
-                    <div class="w-12 h-12 rounded-full bg-white border border-slate-200 flex-shrink-0 flex items-center justify-center text-[#0b6b3a] font-black text-xs shadow-sm uppercase overflow-hidden">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-50 border border-slate-200 flex-shrink-0 flex items-center justify-center text-[#0b6b3a] font-black text-xs sm:text-sm shadow-sm uppercase overflow-hidden">
                         {{ fac.name|slice:":2" }}
                     </div>
 
-                    <!-- Text Info -->
+                    <!-- Text Info (Rộng rãi, hiển thị trọn vẹn tên và địa chỉ) -->
                     <div class="min-w-0 flex-1">
-                        <h3 class="text-xs sm:text-sm font-black text-[#04331b] truncate group-hover:text-[#0b6b3a] transition">
+                        <h3 class="text-sm sm:text-base font-black text-[#04331b] truncate group-hover:text-[#0b6b3a] transition">
                             {{ fac.name }}
                         </h3>
-                        <p class="text-[11px] text-slate-500 truncate mt-0.5 flex items-center gap-1">
-                            <span class="text-[#c2410c] font-bold flex-shrink-0">({{ fac.get_distance_display }})</span>
-                            <span class="truncate">{{ fac.address }}</span>
+                        <p class="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
+                            <span class="text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0">({{ fac.get_distance_display }})</span>
+                            <span>{{ fac.address }}</span>
                         </p>
-                        <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 mt-0.5">
-                            <i class="fa-regular fa-clock text-slate-400 text-[10px]"></i>
+                        <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mt-1">
+                            <i class="fa-regular fa-clock text-slate-400 text-xs"></i>
                             <span>{{ fac.open_time|time:"H:i" }} - {{ fac.close_time|time:"H:i" }}</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Bên phải: Badge Ưu đãi + Nút ĐẶT LỊCH -->
-                <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-xs">
-                        <i class="fa-solid fa-gift text-[8px]"></i> Ưu đãi 1
+                <div class="flex flex-col items-end gap-2 flex-shrink-0 ml-1">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-xs">
+                        <i class="fa-solid fa-gift text-[9px]"></i> Ưu đãi 1
                     </span>
 
                     <a href="{% url 'facilities:facility_detail' fac.id %}"
-                        class="px-4 py-2 rounded-lg font-black text-xs uppercase tracking-wide text-white bg-[#e5b63d] hover:bg-[#d8a834] shadow-sm transition active:scale-95 whitespace-nowrap">
+                        class="px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wide text-white bg-[#e5b63d] hover:bg-[#d8a834] shadow-md shadow-amber-500/20 transition active:scale-95 whitespace-nowrap">
                         ĐẶT LỊCH
                     </a>
                 </div>

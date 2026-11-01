@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -69,10 +70,29 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+db_path = BASE_DIR / 'db.sqlite3'
+
+# Trên môi trường Vercel Serverless (read-only filesystem ở /var/task),
+# ta tự động sao chép db.sqlite3 sang /tmp/db.sqlite3 (nơi có toàn quyền đọc/ghi).
+is_serverless = os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') or '/var/task' in str(BASE_DIR)
+
+if is_serverless:
+    tmp_db = '/tmp/db.sqlite3'
+    if not os.path.exists(tmp_db):
+        try:
+            if db_path.exists():
+                shutil.copy2(str(db_path), tmp_db)
+            else:
+                open(tmp_db, 'a').close()
+        except Exception:
+            pass
+    if os.path.exists(tmp_db):
+        db_path = tmp_db
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': db_path,
     }
 }
 
@@ -111,7 +131,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+if is_serverless:
+    MEDIA_ROOT = '/tmp/media'
+    os.makedirs(MEDIA_ROOT, exist_ok=True)
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = '/users/login/'
 LOGIN_REDIRECT_URL = '/'

@@ -55,7 +55,10 @@ def booking_confirm(request, booking_code):
     Trang xác nhận đặt lịch & điền thông tin khách hàng (Chuẩn theo mẫu trực quan).
     Khách hàng vãng lai không cần đăng nhập, chỉ cần điền Tên, Số điện thoại và Ghi chú cho chủ sân.
     """
-    CleanExpiredLocksService.cleanup()
+    try:
+        CleanExpiredLocksService.cleanup()
+    except Exception:
+        pass
 
     booking = get_object_or_404(Booking, booking_code=booking_code)
 
@@ -116,7 +119,10 @@ def checkout_view(request, booking_code):
     Task 3.1: Trang Checkout & Sinh mã QR VietQR cá nhân của Chủ sân + Nội dung chuyển khoản.
     Hỗ trợ cả khách vãng lai lẫn người dùng đã đăng nhập.
     """
-    CleanExpiredLocksService.cleanup()
+    try:
+        CleanExpiredLocksService.cleanup()
+    except Exception:
+        pass
 
     booking = get_object_or_404(Booking, booking_code=booking_code)
 

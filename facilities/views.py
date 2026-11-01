@@ -57,7 +57,10 @@ def facility_list(request):
     """
     Trang chủ & Danh sách Cụm sân Thể thao (Theo phong cách Alobo).
     """
-    CleanExpiredLocksService.cleanup()
+    try:
+        CleanExpiredLocksService.cleanup()
+    except Exception:
+        pass
 
     categories = SportCategory.objects.all()
     selected_category_slug = request.GET.get('category')
@@ -88,7 +91,10 @@ def facility_detail(request, facility_id):
     - Hàng (Rows) = Sân thi đấu (Nhóm theo Sân trong nhà / Sân tiêu chuẩn)
     - Cột (Columns) = Dải thời gian nằm ngang (Timeline: 06:00 -> 22:00)
     """
-    CleanExpiredLocksService.cleanup()
+    try:
+        CleanExpiredLocksService.cleanup()
+    except Exception:
+        pass
 
     facility = get_object_or_404(Facility, id=facility_id, active_status=True)
     

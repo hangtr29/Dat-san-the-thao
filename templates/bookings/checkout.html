@@ -42,8 +42,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
         <div class="space-y-2">
             {% for message in messages %}
             <div
-                class="px-4 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md
-                        {% if message.tags == 'error' %} bg-rose-600 text-white {% else %} bg-emerald-600 text-white {% endif %}">
+                class="px-4 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md {% if message.tags == 'error' %}bg-rose-600 text-white{% else %}bg-emerald-600 text-white{% endif %}">
                 <i class="fa-solid fa-circle-info"></i>
                 <span>{{ message }}</span>
             </div>

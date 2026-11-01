@@ -86,8 +86,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                             {% if status_code == 'CONFIRMED' %}
                             Chủ sân đã xác nhận nhận đủ tiền. Lịch thi đấu đã được chốt chính thức!
                             {% elif status_code == 'REJECTED' %}
-                            Đơn đặt đã bị từ chối: {{ reject_reason|default:"Bill chuyển khoản không hợp lệ hoặc chưa
-                            nhận được tiền." }}
+                            Đơn đặt đã bị từ chối: {{ reject_reason|default:"Bill chuyển khoản không hợp lệ hoặc chưa nhận được tiền." }}
                             {% else %}
                             Đã gửi ảnh biên lai thành công. Chủ sân đang đối soát số dư ngân hàng (khoảng 3 - 5 phút).
                             {% endif %}
@@ -167,8 +166,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         <div class="flex justify-between items-start gap-2">
                             <div>
                                 <span class="text-emerald-300 font-semibold">Cụm sân:</span>
-                                <strong class="text-white ml-1 text-sm sm:text-base font-extrabold">{{ facility_name
-                                    }}</strong>
+                                <strong class="text-white ml-1 text-sm sm:text-base font-extrabold">{{ facility_name }}</strong>
                             </div>
                             <a href="https://www.google.com/maps/dir/?api=1&destination={{ facility.latitude }},{{ facility.longitude }}"
                                 target="_blank"
@@ -219,8 +217,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         {% endif %}
                         <div class="pt-2 border-t border-emerald-800/60 flex justify-between items-center">
                             <span class="text-sm sm:text-base font-bold text-emerald-200">Tổng thanh toán:</span>
-                            <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted
-                                }}</span>
+                            <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted }}</span>
                         </div>
                     </div>
                 </div>

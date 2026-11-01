@@ -1,139 +1,431 @@
 {% extends 'base.html' %}
 
-{% block title %}Chi tiết đơn đặt {{ booking.booking_code }} - SPORTBOOK{% endblock %}
+{% block title %}Phiếu Đặt Sân - Mã đơn: {{ booking_code }} | SportBook{% endblock %}
+
+{% block body_class %}bg-[#023e1f] text-white min-h-screen flex flex-col antialiased m-0 p-0 overflow-y-auto
+selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% endblock %}
+
+<!-- LOẠI BỎ HOÀN TOÀN HEADER VÀ FOOTER CHUNG CỦA WEBSITE -->
+{% block site_header %}{% endblock %}
+{% block site_footer %}{% endblock %}
+
+{% block main_class %}flex-1 w-full p-0 m-0 flex flex-col min-h-screen bg-[#023e1f]{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="min-h-screen flex flex-col w-full bg-[#023e1f] text-white">
 
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-        <!-- Status Header -->
-        <div class="p-6 
-            {% if booking.status == 'CONFIRMED' %} bg-gradient-to-r from-emerald-600 to-teal-600 text-white
-            {% elif booking.status == 'WAITING_APPROVAL' %} bg-gradient-to-r from-blue-600 to-indigo-600 text-white
-            {% elif booking.status == 'REJECTED' %} bg-gradient-to-r from-rose-600 to-red-600 text-white
-            {% else %} bg-slate-800 text-white {% endif %}">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <span class="text-xs uppercase tracking-wider font-semibold opacity-80 block">Trạng thái phiếu đặt sân</span>
-                    <h2 class="text-2xl font-black mt-0.5 flex items-center gap-2">
-                        {% if booking.status == 'CONFIRMED' %}
-                            <i class="fa-solid fa-circle-check"></i>
-                        {% elif booking.status == 'WAITING_APPROVAL' %}
-                            <i class="fa-solid fa-hourglass-half"></i>
-                        {% elif booking.status == 'REJECTED' %}
-                            <i class="fa-solid fa-circle-xmark"></i>
-                        {% else %}
-                            <i class="fa-solid fa-clock"></i>
-                        {% endif %}
-                        {{ booking.get_status_display }}
-                    </h2>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs opacity-80 block font-medium">Mã đặt chỗ</span>
-                    <span class="font-mono text-xl font-black">{{ booking.booking_code }}</span>
-                </div>
+    <!-- 1. TOP HEADER GHIM CỐ ĐỊNH -->
+    <header
+        class="w-full bg-[#013319] border-b border-emerald-900/80 sticky top-0 z-50 shadow-lg flex-none backdrop-blur-md">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
+            <a href="{% url 'facilities:facility_list' %}" title="Về trang chủ"
+                class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm">
+                <i class="fa-solid fa-house text-sm"></i>
+            </a>
+
+            <div class="text-center flex-1 pr-9">
+                <h1 class="font-black text-sm sm:text-base md:text-lg uppercase tracking-wider text-white">
+                    PHIẾU ĐẶT SÂN & TRẠNG THÁI DUYỆT
+                </h1>
+                <span class="text-[11px] text-emerald-300 font-bold block">
+                    Cổng đối soát thanh toán trực tiếp giữa Khách hàng & Chủ sân
+                </span>
             </div>
         </div>
+    </header>
 
-        <div class="p-6 sm:p-8 space-y-6">
+    <!-- 2. MAIN CONTAINER: BỐ CỤC 2 CỘT RỘNG RÃI TRÊN DESKTOP -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
 
-            <!-- Thông báo hỗ trợ & Zalo Chủ Sân -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-headset text-emerald-600"></i> Hỗ trợ sự cố & Liên hệ trực tiếp
-                    </h4>
-                    <p class="text-xs text-slate-500 mt-0.5">
-                        Nếu có thắc mắc hoặc cần đổi giờ, quý khách vui lòng liên hệ trực tiếp Chủ sân:
-                    </p>
+        <!-- THÔNG BÁO FLASH NẾU CÓ -->
+        {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+            <div
+                class="px-4 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md {% if message.tags == 'error' %}bg-rose-600 text-white{% else %}bg-emerald-600 text-white{% endif %}">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- BANNER TRẠNG THÁI THỜI GIAN THỰC (THEO ĐÚNG STATE MACHINE CỦA ACTOR) -->
+        <div id="status-banner" class="rounded-2xl p-5 sm:p-6 shadow-xl border transition-all duration-300 
+            {% if status_code == 'CONFIRMED' %}
+                bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/50
+            {% elif status_code == 'REJECTED' %}
+                bg-gradient-to-r from-rose-700 to-red-600 border-rose-400/50
+            {% else %}
+                bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 border-amber-400/50
+            {% endif %}">
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4 text-center sm:text-left">
+                    <div id="status-icon-box"
+                        class="w-14 h-14 rounded-2xl bg-black/20 flex items-center justify-center text-3xl flex-shrink-0 shadow-inner">
+                        {% if status_code == 'CONFIRMED' %}
+                        <i class="fa-solid fa-circle-check text-emerald-200"></i>
+                        {% elif status_code == 'REJECTED' %}
+                        <i class="fa-solid fa-circle-xmark text-rose-200"></i>
+                        {% else %}
+                        <i class="fa-solid fa-hourglass-half text-amber-200 animate-spin"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 justify-center sm:justify-start">
+                            <span class="text-[11px] uppercase tracking-wider text-white/80 font-extrabold">Trạng Thái
+                                Đơn Đặt</span>
+                            <span id="live-dot"
+                                class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping inline-block"></span>
+                        </div>
+                        <h2 id="status-title" class="text-lg sm:text-2xl font-black mt-0.5">
+                            {{ status_display }}
+                        </h2>
+                        <p id="status-desc" class="text-xs sm:text-sm text-white/90 font-semibold mt-1">
+                            {% if status_code == 'CONFIRMED' %}
+                            Chủ sân đã xác nhận nhận đủ tiền. Lịch thi đấu đã được chốt chính thức!
+                            {% elif status_code == 'REJECTED' %}
+                            Đơn đặt đã bị từ chối: {{ reject_reason|default:"Bill chuyển khoản không hợp lệ hoặc chưa
+                            nhận được tiền." }}
+                            {% else %}
+                            Đã gửi ảnh biên lai thành công. Chủ sân đang đối soát số dư ngân hàng (khoảng 3 - 5 phút).
+                            {% endif %}
+                        </p>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <a href="tel:{{ facility.phone_contact }}" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-phone"></i> Gọi Chủ Sân: {{ facility.phone_contact }}
-                    </a>
+
+                <div
+                    class="bg-black/30 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20 text-center flex-shrink-0">
+                    <span class="text-[10px] uppercase tracking-wider text-amber-200 block font-bold">Mã Phiếu Đặt
+                        Chỗ</span>
+                    <span
+                        class="text-xl sm:text-2xl font-black font-mono tracking-wider text-white flex items-center justify-center gap-1.5">
+                        {{ booking_code }}
+                        <button type="button" onclick="copyToClipboard('{{ booking_code }}')"
+                            class="text-xs text-amber-300 hover:text-white" title="Sao chép mã đơn">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </span>
                 </div>
             </div>
 
-            {% if booking.status == 'REJECTED' and booking.reject_reason %}
-                <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-sm">
-                    <strong>Lý do từ chối:</strong> {{ booking.reject_reason }}
+            <!-- THANH TIẾN TRÌNH 3 BƯỚC (STEPPER) -->
+            <div class="w-full bg-[#023319]/80 rounded-2xl p-4 border border-emerald-800/60 shadow-inner">
+                <div class="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+                    <div class="flex flex-col items-center gap-1.5">
+                        <div
+                            class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-emerald-200 text-[11px]">1. Khóa Giữ Chỗ</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1.5">
+                        <div
+                            class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-emerald-200 text-[11px]">2. Nộp Bill VietQR</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1.5">
+                        <div id="step-3-circle" class="w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-md
+                            {% if status_code == 'CONFIRMED' %}bg-emerald-500 text-white
+                            {% elif status_code == 'REJECTED' %}bg-rose-500 text-white
+                            {% else %}bg-amber-400 text-slate-900 animate-pulse{% endif %}">
+                            {% if status_code == 'CONFIRMED' %}<i class="fa-solid fa-check"></i>
+                            {% elif status_code == 'REJECTED' %}<i class="fa-solid fa-xmark"></i>
+                            {% else %}<i class="fa-solid fa-hourglass-half"></i>{% endif %}
+                        </div>
+                        <span id="step-3-text"
+                            class="text-[11px] {% if status_code == 'CONFIRMED' %}text-emerald-200{% else %}text-amber-300{% endif %}">
+                            3. Chủ Sân Duyệt
+                        </span>
+                    </div>
                 </div>
-            {% endif %}
+            </div>
 
-            <!-- Danh sách slot đã đặt -->
-            <div>
-                <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Thông Tin Lịch Thi Đấu</h4>
-                <div class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
-                    {% for slot in slots %}
-                        <div class="p-4 bg-white flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-sm">
+        </div>
+
+        <!-- LƯỚI 2 CỘT: CỘT TRÁI (THÔNG TIN VÉ & SÂN) / CỘT PHẢI (LIÊN HỆ & ẢNH BILL) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+
+            <!-- CỘT TRÁI (LG: 7 CỘT): CHI TIẾT VÉ ĐẶT SÂN -->
+            <div class="lg:col-span-7 space-y-5">
+
+                <!-- THẺ VÉ ĐIỆN TỬ (DIGITAL SPORTS TICKET PASS) -->
+                <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-4">
+                    <div class="flex justify-between items-center pb-3 border-b border-emerald-800/50">
+                        <div class="flex items-center gap-2 text-[#facc15] font-black text-sm sm:text-base">
+                            <i class="fa-solid fa-ticket"></i>
+                            <span>Thông Tin Lịch Thi Đấu</span>
+                        </div>
+                        <span class="text-xs text-emerald-300 font-semibold">{{ created_at_formatted }}</span>
+                    </div>
+
+                    <!-- Thông tin Cụm sân & Địa chỉ -->
+                    <div class="p-4 bg-[#023319] rounded-xl border border-emerald-800/60 space-y-1 text-xs sm:text-sm">
+                        <div class="flex justify-between items-start gap-2">
                             <div>
-                                <span class="font-extrabold text-slate-800 text-base">{{ slot.court.facility.name }} - {{ slot.court.court_name }}</span>
-                                <span class="text-xs text-slate-500 block mt-0.5">
-                                    <i class="fa-regular fa-calendar"></i> {{ slot.date|date:"d/m/Y" }} | 
-                                    <i class="fa-regular fa-clock"></i> {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}
+                                <span class="text-emerald-300 font-semibold">Cụm sân:</span>
+                                <strong class="text-white ml-1 text-sm sm:text-base font-extrabold">{{ facility_name
+                                    }}</strong>
+                            </div>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ facility.latitude }},{{ facility.longitude }}"
+                                target="_blank"
+                                class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 text-xs font-bold transition flex items-center gap-1 flex-shrink-0"
+                                title="Mở chỉ đường Google Maps">
+                                <i class="fa-solid fa-diamond-turn-right text-emerald-400"></i> Chỉ đường
+                            </a>
+                        </div>
+                        <div>
+                            <span class="text-emerald-300 font-semibold">Địa chỉ:</span>
+                            <span class="text-emerald-100 ml-1">{{ facility_address }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách các khung giờ thi đấu -->
+                    <div class="space-y-2 text-xs">
+                        <span class="text-emerald-300 font-bold block">Các sân và khung giờ đã đặt:</span>
+                        {% for slot in slots_list %}
+                        <div
+                            class="flex justify-between items-center p-3 rounded-xl bg-[#023319] border border-emerald-800/60">
+                            <div>
+                                <span class="font-extrabold text-white text-xs sm:text-sm">{{ slot.court_name }}</span>
+                                <span class="text-emerald-300 block text-[11px] mt-0.5">
+                                    <i class="fa-regular fa-calendar"></i> {{ slot.date_str }} &nbsp;|&nbsp;
+                                    <i class="fa-regular fa-clock"></i> {{ slot.time_range }}
                                 </span>
                             </div>
-                            <span class="font-black text-emerald-600 text-base">{{ slot.price|floatformat:0 }} đ</span>
+                            <span class="font-black text-[#facc15] text-sm sm:text-base">{{ slot.price_str }}</span>
                         </div>
-                    {% endfor %}
-                </div>
-            </div>
+                        {% endfor %}
+                    </div>
 
-            <!-- Tổng kết hóa đơn & Bill chuyển khoản -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
-                <div>
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Chi tiết thanh toán</h4>
-                    <div class="space-y-1.5 text-xs text-slate-600">
-                        <div class="flex justify-between">
-                            <span>Khách hàng:</span>
-                            <span class="font-bold text-slate-800">{{ booking.customer_name|default:booking.customer.get_full_name|default:booking.customer.username|default:"Khách vãng lai" }}</span>
+                    <!-- Thông tin người đặt & Tổng thanh toán -->
+                    <div class="pt-3 border-t border-emerald-800/50 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-emerald-300 font-semibold">Khách hàng đặt:</span>
+                            <strong class="text-white">{{ customer_name }}</strong>
                         </div>
-                        <div class="flex justify-between">
-                            <span>Số điện thoại:</span>
-                            <span class="font-bold text-slate-800">{{ booking.customer_phone|default:booking.customer.phone|default:"-" }}</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-emerald-300 font-semibold">Số điện thoại:</span>
+                            <strong class="text-[#facc15] font-mono">{{ customer_phone }}</strong>
                         </div>
-                        <div class="flex justify-between">
-                            <span>Thời điểm tạo:</span>
-                            <span class="font-medium text-slate-700">{{ booking.created_at|date:"H:i d/m/Y" }}</span>
+                        {% if customer_note %}
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-emerald-300 font-semibold">Ghi chú cho chủ sân:</span>
+                            <span class="text-emerald-100 italic">{{ customer_note }}</span>
                         </div>
-                        <div class="flex justify-between text-sm pt-2 border-t border-slate-100">
-                            <span class="font-bold text-slate-800">Tổng thanh toán:</span>
-                            <span class="font-black text-emerald-600 text-lg">{{ booking.total_amount|floatformat:0 }} đ</span>
+                        {% endif %}
+                        <div class="pt-2 border-t border-emerald-800/60 flex justify-between items-center">
+                            <span class="text-sm sm:text-base font-bold text-emerald-200">Tổng thanh toán:</span>
+                            <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted
+                                }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div>
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Biên lai chuyển khoản (Bill)</h4>
-                    {% if booking.payment_proof %}
-                        <a href="{{ booking.payment_proof.url }}" target="_blank" class="block border rounded-xl overflow-hidden group shadow-sm">
-                            <img src="{{ booking.payment_proof.url }}" alt="Bill chuyển khoản" class="w-full h-32 object-cover group-hover:scale-105 transition duration-200">
-                            <span class="block bg-slate-50 text-center py-1.5 text-xs font-bold text-slate-600 group-hover:text-emerald-600">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem ảnh đầy đủ
-                            </span>
-                        </a>
-                    {% else %}
-                        <div class="p-6 bg-slate-50 border border-dashed rounded-xl text-center text-xs text-slate-400">
-                            Chưa có ảnh biên lai
-                        </div>
-                    {% endif %}
+                <!-- KHU VỰC DÀNH CHO CHỦ SÂN (NẾU CHỦ SÂN ĐANG XEM TRANG NÀY) -->
+                {% if user.is_authenticated and user.is_owner or user.is_staff %}
+                {% if status_code == 'WAITING_APPROVAL' %}
+                <div class="bg-amber-950/60 rounded-2xl p-5 border border-amber-500/50 shadow-xl space-y-3">
+                    <div class="flex items-center gap-2 text-amber-300 font-black text-sm">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Bảng Thao Tác Nhanh Dành Cho Chủ Sân</span>
+                    </div>
+                    <p class="text-xs text-amber-100">
+                        Bạn đang xem đơn này với tư cách Chủ sân. Sau khi kiểm tra app ngân hàng thấy tiền vào, bạn có
+                        thể duyệt ngay:
+                    </p>
+                    <div class="flex items-center gap-3 pt-1">
+                        <form method="post" action="{% url 'bookings:owner_approve' booking_code %}" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'bookings:booking_detail' booking_code %}">
+                            <button type="submit"
+                                onclick="return confirm('Xác nhận đã nhận đủ {{ total_amount_formatted }} cho đơn này?')"
+                                class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black text-xs uppercase text-white shadow-md transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-check"></i> Xác Nhận Đã Nhận Tiền
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'bookings:owner_reject' booking_code %}" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'bookings:booking_detail' booking_code %}">
+                            <button type="submit" onclick="return confirm('Từ chối đơn này và giải phóng slot?')"
+                                class="w-full py-3 rounded-xl bg-rose-700 hover:bg-rose-800 font-bold text-xs uppercase text-white shadow-md transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-xmark"></i> Từ Chối
+                            </button>
+                        </form>
+                    </div>
                 </div>
+                {% endif %}
+                {% endif %}
+
             </div>
 
-            <!-- Actions -->
-            <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row gap-3 justify-end">
-                <a href="{% url 'facilities:facility_list' %}" class="px-5 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-700 hover:bg-slate-50 text-xs text-center">
-                    Về Trang Chủ
-                </a>
-                {% if booking.status == 'PENDING_BILL' %}
-                    <a href="{% url 'bookings:checkout' booking.booking_code %}" class="px-5 py-2.5 rounded-xl bg-emerald-600 font-bold text-white hover:bg-emerald-700 text-xs text-center shadow-md">
-                        Tiếp Tục Thanh Toán & Nộp Bill
+            <!-- CỘT PHẢI (LG: 5 CỘT): LIÊN HỆ TRỰC TIẾP CHỦ SÂN & ẢNH BIÊN LAI -->
+            <div class="lg:col-span-5 space-y-5">
+
+                <!-- HỘP HỖ TRỢ TRỰC TIẾP & HOTLINE CHỦ SÂN (ACTOR CONNECTION) -->
+                <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-3.5">
+                    <div class="flex items-center gap-2 text-[#facc15] font-black text-sm sm:text-base">
+                        <i class="fa-solid fa-headset"></i>
+                        <span>Liên Hệ Chủ Sân & Hỗ Trợ</span>
+                    </div>
+
+                    <p class="text-xs text-emerald-100 font-semibold leading-relaxed">
+                        Thanh toán được thực hiện trực tiếp cho Chủ sân. Nếu cần xác nhận gấp để vào sân ngay, bạn có
+                        thể gọi điện hoặc nhắn Zalo trực tiếp:
+                    </p>
+
+                    <div class="space-y-2 pt-1">
+                        <a href="tel:{{ facility_phone }}"
+                            class="w-full py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-950/40 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-phone"></i>
+                            <span>Gọi Chủ Sân: {{ facility_phone }}</span>
+                        </a>
+
+                        <a href="https://zalo.me/{{ facility_phone }}" target="_blank"
+                            class="w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-slate-800 bg-[#0068ff] hover:bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-comment-dots"></i>
+                            <span>Nhắn Zalo Với Chủ Sân</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ẢNH BIÊN LAI (BILL) ĐÃ NỘP -->
+                <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2 text-[#facc15] font-black text-sm">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                            <span>Biên Lai Chuyển Khoản Đã Nộp</span>
+                        </div>
+                        <span class="text-[10px] text-emerald-300 font-bold">Minh chứng</span>
+                    </div>
+
+                    {% if payment_proof_url %}
+                    <div
+                        class="rounded-xl overflow-hidden border border-emerald-700/60 group relative shadow-md bg-black/20">
+                        <img src="{{ payment_proof_url }}" alt="Bill chuyển khoản"
+                            class="w-full h-44 object-contain group-hover:scale-105 transition duration-300">
+                        <a href="{{ payment_proof_url }}" target="_blank"
+                            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold text-white gap-1.5 backdrop-blur-xs">
+                            <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Xem ảnh gốc đầy đủ
+                        </a>
+                    </div>
+                    {% else %}
+                    <div
+                        class="p-6 bg-[#023319] border border-dashed border-emerald-800 rounded-xl text-center text-xs text-emerald-300">
+                        Chưa có ảnh biên lai
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- CÁC NÚT ĐIỀU HƯỚNG TIỆN ÍCH -->
+                <div class="space-y-2.5">
+                    <button type="button" onclick="checkStatusManually()"
+                        class="w-full py-3 rounded-xl border border-emerald-500/70 hover:bg-emerald-800/40 text-emerald-200 hover:text-white font-bold text-xs sm:text-sm transition text-center cursor-pointer flex items-center justify-center gap-2 shadow-sm">
+                        <i id="refresh-icon" class="fa-solid fa-rotate"></i>
+                        <span>Làm Mới Trạng Thái Duyệt</span>
+                    </button>
+
+                    <a href="{% url 'facilities:facility_list' %}"
+                        class="w-full py-3 rounded-xl bg-[#e5b63d] hover:bg-[#d8a834] font-black text-xs sm:text-sm uppercase tracking-wider text-white shadow-lg shadow-amber-500/20 transition text-center block">
+                        ĐẶT THÊM SÂN KHÁC
                     </a>
-                {% endif %}
+                </div>
+
             </div>
 
         </div>
-    </div>
-</div>
-{% endblock %}
 
+    </main>
+
+</div>
+
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        alert('Đã sao chép mã đơn: ' + text);
+    }
+
+    // Cơ chế Tự động kiểm tra trạng thái duyệt đơn mỗi 5 giây (Auto Polling)
+    const BOOKING_CODE = "{{ booking_code }}";
+    const API_STATUS_URL = "{% url 'bookings:booking_status_api' booking_code %}";
+
+    let checkInterval = null;
+
+    function checkStatusManually() {
+        const icon = document.getElementById('refresh-icon');
+        if (icon) icon.classList.add('fa-spin');
+        pollStatus(() => {
+            if (icon) icon.classList.remove('fa-spin');
+        });
+    }
+
+    function pollStatus(callback = null) {
+        fetch(API_STATUS_URL)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'CONFIRMED') {
+                    // Chủ sân đã duyệt thành công -> Cập nhật giao diện sang màu xanh Emerald rực rỡ
+                    updateUIConfirmed(data);
+                    if (checkInterval) clearInterval(checkInterval);
+                } else if (data.status === 'REJECTED') {
+                    // Chủ sân từ chối
+                    updateUIRejected(data);
+                    if (checkInterval) clearInterval(checkInterval);
+                }
+                if (callback) callback();
+            })
+            .catch(err => {
+                console.error("Lỗi kiểm tra trạng thái đơn:", err);
+                if (callback) callback();
+            });
+    }
+
+    function updateUIConfirmed(data) {
+        const banner = document.getElementById('status-banner');
+        const iconBox = document.getElementById('status-icon-box');
+        const title = document.getElementById('status-title');
+        const desc = document.getElementById('status-desc');
+        const liveDot = document.getElementById('live-dot');
+        const step3Circle = document.getElementById('step-3-circle');
+        const step3Text = document.getElementById('step-3-text');
+
+        banner.className = "rounded-2xl p-5 sm:p-6 shadow-xl border transition-all duration-300 bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/50";
+        iconBox.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-200"></i>';
+        title.innerText = "Đã xác nhận đặt sân thành công!";
+        desc.innerText = "🎉 Chúc mừng bạn! Chủ sân đã nhận đủ tiền và chốt lịch thi đấu. Hẹn gặp bạn tại sân đúng giờ nhé!";
+        if (liveDot) liveDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-200 inline-block";
+
+        if (step3Circle) {
+            step3Circle.className = "w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-md bg-emerald-500 text-white";
+            step3Circle.innerHTML = '<i class="fa-solid fa-check"></i>';
+        }
+        if (step3Text) step3Text.className = "text-[11px] text-emerald-200 font-bold";
+    }
+
+    function updateUIRejected(data) {
+        const banner = document.getElementById('status-banner');
+        const iconBox = document.getElementById('status-icon-box');
+        const title = document.getElementById('status-title');
+        const desc = document.getElementById('status-desc');
+        const step3Circle = document.getElementById('step-3-circle');
+
+        banner.className = "rounded-2xl p-5 sm:p-6 shadow-xl border transition-all duration-300 bg-gradient-to-r from-rose-700 to-red-600 border-rose-400/50";
+        iconBox.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-200"></i>';
+        title.innerText = "Đơn đặt đã bị từ chối";
+        desc.innerText = "Lý do: " + (data.reject_reason || "Chưa nhận được tiền chuyển khoản.");
+
+        if (step3Circle) {
+            step3Circle.className = "w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-md bg-rose-500 text-white";
+            step3Circle.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        }
+    }
+
+    // Tự động kiểm tra mỗi 4 giây nếu đơn đang ở trạng thái chờ duyệt
+    {% if status_code == 'WAITING_APPROVAL' %}
+    checkInterval = setInterval(pollStatus, 4000);
+    {% endif %}
+</script>
+{% endblock %}

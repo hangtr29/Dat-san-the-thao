@@ -207,18 +207,63 @@ def upload_payment_proof(request, booking_code):
 
 def booking_detail(request, booking_code):
     """
-    Chi tiết phiếu đặt sân & đối soát. Hiển thị Hotline/Zalo chủ sân để 2 bên tự giải quyết sự cố.
+    Trang chi tiết Phiếu Đặt Sân & Đối soát Bill trực quan (Sau khi nộp Bill).
+    Logic Actor: Khách theo dõi tiến độ duyệt, có Hotline/Zalo chủ sân để hỗ trợ tức thì.
     """
     booking = get_object_or_404(Booking, booking_code=booking_code)
-    first_slot = booking.slots.select_related('court__facility').first()
+    slots = booking.slots.select_related('court__facility', 'court__category').all()
+    first_slot = slots.first()
     facility = first_slot.court.facility if first_slot else None
+
+    # Chuẩn bị dữ liệu hiển thị sạch sẽ để template không bao giờ bị formatter bẻ dòng
+    slots_list = []
+    for s in slots:
+        slots_list.append({
+            'facility_name': s.court.facility.name,
+            'court_name': s.court.court_name,
+            'date_str': s.date.strftime('%d/%m/%Y'),
+            'time_range': f"{s.start_time.strftime('%H:%M')} - {s.end_time.strftime('%H:%M')}",
+            'price_str': f"{int(s.price):,} đ".replace(',', '.'),
+        })
+
+    total_amount_formatted = f"{int(booking.total_amount):,} đ".replace(',', '.')
+    created_at_formatted = booking.created_at.strftime('%H:%M ngày %d/%m/%Y')
 
     context = {
         'booking': booking,
         'facility': facility,
-        'slots': booking.slots.all(),
+        'booking_code': booking.booking_code,
+        'status_code': booking.status,
+        'status_display': booking.get_status_display(),
+        'reject_reason': booking.reject_reason or '',
+        'total_amount_formatted': total_amount_formatted,
+        'created_at_formatted': created_at_formatted,
+        'customer_name': booking.display_customer_name,
+        'customer_phone': booking.display_customer_phone,
+        'customer_note': booking.customer_note,
+        'facility_name': facility.name if facility else '',
+        'facility_address': facility.address if facility else '',
+        'facility_phone': facility.phone_contact if facility else '',
+        'slots_list': slots_list,
+        'payment_proof_url': booking.payment_proof.url if booking.payment_proof else '',
     }
     return render(request, 'bookings/booking_detail.html', context)
+
+
+def booking_status_api(request, booking_code):
+    """
+    API kiểm tra trạng thái đơn đặt sân theo thời gian thực (Polling cho trang chi tiết).
+    Khi chủ sân duyệt/từ chối, trang của khách tự động cập nhật ngay lập tức.
+    """
+    booking = get_object_or_404(Booking, booking_code=booking_code)
+    return JsonResponse({
+        'booking_code': booking.booking_code,
+        'status': booking.status,
+        'status_display': booking.get_status_display(),
+        'is_confirmed': booking.status == BookingStatus.CONFIRMED,
+        'is_rejected': booking.status == BookingStatus.REJECTED,
+        'reject_reason': booking.reject_reason or '',
+    })
 
 
 def booking_history(request):
@@ -319,6 +364,9 @@ def owner_approve_booking(request, booking_code):
     else:
         messages.error(request, f"Không thể duyệt đơn ở trạng thái hiện tại ({booking.get_status_display()}).")
 
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect('bookings:owner_dashboard')
 
 
@@ -344,4 +392,7 @@ def owner_reject_booking(request, booking_code):
     else:
         messages.error(request, "Không thể từ chối đơn ở trạng thái này.")
 
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect('bookings:owner_dashboard')

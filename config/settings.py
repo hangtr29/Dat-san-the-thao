@@ -97,6 +97,8 @@ if is_serverless:
 
     # Lưu session vào signed cookies thay vì DB để tránh write database ở mỗi request trên serverless
     SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+    SESSION_COOKIE_AGE = 86400 * 7
+    SESSION_SAVE_EVERY_REQUEST = True
 
 DATABASES = {
     'default': {

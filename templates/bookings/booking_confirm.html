@@ -15,21 +15,23 @@
 
     <!-- 1. THANH TOP HEADER CỐ ĐỊNH (STICKY TOP) KHÔNG BỊ XÊ DỊCH KHI THAO TÁC -->
     <header class="w-full bg-[#013319] border-b border-emerald-900/80 sticky top-0 z-50 shadow-lg flex-none backdrop-blur-md">
-        <div class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <div class="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between relative">
             <a href="{% url 'facilities:facility_detail' facility.id %}?date={{ first_slot.date|date:'Y-m-d' }}" 
                title="Quay lại chọn giờ"
-               class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm">
+               class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm z-10">
                 <i class="fa-solid fa-chevron-left text-sm"></i>
             </a>
 
-            <h1 class="font-black text-sm sm:text-base md:text-lg uppercase tracking-wider text-white text-center flex-1 pr-9">
+            <h1 class="font-black text-sm sm:text-base md:text-lg uppercase tracking-wider text-white text-center absolute inset-x-0 mx-auto px-12 pointer-events-none">
                 ĐẶT LỊCH THEO SÂN - TRỰC QUAN
             </h1>
+
+            <div class="w-9"></div>
         </div>
     </header>
 
     <!-- 2. NỘI DUNG CHÍNH: CĂN ĐỀU RỘNG RÃI TRÊN TOÀN TRANG (KHÔNG BỊ TẬP TRUNG CO CỤM Ở GIỮA) -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8">
+    <main class="flex-1 w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6 sm:py-8">
 
         <!-- THÔNG BÁO FLASH NẾU CÓ -->
         {% if messages %}

@@ -17,13 +17,14 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
     <!-- 1. TOP HEADER GHIM CỐ ĐỊNH -->
     <header
         class="w-full bg-[#013319] border-b border-emerald-900/80 sticky top-0 z-50 shadow-lg flex-none backdrop-blur-md">
-        <div class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <div
+            class="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between relative">
             <a href="{% url 'facilities:facility_list' %}" title="Về trang chủ"
-                class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm">
+                class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm z-10">
                 <i class="fa-solid fa-house text-sm"></i>
             </a>
 
-            <div class="text-center flex-1 pr-9">
+            <div class="text-center absolute inset-x-0 mx-auto px-12 pointer-events-none">
                 <h1 class="font-black text-sm sm:text-base md:text-lg uppercase tracking-wider text-white">
                     PHIẾU ĐẶT SÂN & TRẠNG THÁI DUYỆT
                 </h1>
@@ -31,11 +32,13 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                     Cổng đối soát thanh toán trực tiếp giữa Khách hàng & Chủ sân
                 </span>
             </div>
+
+            <div class="w-9"></div>
         </div>
     </header>
 
-    <!-- 2. MAIN CONTAINER: BỐ CỤC 2 CỘT RỘNG RÃI TRÊN DESKTOP -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
+    <!-- 2. MAIN CONTAINER: BỐ CỤC 2 CỘT RỘNG RÃI TRÊN DESKTOP (GIÃN ĐỀU KHẮP MÀN HÌNH) -->
+    <main class="flex-1 w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6 sm:py-8 space-y-6">
 
         <!-- THÔNG BÁO FLASH NẾU CÓ -->
         {% if messages %}
@@ -86,7 +89,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                             {% if status_code == 'CONFIRMED' %}
                             Chủ sân đã xác nhận nhận đủ tiền. Lịch thi đấu đã được chốt chính thức!
                             {% elif status_code == 'REJECTED' %}
-                            Đơn đặt đã bị từ chối: {{ reject_reason|default:"Bill chuyển khoản không hợp lệ hoặc chưa nhận được tiền." }}
+                            Đơn đặt đã bị từ chối: {{ reject_reason|default:"Bill chuyển khoản không hợp lệ hoặc chưa
+                            nhận được tiền." }}
                             {% else %}
                             Đã gửi ảnh biên lai thành công. Chủ sân đang đối soát số dư ngân hàng (khoảng 3 - 5 phút).
                             {% endif %}
@@ -166,7 +170,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         <div class="flex justify-between items-start gap-2">
                             <div>
                                 <span class="text-emerald-300 font-semibold">Cụm sân:</span>
-                                <strong class="text-white ml-1 text-sm sm:text-base font-extrabold">{{ facility_name }}</strong>
+                                <strong class="text-white ml-1 text-sm sm:text-base font-extrabold">{{ facility_name
+                                    }}</strong>
                             </div>
                             <a href="https://www.google.com/maps/dir/?api=1&destination={{ facility.latitude }},{{ facility.longitude }}"
                                 target="_blank"
@@ -217,7 +222,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         {% endif %}
                         <div class="pt-2 border-t border-emerald-800/60 flex justify-between items-center">
                             <span class="text-sm sm:text-base font-bold text-emerald-200">Tổng thanh toán:</span>
-                            <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted }}</span>
+                            <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted
+                                }}</span>
                         </div>
                     </div>
                 </div>

@@ -81,13 +81,22 @@ if is_serverless:
     if not os.path.exists(tmp_db):
         try:
             if db_path.exists():
-                shutil.copy2(str(db_path), tmp_db)
+                shutil.copyfile(str(db_path), tmp_db)
+                os.chmod(tmp_db, 0o666)
             else:
                 open(tmp_db, 'a').close()
+                os.chmod(tmp_db, 0o666)
         except Exception:
             pass
     if os.path.exists(tmp_db):
+        try:
+            os.chmod(tmp_db, 0o666)
+        except Exception:
+            pass
         db_path = tmp_db
+
+    # Lưu session vào signed cookies thay vì DB để tránh write database ở mỗi request trên serverless
+    SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 DATABASES = {
     'default': {

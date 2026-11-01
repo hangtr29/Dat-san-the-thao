@@ -152,12 +152,33 @@ def checkout_view(request, booking_code):
         messages.warning(request, "Đơn đặt của bạn đã hết hạn giữ chỗ (10 phút). Vui lòng đặt lại.")
         return redirect('facilities:facility_list')
 
+    # Chuẩn bị sẵn dữ liệu hiển thị sạch sẽ để template không bao giờ bị formatter bẻ dòng
+    slots_list = []
+    for s in booking.slots.select_related('court__facility').all():
+        slots_list.append({
+            'facility_name': s.court.facility.name,
+            'court_name': s.court.court_name,
+            'date_str': s.date.strftime('%d/%m/%Y'),
+            'time_range': f"{s.start_time.strftime('%H:%M')} - {s.end_time.strftime('%H:%M')}",
+            'price_str': f"{int(s.price):,} đ".replace(',', '.'),
+        })
+
+    total_amount_formatted = f"{int(booking.total_amount):,} đ".replace(',', '.')
+
     context = {
         'booking': booking,
         'facility': facility,
         'vietqr_url': vietqr_url,
         'seconds_remaining': seconds_remaining,
-        'slots': booking.slots.select_related('court').all(),
+        'slots_list': slots_list,
+        'total_amount_formatted': total_amount_formatted,
+        'booking_code': booking.booking_code,
+        'customer_name': booking.display_customer_name,
+        'customer_phone': booking.display_customer_phone,
+        'customer_note': booking.customer_note,
+        'bank_name': facility.bank_name if facility else '',
+        'bank_account_no': facility.bank_account_no if facility else '',
+        'bank_account_name': facility.bank_account_name if facility else '',
     }
     return render(request, 'bookings/checkout.html', context)
 

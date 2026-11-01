@@ -1,25 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}Thanh toán Đặt Sân - Quét Mã VietQR | Mã đơn: {{ booking.booking_code }}{% endblock %}
+{% block title %}Thanh toán Đặt Sân - Quét Mã VietQR{% endblock %}
 
-{% block body_class %}bg-[#023e1f] text-white min-h-screen flex flex-col antialiased m-0 p-0 overflow-y-auto
-selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% endblock %}
+{% block body_class %}bg-[#023e1f] text-white min-h-screen flex flex-col antialiased m-0 p-0 overflow-y-auto selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% endblock %}
 
-<!-- LOẠI BỎ HOÀN TOÀN HEADER VÀ FOOTER CHUNG CỦA WEBSITE -->
 {% block site_header %}{% endblock %}
 {% block site_footer %}{% endblock %}
-
 {% block main_class %}flex-1 w-full p-0 m-0 flex flex-col min-h-screen bg-[#023e1f]{% endblock %}
 
 {% block content %}
 <div class="min-h-screen flex flex-col w-full bg-[#023e1f] text-white">
 
     <!-- 1. TOP HEADER GHIM CỐ ĐỊNH -->
-    <header
-        class="w-full bg-[#013319] border-b border-emerald-900/80 sticky top-0 z-50 shadow-lg flex-none backdrop-blur-md">
+    <header class="w-full bg-[#013319] border-b border-emerald-900/80 sticky top-0 z-50 shadow-lg flex-none backdrop-blur-md">
         <div class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
-            <a href="{% url 'bookings:booking_confirm' booking.booking_code %}" title="Quay lại thông tin đặt sân"
-                class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm">
+            <a href="{% url 'bookings:booking_confirm' booking_code %}" 
+               title="Quay lại thông tin đặt sân"
+               class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm">
                 <i class="fa-solid fa-chevron-left text-sm"></i>
             </a>
 
@@ -34,15 +31,13 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
         </div>
     </header>
 
-    <!-- 2. MAIN CONTAINER: BỐ CỤC 2 CỘT RỘNG RÃI TRÊN DESKTOP -->
+    <!-- 2. MAIN CONTAINER -->
     <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
 
-        <!-- THÔNG BÁO FLASH NẾU CÓ -->
         {% if messages %}
         <div class="space-y-2">
             {% for message in messages %}
-            <div
-                class="px-4 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md {% if message.tags == 'error' %}bg-rose-600 text-white{% else %}bg-emerald-600 text-white{% endif %}">
+            <div class="px-4 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md {% if message.tags == 'error' %}bg-rose-600 text-white{% else %}bg-emerald-600 text-white{% endif %}">
                 <i class="fa-solid fa-circle-info"></i>
                 <span>{{ message }}</span>
             </div>
@@ -51,74 +46,60 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
         {% endif %}
 
         <!-- BANNER ĐẾM NGƯỢC THỜI GIAN GIỮ CHỖ (10 PHÚT) -->
-        <div
-            class="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white rounded-2xl p-4 sm:p-5 shadow-xl border border-amber-400/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white rounded-2xl p-4 sm:p-5 shadow-xl border border-amber-400/40 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3.5 text-center sm:text-left">
-                <div
-                    class="w-12 h-12 rounded-2xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                <div class="w-12 h-12 rounded-2xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
                     <i class="fa-solid fa-stopwatch animate-pulse text-amber-100"></i>
                 </div>
                 <div>
                     <h3 class="font-extrabold text-sm sm:text-base">Slot giờ đang được khóa giữ chỗ tạm thời</h3>
-                    <p class="text-xs text-amber-100 font-semibold mt-0.5">Vui lòng quét mã QR chuyển khoản và tải ảnh
-                        biên lai (Bill) trước khi hết hạn.</p>
+                    <p class="text-xs text-amber-100 font-semibold mt-0.5">Vui lòng quét mã QR chuyển khoản và tải ảnh biên lai (Bill) trước khi hết hạn.</p>
                 </div>
             </div>
-            <div
-                class="bg-black/30 backdrop-blur-md px-5 py-2 rounded-xl border border-white/20 text-center flex-shrink-0">
-                <span class="text-[10px] uppercase tracking-wider text-amber-200 block font-bold">Thời gian còn
-                    lại</span>
-                <span id="countdown-timer"
-                    class="text-2xl sm:text-3xl font-black font-mono tracking-widest text-white">10:00</span>
+            <div class="bg-black/30 backdrop-blur-md px-5 py-2 rounded-xl border border-white/20 text-center flex-shrink-0">
+                <span class="text-[10px] uppercase tracking-wider text-amber-200 block font-bold">Thời gian còn lại</span>
+                <span id="countdown-timer" class="text-2xl sm:text-3xl font-black font-mono tracking-widest text-white">10:00</span>
             </div>
         </div>
 
-        <!-- LƯỚI 2 CỘT CÂN ĐỀU RỘNG RÃI -->
+        <!-- LƯỚI 2 CỘT -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
             <!-- CỘT TRÁI (LG: 6 CỘT): MÃ QR VIETQR & THÔNG TIN CHUYỂN KHOẢN -->
-            <div
-                class="lg:col-span-6 bg-[#034424] rounded-2xl p-6 sm:p-7 border border-emerald-800/40 shadow-xl flex flex-col items-center text-center">
-
-                <span
-                    class="px-3.5 py-1 rounded-full text-xs font-black bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 mb-3 shadow-xs">
+            <div class="lg:col-span-6 bg-[#034424] rounded-2xl p-6 sm:p-7 border border-emerald-800/40 shadow-xl flex flex-col items-center text-center">
+                
+                <span class="px-3.5 py-1 rounded-full text-xs font-black bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 mb-3 shadow-xs">
                     <i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Thanh Toán Không Giữ Tiền Trung Gian
                 </span>
 
                 <h2 class="text-lg sm:text-xl font-black text-white">Quét Mã VietQR Chuyển Khoản</h2>
                 <p class="text-xs text-emerald-200 mt-1 max-w-sm font-semibold">
-                    Mở ứng dụng Ngân hàng bất kỳ (Vietcombank, MBBank, Techcombank, BIDV, MoMo...) và quét mã bên dưới
-                    để thanh toán tức thì.
+                    Mở ứng dụng Ngân hàng bất kỳ (Vietcombank, MBBank, Techcombank, BIDV, MoMo...) và quét mã bên dưới để thanh toán tức thì.
                 </p>
 
                 <!-- KHUNG MÃ QR ĐỘNG CHUẨN VIETQR -->
                 <div class="my-5 p-4 bg-white rounded-3xl shadow-2xl border-4 border-emerald-500/60 relative group">
                     {% if vietqr_url %}
-                    <img src="{{ vietqr_url }}" alt="VietQR Payment Code"
-                        class="w-64 h-64 sm:w-72 sm:h-72 object-contain rounded-2xl">
+                        <img src="{{ vietqr_url }}" alt="VietQR Payment Code" class="w-64 h-64 sm:w-72 sm:h-72 object-contain rounded-2xl">
                     {% else %}
-                    <div class="w-64 h-64 flex items-center justify-center text-slate-400 font-bold">
-                        Đang tạo mã QR...
-                    </div>
+                        <div class="w-64 h-64 flex items-center justify-center text-slate-400 font-bold">
+                            Đang tạo mã QR...
+                        </div>
                     {% endif %}
                 </div>
 
                 <!-- CHI TIẾT TÀI KHOẢN NGÂN HÀNG CỦA CHỦ SÂN -->
-                <div
-                    class="w-full bg-[#023319] rounded-2xl p-4 sm:p-5 text-left text-xs sm:text-sm space-y-2.5 border border-emerald-800/60 shadow-inner">
+                <div class="w-full bg-[#023319] rounded-2xl p-4 sm:p-5 text-left text-xs sm:text-sm space-y-2.5 border border-emerald-800/60 shadow-inner">
                     <div class="flex justify-between items-center">
                         <span class="text-emerald-300 font-semibold">Ngân hàng:</span>
-                        <strong class="font-extrabold text-white uppercase">{{ facility.bank_name }}</strong>
+                        <strong class="font-extrabold text-white uppercase">{{ bank_name }}</strong>
                     </div>
 
                     <div class="flex justify-between items-center">
                         <span class="text-emerald-300 font-semibold">Số tài khoản:</span>
                         <div class="flex items-center gap-2">
-                            <span class="font-black font-mono text-[#facc15] text-sm sm:text-base">{{
-                                facility.bank_account_no }}</span>
-                            <button type="button" onclick="copyToClipboard('{{ facility.bank_account_no }}')"
-                                class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer"
-                                title="Sao chép số tài khoản">
+                            <span class="font-black font-mono text-[#facc15] text-sm sm:text-base">{{ bank_account_no }}</span>
+                            <button type="button" onclick="copyToClipboard('{{ bank_account_no }}')" class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer" title="Sao chép số tài khoản">
                                 <i class="fa-regular fa-copy"></i> Copy
                             </button>
                         </div>
@@ -126,17 +107,14 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
 
                     <div class="flex justify-between items-center">
                         <span class="text-emerald-300 font-semibold">Chủ tài khoản:</span>
-                        <strong class="font-extrabold text-white uppercase">{{ facility.bank_account_name }}</strong>
+                        <strong class="font-extrabold text-white uppercase">{{ bank_account_name }}</strong>
                     </div>
 
                     <div class="flex justify-between items-center">
                         <span class="text-emerald-300 font-semibold">Số tiền thanh toán:</span>
                         <div class="flex items-center gap-2">
-                            <span class="font-black text-[#facc15] text-base sm:text-lg">{{
-                                booking.total_amount|floatformat:0 }} đ</span>
-                            <button type="button" onclick="copyToClipboard('{{ booking.total_amount|floatformat:0 }}')"
-                                class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer"
-                                title="Sao chép số tiền">
+                            <span class="font-black text-[#facc15] text-base sm:text-lg">{{ total_amount_formatted }}</span>
+                            <button type="button" onclick="copyToClipboard('{{ total_amount_formatted }}')" class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer" title="Sao chép số tiền">
                                 <i class="fa-regular fa-copy"></i>
                             </button>
                         </div>
@@ -145,12 +123,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                     <div class="flex justify-between items-center pt-2 border-t border-emerald-800/60">
                         <span class="text-emerald-300 font-semibold">Nội dung (Bắt buộc):</span>
                         <div class="flex items-center gap-2">
-                            <span
-                                class="font-black font-mono text-slate-900 bg-[#facc15] px-2.5 py-0.5 rounded text-xs sm:text-sm shadow-xs">{{
-                                booking.booking_code }}</span>
-                            <button type="button" onclick="copyToClipboard('{{ booking.booking_code }}')"
-                                class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer"
-                                title="Sao chép nội dung">
+                            <span class="font-black font-mono text-slate-900 bg-[#facc15] px-2.5 py-0.5 rounded text-xs sm:text-sm shadow-xs">{{ booking_code }}</span>
+                            <button type="button" onclick="copyToClipboard('{{ booking_code }}')" class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer" title="Sao chép nội dung">
                                 <i class="fa-regular fa-copy"></i>
                             </button>
                         </div>
@@ -166,10 +140,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                 <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-3.5">
                     <div class="flex justify-between items-center pb-3 border-b border-emerald-800/50">
                         <div>
-                            <span class="text-[10px] text-emerald-300 uppercase font-black tracking-wider block">Mã Đơn
-                                Đặt</span>
-                            <h3 class="text-lg sm:text-xl font-mono font-black text-[#facc15]">{{ booking.booking_code
-                                }}</h3>
+                            <span class="text-[10px] text-emerald-300 uppercase font-black tracking-wider block">Mã Đơn Đặt</span>
+                            <h3 class="text-lg sm:text-xl font-mono font-black text-[#facc15]">{{ booking_code }}</h3>
                         </div>
                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-slate-900 shadow-sm">
                             {{ booking.get_status_display }}
@@ -180,16 +152,16 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                     <div class="py-3 px-4 bg-[#023319] rounded-xl text-xs space-y-1.5 border border-emerald-800/60">
                         <div class="flex justify-between">
                             <span class="text-emerald-300 font-semibold">Khách hàng:</span>
-                            <strong class="text-white">{{ booking.display_customer_name }}</strong>
+                            <strong class="text-white">{{ customer_name }}</strong>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-emerald-300 font-semibold">Số điện thoại:</span>
-                            <strong class="text-[#facc15] font-mono">{{ booking.display_customer_phone }}</strong>
+                            <strong class="text-[#facc15] font-mono">{{ customer_phone }}</strong>
                         </div>
-                        {% if booking.customer_note %}
+                        {% if customer_note %}
                         <div class="flex justify-between text-[11px] pt-1 border-t border-emerald-800/40">
                             <span class="text-emerald-300 font-semibold">Ghi chú:</span>
-                            <span class="text-emerald-100 italic">{{ booking.customer_note }}</span>
+                            <span class="text-emerald-100 italic">{{ customer_note }}</span>
                         </div>
                         {% endif %}
                     </div>
@@ -197,34 +169,29 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                     <!-- Khung giờ đã giữ chỗ -->
                     <div class="space-y-1.5 text-xs">
                         <div class="text-emerald-300 font-bold mb-1">Khung giờ đang giữ chỗ:</div>
-                        {% for slot in slots %}
-                        <div
-                            class="flex justify-between items-center p-2.5 rounded-xl bg-[#023319] border border-emerald-800/60">
+                        {% for slot in slots_list %}
+                        <div class="flex justify-between items-center p-2.5 rounded-xl bg-[#023319] border border-emerald-800/60">
                             <div>
-                                <span class="font-extrabold text-white">{{ slot.court.facility.name }} - {{
-                                    slot.court.court_name }}</span>
+                                <span class="font-extrabold text-white">{{ slot.facility_name }} - {{ slot.court_name }}</span>
                                 <span class="text-emerald-300 block text-[11px] mt-0.5">
-                                    {{ slot.date|date:"d/m/Y" }} | {{ slot.start_time|time:"H:i" }} - {{
-                                    slot.end_time|time:"H:i" }}
+                                    {{ slot.date_str }} | {{ slot.time_range }}
                                 </span>
                             </div>
-                            <span class="font-black text-[#facc15] text-sm">{{ slot.price|floatformat:0 }} đ</span>
+                            <span class="font-black text-[#facc15] text-sm">{{ slot.price_str }}</span>
                         </div>
                         {% endfor %}
                     </div>
 
                     <div class="pt-3 border-t border-emerald-800/50 flex justify-between items-center">
                         <span class="text-sm font-bold text-emerald-200">Tổng thanh toán:</span>
-                        <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{
-                            booking.total_amount|floatformat:0 }} đ</span>
+                        <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted }}</span>
                     </div>
                 </div>
 
                 <!-- KHỐI 2: FORM TẢI ẢNH BIÊN LAI (BILL CHUYỂN KHOẢN) -->
                 <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-4">
                     <div class="flex items-center gap-2.5">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-lg">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-lg">
                             <i class="fa-solid fa-cloud-arrow-up"></i>
                         </div>
                         <div>
@@ -235,18 +202,14 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         </div>
                     </div>
 
-                    <form method="post" action="{% url 'bookings:upload_proof' booking.booking_code %}"
-                        enctype="multipart/form-data" class="space-y-4">
+                    <form method="post" action="{% url 'bookings:upload_proof' booking_code %}" enctype="multipart/form-data" class="space-y-4">
                         {% csrf_token %}
 
-                        <label for="id_payment_proof"
-                            class="block w-full border-2 border-dashed border-emerald-500/80 rounded-2xl p-5 text-center hover:bg-emerald-900/30 transition cursor-pointer relative group">
-                            <input type="file" name="payment_proof" id="id_payment_proof" accept="image/*" required
-                                class="hidden" onchange="previewBillImage(this)">
-
+                        <label for="id_payment_proof" class="block w-full border-2 border-dashed border-emerald-500/80 rounded-2xl p-5 text-center hover:bg-emerald-900/30 transition cursor-pointer relative group">
+                            <input type="file" name="payment_proof" id="id_payment_proof" accept="image/*" required class="hidden" onchange="previewBillImage(this)">
+                            
                             <div id="bill-prompt" class="space-y-1.5">
-                                <div
-                                    class="w-10 h-10 rounded-full bg-emerald-800/60 text-emerald-300 flex items-center justify-center mx-auto text-lg group-hover:scale-110 transition">
+                                <div class="w-10 h-10 rounded-full bg-emerald-800/60 text-emerald-300 flex items-center justify-center mx-auto text-lg group-hover:scale-110 transition">
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
                                 </div>
                                 <div class="font-black text-xs sm:text-sm text-emerald-100">
@@ -258,15 +221,13 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                             </div>
 
                             <div id="bill-preview-box" class="hidden flex flex-col items-center">
-                                <img id="bill-preview-img" src="" alt="Biên lai Preview"
-                                    class="max-h-44 rounded-xl shadow-lg border border-emerald-400">
+                                <img id="bill-preview-img" src="" alt="Biên lai Preview" class="max-h-44 rounded-xl shadow-lg border border-emerald-400">
                                 <span class="text-xs text-amber-300 font-bold mt-2">Nhấn để đổi ảnh khác</span>
                             </div>
                         </label>
 
                         <!-- NÚT GỬI XÁC NHẬN THANH TOÁN -->
-                        <button type="submit"
-                            class="w-full py-4 px-4 rounded-xl font-black text-sm uppercase tracking-wider text-white bg-[#e5b63d] hover:bg-[#d8a834] active:scale-[0.99] transition duration-150 shadow-xl shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2">
+                        <button type="submit" class="w-full py-4 px-4 rounded-xl font-black text-sm uppercase tracking-wider text-white bg-[#e5b63d] hover:bg-[#d8a834] active:scale-[0.99] transition duration-150 shadow-xl shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2">
                             <i class="fa-solid fa-check"></i>
                             <span>GỬI XÁC NHẬN THANH TOÁN CHO CHỦ SÂN</span>
                         </button>
@@ -282,7 +243,6 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
 </div>
 
 <script>
-    // Đếm ngược 10 phút giữ chỗ
     let seconds = {{ seconds_remaining }};
     const timerEl = document.getElementById('countdown-timer');
 
@@ -310,7 +270,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
     function previewBillImage(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function (e) {
+            reader.onload = function(e) {
                 document.getElementById('bill-preview-img').src = e.target.result;
                 document.getElementById('bill-preview-box').classList.remove('hidden');
                 document.getElementById('bill-prompt').classList.add('hidden');

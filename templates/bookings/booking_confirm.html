@@ -13,25 +13,28 @@
 {% block content %}
 <div class="min-h-screen flex flex-col w-full bg-[#023e1f] text-white">
 
-    <!-- 1. THANH TOP HEADER CỐ ĐỊNH (STICKY TOP) KHÔNG BỊ XÊ DỊCH KHI THAO TÁC -->
+    <!-- 1. THANH TOP HEADER CỐ ĐỊNH (STICKY TOP) - CĂN CHÍNH GIỮA TUYỆT ĐỐI MÀN HÌNH -->
     <header class="w-full bg-[#013319] border-b border-emerald-900/80 sticky top-0 z-50 shadow-lg flex-none backdrop-blur-md">
-        <div class="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between relative">
+        <div class="w-full px-4 sm:px-8 lg:px-14 py-3.5 flex items-center justify-between relative">
             <a href="{% url 'facilities:facility_detail' facility.id %}?date={{ first_slot.date|date:'Y-m-d' }}" 
                title="Quay lại chọn giờ"
-               class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm z-10">
+               class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 shadow-sm z-10">
                 <i class="fa-solid fa-chevron-left text-sm"></i>
             </a>
 
-            <h1 class="font-black text-sm sm:text-base md:text-lg uppercase tracking-wider text-white text-center absolute inset-x-0 mx-auto px-12 pointer-events-none">
-                ĐẶT LỊCH THEO SÂN - TRỰC QUAN
-            </h1>
+            <!-- Tiêu đề căn chính giữa tuyệt đối của toàn bộ chiều ngang trình duyệt -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <h1 class="font-black text-base sm:text-lg md:text-xl uppercase tracking-wider text-white text-center px-14">
+                    ĐẶT LỊCH THEO SÂN - TRỰC QUAN
+                </h1>
+            </div>
 
-            <div class="w-9"></div>
+            <div class="w-10 h-10 flex-none"></div>
         </div>
     </header>
 
-    <!-- 2. NỘI DUNG CHÍNH: CĂN ĐỀU RỘNG RÃI TRÊN TOÀN TRANG (KHÔNG BỊ TẬP TRUNG CO CỤM Ở GIỮA) -->
-    <main class="flex-1 w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6 sm:py-8">
+    <!-- 2. NỘI DUNG CHÍNH: GIÃN RỘNG TOÀN DIỆN TRÊN MÀN HÌNH LỚN -->
+    <main class="flex-1 w-full max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 py-6 sm:py-8">
 
         <!-- THÔNG BÁO FLASH NẾU CÓ -->
         {% if messages %}
@@ -49,8 +52,8 @@
         <form method="post" enctype="multipart/form-data" class="w-full">
             {% csrf_token %}
 
-            <!-- LƯỚI 2 CỘT CĂN ĐỀU RỘNG RÃI TRÊN DESKTOP (CỘT TRÁI: 5 PHẦN / CỘT PHẢI: 7 PHẦN) -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            <!-- LƯỚI 2 CỘT GIÃN RỘNG ĐỐI XỨNG TRÊN DESKTOP (CỘT TRÁI: 5 PHẦN / CỘT PHẢI: 7 PHẦN) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-start">
 
                 <!-- CỘT TRÁI (LG: 5 CỘT): THÔNG TIN SÂN & THÔNG TIN LỊCH ĐẶT -->
                 <div class="lg:col-span-5 space-y-5">

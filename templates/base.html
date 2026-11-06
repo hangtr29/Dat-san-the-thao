@@ -132,7 +132,7 @@
                     {% if user.is_owner or user.is_staff %}
                     <a href="{% url 'bookings:owner_dashboard' %}"
                         class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-amber-400 text-slate-900 font-black text-xs shadow-md hover:bg-amber-300 transition">
-                        <i class="fa-solid fa-shield-halved"></i> Quản lý Chủ sân
+                        <i class="fa-solid fa-store"></i> Kênh Chủ Sân
                     </a>
                     {% endif %}
 
@@ -143,15 +143,13 @@
                                 class="w-7 h-7 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center font-black text-xs shadow-inner">
                                 {{ user.username|slice:":1"|upper }}
                             </span>
-                            <span class="hidden sm:inline text-sm font-bold">{{ user.get_full_name|default:user.username
-                                }}</span>
+                            <span class="hidden sm:inline text-sm font-bold">{{ user.get_full_name|default:user.username }}</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-emerald-200 ml-1"></i>
                         </button>
                         <div
                             class="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 hidden group-hover:block text-slate-800 z-50">
                             <div class="px-4 py-2.5 border-b border-slate-100 text-xs text-slate-500">
-                                Vai trò: <strong class="text-emerald-700 font-black">{{ user.get_role_display
-                                    }}</strong>
+                                Vai trò: <strong class="text-emerald-700 font-black">{{ user.get_role_display }}</strong>
                             </div>
                             <a href="{% url 'bookings:booking_history' %}"
                                 class="block px-4 py-2 text-xs font-bold hover:bg-emerald-50 text-slate-700">
@@ -231,7 +229,7 @@
                 {% if user.is_authenticated and user.is_owner %}
                 <a href="{% url 'bookings:owner_dashboard' %}"
                     class="px-4 py-2 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition flex items-center gap-1.5 whitespace-nowrap">
-                    <i class="fa-solid fa-shield-halved text-amber-600"></i> Duyệt bill
+                    <i class="fa-solid fa-store text-amber-600"></i> Kênh chủ sân
                 </a>
                 {% endif %}
             </div>

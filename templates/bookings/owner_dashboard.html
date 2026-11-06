@@ -1,169 +1,358 @@
 {% extends 'base.html' %}
 
-{% block title %}Bảng Điều Khiển Chủ Sân - SPORTBOOK{% endblock %}
+{% block title %}Bảng Điều Khiển & Thống Kê Doanh Thu Chủ Sân | SportBook{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN vẽ biểu đồ doanh thu trực quan -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-    <!-- Header & Stats -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <!-- 1. HEADER & THAO TÁC XUẤT BÁO CÁO -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-            <div class="flex items-center gap-2 mb-1">
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                    Khu Vực Quản Lý Sân
+            <div class="flex items-center gap-2 mb-1.5">
+                <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-shield-halved"></i> Trung Tâm Quản Trị Chủ Sân
+                </span>
+                <span class="text-xs text-slate-400 font-semibold">• Đối soát trực tiếp</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                Thống Kê Doanh Thu & Quản Lý Đặt Sân
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                Theo dõi biến động dòng tiền, tỷ lệ lấp đầy sân và tự động kết xuất báo cáo doanh thu tài chính.
+            </p>
+        </div>
+
+        <!-- CẶP NÚT XUẤT BÁO CÁO DOANH THU (EXCEL/CSV & PDF) -->
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Nút 1: Xuất Excel / CSV -->
+            <a href="{% url 'bookings:owner_export_revenue_csv' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}" 
+               class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-file-excel text-sm"></i>
+                <span>Xuất Excel / CSV</span>
+            </a>
+
+            <!-- Nút 2: In / Tải PDF A4 -->
+            <a href="{% url 'bookings:owner_export_revenue_pdf' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}" 
+               target="_blank"
+               class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-file-pdf text-sm text-rose-400"></i>
+                <span>In / Xuất PDF (A4)</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. THẺ THỐNG KÊ DOANH THU & KPI CHÍNH -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <!-- Card 1: Doanh thu hôm nay -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-500 uppercase">Doanh Thu Hôm Nay</span>
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-calendar-day"></i>
+                </div>
+            </div>
+            <div class="text-2xl font-black text-emerald-700">{{ revenue_today_str }}</div>
+            <span class="text-[11px] text-slate-400 font-semibold block mt-1">Cập nhật thời gian thực</span>
+        </div>
+
+        <!-- Card 2: Doanh thu tháng này -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-500 uppercase">Doanh Thu Tháng Này</span>
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-calendar-week"></i>
+                </div>
+            </div>
+            <div class="text-2xl font-black text-blue-700">{{ revenue_month_str }}</div>
+            <span class="text-[11px] text-slate-400 font-semibold block mt-1">Tính từ ngày 1 đầu tháng</span>
+        </div>
+
+        <!-- Card 3: Tổng doanh thu tích lũy -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-500 uppercase">Tổng Doanh Thu</span>
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                </div>
+            </div>
+            <div class="text-2xl font-black text-[#b45309]">{{ revenue_total_str }}</div>
+            <span class="text-[11px] text-slate-400 font-semibold block mt-1">Tổng cộng các đơn đã duyệt</span>
+        </div>
+
+        <!-- Card 4: Số đơn chờ duyệt & Đã duyệt -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-500 uppercase">Trạng Thái Đơn</span>
+                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-black text-amber-600">{{ pending_count }}</span>
+                <span class="text-xs font-bold text-slate-400">chờ duyệt /</span>
+                <span class="text-lg font-black text-emerald-600">{{ confirmed_count }}</span>
+                <span class="text-xs font-bold text-slate-400">đã xong</span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-semibold block mt-1">Tỷ lệ lấp đầy ổn định</span>
+        </div>
+    </div>
+
+    <!-- 3. BIỂU ĐỒ DOANH THU 7 NGÀY GẦN NHẤT (CHART.JS) -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+            <div>
+                <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-emerald-600"></i>
+                    Biểu Đồ Xu Hướng Doanh Thu (7 Ngày Gần Nhất)
+                </h3>
+                <p class="text-xs text-slate-400 font-semibold mt-0.5">Biểu diễn dòng tiền thực tế thu được từ các đơn đặt sân đã xác thực</p>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 w-fit">
+                Đơn vị: VNĐ
+            </span>
+        </div>
+        <div class="h-64 sm:h-72 w-full">
+            <canvas id="revenueTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 4. THANH BỘ LỌC TÌM KIẾM & BÁO CÁO NÂNG CAO -->
+    <form method="get" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+        <div class="font-black text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-filter text-emerald-600"></i> Bộ Lọc Doanh Thu & Đơn Đặt Sân
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <!-- Chọn cụm sân -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Cụm Sân:</label>
+                <select name="facility_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="">-- Tất cả cụm sân --</option>
+                    {% for f in my_facilities %}
+                    <option value="{{ f.id }}" {% if selected_facility_id == f.id|stringformat:"s" %}selected{% endif %}>{{ f.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Trạng thái đơn -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Trạng Thái Đơn:</label>
+                <select name="status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="WAITING_APPROVAL" {% if status_filter == 'WAITING_APPROVAL' %}selected{% endif %}>Chờ duyệt bill ({{ pending_count }})</option>
+                    <option value="CONFIRMED" {% if status_filter == 'CONFIRMED' %}selected{% endif %}>Đã duyệt thành công ({{ confirmed_count }})</option>
+                    <option value="ALL" {% if status_filter == 'ALL' %}selected{% endif %}>Tất cả trạng thái</option>
+                </select>
+            </div>
+
+            <!-- Từ ngày -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Từ Ngày:</label>
+                <input type="date" name="date_from" value="{{ date_from }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <!-- Đến ngày -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Đến Ngày:</label>
+                <input type="date" name="date_to" value="{{ date_to }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <!-- Nút Lọc -->
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-magnifying-glass"></i> Lọc Dữ Liệu
+                </button>
+                <a href="{% url 'bookings:owner_dashboard' %}" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition" title="Đặt lại bộ lọc">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- 5. BẢNG DANH SÁCH CHI TIẾT CÁC ĐƠN ĐẶT & XÉT DUYỆT -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden space-y-0">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+            <div>
+                <h3 class="font-black text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-emerald-600"></i>
+                    Danh Sách Đơn Đặt Sân & Đối Soát Biên Lai
+                </h3>
+                <span class="text-xs text-slate-500 font-semibold">
+                    Đang hiển thị {{ bookings|length }} đơn • Doanh thu theo lọc: <strong class="text-emerald-700">{{ revenue_filtered_str }}</strong>
                 </span>
             </div>
-            <h1 class="text-3xl font-black text-slate-900">Bảng Điều Khiển Chủ Sân</h1>
-            <p class="text-xs text-slate-500 mt-1">Soi ảnh chuyển khoản (Bill), kiểm tra tài khoản ngân hàng và xét duyệt đơn đặt sân.</p>
         </div>
 
-        <div class="flex items-center gap-3">
-            <div class="bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
-                    <i class="fa-solid fa-bell"></i>
-                </div>
-                <div>
-                    <span class="text-xs text-slate-400 font-bold uppercase block">Chờ duyệt bill</span>
-                    <span class="text-xl font-black text-amber-600">{{ pending_count }} đơn</span>
-                </div>
-            </div>
-            <div class="bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
-                    <i class="fa-solid fa-circle-check"></i>
-                </div>
-                <div>
-                    <span class="text-xs text-slate-400 font-bold uppercase block">Đã hoàn tất</span>
-                    <span class="text-xl font-black text-emerald-600">{{ confirmed_count }} đơn</span>
-                </div>
-            </div>
+        {% if bookings %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-extrabold uppercase tracking-wider border-b border-slate-200">
+                        <th class="py-4 px-4">Mã đơn & Thời gian</th>
+                        <th class="py-4 px-4">Khách hàng</th>
+                        <th class="py-4 px-4">Sân & Khung giờ</th>
+                        <th class="py-4 px-4 text-right">Tổng tiền</th>
+                        <th class="py-4 px-4 text-center">Ảnh Bill</th>
+                        <th class="py-4 px-4 text-center">Trạng thái</th>
+                        <th class="py-4 px-4 text-center">Hành động duyệt</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for b in bookings %}
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <td class="py-4 px-4 font-mono font-bold text-slate-800">
+                            {{ b.booking_code }}
+                            <span class="block text-[10px] font-normal text-slate-400 mt-0.5">{{ b.created_at|date:"d/m/Y H:i" }}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <div class="font-bold text-slate-800">{{ b.display_customer_name }}</div>
+                            <div class="text-[11px] text-emerald-600 font-semibold">{{ b.display_customer_phone }}</div>
+                            {% if b.customer_note %}
+                            <div class="text-[10px] text-slate-500 italic mt-0.5">Ghi chú: {{ b.customer_note }}</div>
+                            {% endif %}
+                            {% if b.student_card_image %}
+                            <a href="{{ b.student_card_image.url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline mt-0.5">
+                                <i class="fa-solid fa-id-card"></i> Xem Thẻ HSSV
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4">
+                            {% for slot in b.slots.all %}
+                            <div class="font-semibold text-slate-700">{{ slot.court.court_name }}</div>
+                            <div class="text-[10px] text-slate-400">
+                                {{ slot.date|date:"d/m" }} | {{ slot.start_time|time:"H:i" }}-{{ slot.end_time|time:"H:i" }}
+                            </div>
+                            {% endfor %}
+                        </td>
+                        <td class="py-4 px-4 text-right font-black text-emerald-700 text-sm">
+                            {{ b.total_amount|floatformat:0 }} đ
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            {% if b.payment_proof %}
+                            <a href="{{ b.payment_proof.url }}" target="_blank" class="inline-block relative group cursor-pointer" title="Nhấp để xem ảnh gốc">
+                                <img src="{{ b.payment_proof.url }}" alt="Bill" class="w-12 h-12 object-cover rounded-xl border border-slate-200 shadow-xs group-hover:scale-110 transition mx-auto">
+                                <span class="text-[9px] block text-emerald-600 font-bold mt-0.5">Soi ảnh</span>
+                            </a>
+                            {% else %}
+                            <span class="text-slate-400 text-[11px] italic">Chưa nộp bill</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold inline-block
+                                {% if b.status == 'CONFIRMED' %} bg-emerald-100 text-emerald-800 border border-emerald-200
+                                {% elif b.status == 'WAITING_APPROVAL' %} bg-amber-100 text-amber-800 border border-amber-200
+                                {% elif b.status == 'PENDING_BILL' %} bg-slate-100 text-slate-700
+                                {% elif b.status == 'REJECTED' %} bg-rose-100 text-rose-800 border border-rose-200
+                                {% else %} bg-slate-100 text-slate-700 {% endif %}">
+                                {{ b.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            {% if b.status == 'WAITING_APPROVAL' %}
+                            <div class="flex items-center justify-center gap-2">
+                                <form method="post" action="{% url 'bookings:owner_approve' b.booking_code %}">
+                                    {% csrf_token %}
+                                    <button type="submit" onclick="return confirm('Bạn xác nhận đã nhận đủ tiền {{ b.total_amount|floatformat:0 }} đ cho đơn này?')"
+                                        class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm flex items-center gap-1 cursor-pointer">
+                                        <i class="fa-solid fa-check"></i> Xác Nhận
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'bookings:owner_reject' b.booking_code %}">
+                                    {% csrf_token %}
+                                    <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn TỪ CHỐI đơn này và giải phóng slot?')"
+                                        class="px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[11px] border border-rose-200 cursor-pointer">
+                                        Từ Chối
+                                    </button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <a href="{% url 'bookings:booking_detail' b.booking_code %}" class="text-emerald-600 hover:underline font-bold text-[11px] inline-flex items-center gap-1">
+                                <i class="fa-solid fa-ticket"></i> Xem vé
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
-
-    <!-- Filter Tabs -->
-    <div class="flex items-center gap-2 mb-6 border-b border-slate-200 pb-3 overflow-x-auto text-xs font-bold">
-        <a href="?status=WAITING_APPROVAL" 
-           class="px-4 py-2 rounded-xl transition flex items-center gap-1.5 
-           {% if status_filter == 'WAITING_APPROVAL' %} bg-amber-500 text-white shadow-md {% else %} text-slate-600 hover:bg-slate-100 {% endif %}">
-            <i class="fa-solid fa-clock-rotate-left"></i> Đơn Chờ Duyệt ({{ pending_count }})
-        </a>
-        <a href="?status=CONFIRMED" 
-           class="px-4 py-2 rounded-xl transition flex items-center gap-1.5 
-           {% if status_filter == 'CONFIRMED' %} bg-emerald-600 text-white shadow-md {% else %} text-slate-600 hover:bg-slate-100 {% endif %}">
-            <i class="fa-solid fa-check"></i> Đã Duyệt Thành Công
-        </a>
-        <a href="?status=ALL" 
-           class="px-4 py-2 rounded-xl transition flex items-center gap-1.5 
-           {% if status_filter == 'ALL' %} bg-slate-900 text-white shadow-md {% else %} text-slate-600 hover:bg-slate-100 {% endif %}">
-            <i class="fa-solid fa-list"></i> Tất Cả Các Đơn
-        </a>
-    </div>
-
-    <!-- Orders Table -->
-    {% if bookings %}
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
-                            <th class="py-4 px-4">Mã đơn & Thời gian</th>
-                            <th class="py-4 px-4">Khách hàng</th>
-                            <th class="py-4 px-4">Khung giờ đặt</th>
-                            <th class="py-4 px-4 text-right">Tổng tiền</th>
-                            <th class="py-4 px-4 text-center">Ảnh Bill (Minh chứng)</th>
-                            <th class="py-4 px-4 text-center">Trạng thái</th>
-                            <th class="py-4 px-4 text-center">Hành động duyệt</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        {% for b in bookings %}
-                            <tr class="hover:bg-slate-50/70 transition">
-                                <td class="py-4 px-4 font-mono font-bold text-slate-800">
-                                    {{ b.booking_code }}
-                                    <span class="block text-[10px] font-normal text-slate-400 mt-0.5">{{ b.created_at|date:"d/m/Y H:i" }}</span>
-                                </td>
-                                <td class="py-4 px-4">
-                                    <div class="font-bold text-slate-800">{{ b.customer_name|default:b.customer.get_full_name|default:b.customer.username|default:"Khách vãng lai" }}</div>
-                                    <div class="text-[11px] text-emerald-600 font-semibold">{{ b.customer_phone|default:b.customer.phone_number|default:"Chưa có SĐT" }}</div>
-                                    {% if b.customer_note %}
-                                        <div class="text-[10px] text-slate-500 italic mt-0.5">Ghi chú: {{ b.customer_note }}</div>
-                                    {% endif %}
-                                    {% if b.student_card_image %}
-                                        <a href="{{ b.student_card_image.url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline mt-0.5">
-                                            <i class="fa-solid fa-id-card"></i> Xem Thẻ HSSV
-                                        </a>
-                                    {% endif %}
-                                </td>
-                                <td class="py-4 px-4">
-                                    {% for slot in b.slots.all %}
-                                        <div class="font-semibold text-slate-700">{{ slot.court.court_name }}</div>
-                                        <div class="text-[10px] text-slate-400">
-                                            {{ slot.date|date:"d/m" }} | {{ slot.start_time|time:"H:i" }}-{{ slot.end_time|time:"H:i" }}
-                                        </div>
-                                    {% endfor %}
-                                </td>
-                                <td class="py-4 px-4 text-right font-black text-emerald-600 text-sm">
-                                    {{ b.total_amount|floatformat:0 }} đ
-                                </td>
-                                <td class="py-4 px-4 text-center">
-                                    {% if b.payment_proof %}
-                                        <a href="{{ b.payment_proof.url }}" target="_blank" class="inline-block relative group cursor-pointer">
-                                            <img src="{{ b.payment_proof.url }}" alt="Bill" class="w-12 h-12 object-cover rounded-lg border border-slate-200 shadow-sm group-hover:scale-110 transition">
-                                            <span class="text-[9px] block text-emerald-600 font-bold mt-0.5">Soi ảnh</span>
-                                        </a>
-                                    {% else %}
-                                        <span class="text-slate-400 text-[11px]">Chưa nộp bill</span>
-                                    {% endif %}
-                                </td>
-                                <td class="py-4 px-4 text-center">
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold inline-block
-                                        {% if b.status == 'CONFIRMED' %} bg-emerald-100 text-emerald-800 border border-emerald-200
-                                        {% elif b.status == 'WAITING_APPROVAL' %} bg-amber-100 text-amber-800 border border-amber-200
-                                        {% elif b.status == 'PENDING_BILL' %} bg-slate-100 text-slate-700
-                                        {% elif b.status == 'REJECTED' %} bg-rose-100 text-rose-800 border border-rose-200
-                                        {% else %} bg-slate-100 text-slate-700 {% endif %}">
-                                        {{ b.get_status_display }}
-                                    </span>
-                                </td>
-                                <td class="py-4 px-4 text-center">
-                                    {% if b.status == 'WAITING_APPROVAL' %}
-                                        <div class="flex items-center justify-center gap-2">
-                                            <!-- Duyệt thành công -->
-                                            <form method="post" action="{% url 'bookings:owner_approve' b.booking_code %}">
-                                                {% csrf_token %}
-                                                <button type="submit" onclick="return confirm('Bạn xác nhận đã nhận đủ tiền {{ b.total_amount|floatformat:0 }} đ cho đơn này?')"
-                                                    class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm flex items-center gap-1">
-                                                    <i class="fa-solid fa-check"></i> Xác Nhận
-                                                </button>
-                                            </form>
-                                            <!-- Từ chối -->
-                                            <form method="post" action="{% url 'bookings:owner_reject' b.booking_code %}">
-                                                {% csrf_token %}
-                                                <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn TỪ CHỐI đơn này và giải phóng slot?')"
-                                                    class="px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[11px] border border-rose-200">
-                                                    Từ Chối
-                                                </button>
-                                            </form>
-                                        </div>
-                                    {% else %}
-                                        <span class="text-slate-400 text-[11px]">Đã xử lý</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    {% else %}
-        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-md mx-auto">
+        {% else %}
+        <div class="p-12 text-center max-w-md mx-auto">
             <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-4">
                 <i class="fa-solid fa-clipboard-check"></i>
             </div>
-            <h3 class="text-base font-bold text-slate-800">Không có đơn đặt nào trong danh mục này</h3>
-            <p class="text-xs text-slate-500 mt-1">Khi khách hàng đặt sân và chuyển khoản, các đơn chờ duyệt sẽ lập tức xuất hiện tại đây.</p>
+            <h3 class="text-base font-bold text-slate-800">Không có đơn đặt nào phù hợp bộ lọc</h3>
+            <p class="text-xs text-slate-500 mt-1">Khi khách hàng đặt sân và chuyển khoản, danh sách đơn sẽ tự động hiển thị tại đây.</p>
         </div>
-    {% endif %}
+        {% endif %}
+    </div>
 
 </div>
-{% endblock %}
 
+<!-- Script Chart.js vẽ biểu đồ xu hướng doanh thu -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('revenueTrendChart');
+        if (ctx) {
+            const labels = {{ daily_labels_json|safe }};
+            const dataRevenues = {{ daily_revenues_json|safe }};
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: dataRevenues,
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#d97706',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.35,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return (value / 1000000) + ' Tr';
+                                    if (value >= 1000) return (value / 1000) + ' k';
+                                    return value;
+                                },
+                                font: { weight: 'bold', size: 10 }
+                            },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            ticks: { font: { weight: 'bold', size: 11 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

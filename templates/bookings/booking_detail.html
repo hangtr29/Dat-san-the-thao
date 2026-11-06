@@ -223,11 +223,97 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         {% endif %}
                         <div class="pt-2 border-t border-emerald-800/60 flex justify-between items-center">
                             <span class="text-sm sm:text-base font-bold text-emerald-200">Tổng thanh toán:</span>
-                            <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted
-                                }}</span>
+                            <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted }}</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- KHỐI ĐÁNH GIÁ CHẤT LƯỢNG SÂN (CHỈ DÀNH CHO ĐƠN ĐÃ ĐƯỢC DUYỆT THÀNH CÔNG - CHỐNG SPAM) -->
+                {% if status_code == 'CONFIRMED' %}
+                <div class="bg-[#034424] rounded-2xl p-5 sm:p-6 border border-emerald-800/40 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-emerald-800/50">
+                        <div class="flex items-center gap-2 text-[#facc15] font-black text-sm sm:text-base">
+                            <i class="fa-solid fa-star"></i>
+                            <span>Đánh Giá Chất Lượng Sân (Xác Thực)</span>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Khách chơi thực tế
+                        </span>
+                    </div>
+
+                    {% if user_review %}
+                        <!-- Đã đánh giá rồi -->
+                        <div class="p-4 rounded-xl bg-[#023319] border border-emerald-700/60 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-xs text-white">Đánh giá của bạn:</span>
+                                <div class="text-[#facc15] text-sm tracking-widest">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= user_review.rating %}★{% else %}☆{% endif %}
+                                    {% endfor %}
+                                    <span class="text-xs font-bold text-white ml-1">({{ user_review.rating }}/5)</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-emerald-100 italic bg-black/20 p-3 rounded-lg">
+                                "{{ user_review.comment }}"
+                            </p>
+                            <span class="text-[10px] text-emerald-400 font-semibold block text-right">
+                                Gửi lúc: {{ user_review.created_at|date:"H:i d/m/Y" }}
+                            </span>
+                        </div>
+                    {% else %}
+                        <!-- Chưa đánh giá -> Form gửi đánh giá -->
+                        <form method="post" action="{% url 'bookings:submit_review' booking_code %}" class="space-y-3.5">
+                            {% csrf_token %}
+                            <p class="text-xs text-emerald-100 font-semibold leading-relaxed">
+                                Đơn đặt của bạn đã được chủ sân duyệt thành công! Bạn có thể để lại số sao và nhận xét thực tế về mặt sân, ánh sáng và dịch vụ để hỗ trợ cộng đồng:
+                            </p>
+
+                            <!-- Chọn số sao tương tác -->
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-300 mb-1.5">Mức độ hài lòng của bạn:</label>
+                                <div class="grid grid-cols-5 gap-2">
+                                    <label class="flex flex-col items-center gap-1 cursor-pointer bg-[#023319] p-2 rounded-xl border border-emerald-800/80 hover:border-amber-400 transition text-center">
+                                        <input type="radio" name="rating" value="5" checked class="accent-amber-400">
+                                        <span class="text-[#facc15] text-xs font-extrabold">5 ★</span>
+                                        <span class="text-[9px] text-emerald-200">Xuất sắc</span>
+                                    </label>
+                                    <label class="flex flex-col items-center gap-1 cursor-pointer bg-[#023319] p-2 rounded-xl border border-emerald-800/80 hover:border-amber-400 transition text-center">
+                                        <input type="radio" name="rating" value="4" class="accent-amber-400">
+                                        <span class="text-[#facc15] text-xs font-extrabold">4 ★</span>
+                                        <span class="text-[9px] text-emerald-200">Tốt</span>
+                                    </label>
+                                    <label class="flex flex-col items-center gap-1 cursor-pointer bg-[#023319] p-2 rounded-xl border border-emerald-800/80 hover:border-amber-400 transition text-center">
+                                        <input type="radio" name="rating" value="3" class="accent-amber-400">
+                                        <span class="text-[#facc15] text-xs font-extrabold">3 ★</span>
+                                        <span class="text-[9px] text-emerald-200">Bình thường</span>
+                                    </label>
+                                    <label class="flex flex-col items-center gap-1 cursor-pointer bg-[#023319] p-2 rounded-xl border border-emerald-800/80 hover:border-amber-400 transition text-center">
+                                        <input type="radio" name="rating" value="2" class="accent-amber-400">
+                                        <span class="text-[#facc15] text-xs font-extrabold">2 ★</span>
+                                        <span class="text-[9px] text-emerald-200">Tệ</span>
+                                    </label>
+                                    <label class="flex flex-col items-center gap-1 cursor-pointer bg-[#023319] p-2 rounded-xl border border-emerald-800/80 hover:border-amber-400 transition text-center">
+                                        <input type="radio" name="rating" value="1" class="accent-amber-400">
+                                        <span class="text-[#facc15] text-xs font-extrabold">1 ★</span>
+                                        <span class="text-[9px] text-emerald-200">Rất tệ</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Ô nhận xét -->
+                            <div>
+                                <label for="review_comment" class="block text-xs font-bold text-emerald-300 mb-1">Nhận xét chi tiết về sân:</label>
+                                <textarea id="review_comment" name="comment" rows="3" required placeholder="Ví dụ: Mặt sân mới đẹp, ánh sáng tốt không bị chói mắt, chủ sân nhiệt tình..."
+                                    class="w-full bg-[#023319] border border-emerald-800/80 rounded-xl p-3 text-xs text-white placeholder-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full py-3.5 rounded-xl bg-[#e5b63d] hover:bg-[#d8a834] font-black text-xs uppercase tracking-wider text-white shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-paper-plane"></i> GỬI ĐÁNH GIÁ CHẤT LƯỢNG SÂN
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+                {% endif %}
 
                 <!-- KHU VỰC DÀNH CHO CHỦ SÂN (NẾU CHỦ SÂN ĐANG XEM TRANG NÀY) -->
                 {% if user.is_authenticated and user.is_owner or user.is_staff %}

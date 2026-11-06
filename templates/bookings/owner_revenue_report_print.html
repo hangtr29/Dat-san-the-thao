@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Doanh Thu - {{ facility_selected.name|default:"Hệ thống SportBook" }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+        body { font-family: 'Nunito', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; padding: 0 !important; }
+            .print-page { box-shadow: none !important; border: none !important; padding: 0 !important; max-width: 100% !important; }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <!-- Thanh công cụ in ấn (Ẩn khi in) -->
+    <div class="no-print max-w-5xl mx-auto mb-6 flex items-center justify-between bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-lg">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'bookings:owner_dashboard' %}" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+            </a>
+            <span class="text-xs text-slate-300 font-semibold">Xem trước trang in / xuất PDF</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="window.print()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-black text-xs uppercase tracking-wider text-white shadow-md transition flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-print"></i> In / Lưu PDF (A4)
+            </button>
+        </div>
+    </div>
+
+    <!-- Tờ Báo Cáo Chuẩn Khổ A4 -->
+    <div class="print-page max-w-5xl mx-auto bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-slate-200">
+        
+        <!-- Header Báo cáo -->
+        <div class="flex justify-between items-start pb-6 border-b-2 border-slate-900">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-black uppercase text-slate-900 tracking-wider">
+                    {{ facility_selected.name|default:"HỆ THỐNG ĐẶT SÂN THỂ THAO SPORTBOOK" }}
+                </h2>
+                <p class="text-xs text-slate-600 font-semibold mt-1">
+                    Địa chỉ: {{ facility_selected.address|default:"Toàn bộ cơ sở thuộc quản lý" }}
+                </p>
+                <p class="text-xs text-slate-600 font-semibold">
+                    Hotline / Liên hệ: {{ facility_selected.phone_contact|default:"1900-SPORTBOOK" }}
+                </p>
+            </div>
+            <div class="text-right">
+                <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Mẫu số: 01-BCTK/SPORT</div>
+                <div class="text-xs text-slate-700 font-bold mt-1">Ngày xuất: {{ export_time }}</div>
+                <div class="text-xs text-emerald-700 font-bold mt-0.5">Người lập: {{ owner_name }}</div>
+            </div>
+        </div>
+
+        <!-- Tiêu đề lớn -->
+        <div class="text-center my-8">
+            <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-wide text-slate-900">
+                BÁO CÁO DOANH THU ĐẶT SÂN
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-bold mt-1">
+                Kỳ báo cáo: {% if date_from and date_to %}Từ ngày {{ date_from }} đến ngày {{ date_to }}{% elif date_from %}Từ ngày {{ date_from }} đến nay{% elif date_to %}Trước ngày {{ date_to }}{% else %}Toàn bộ thời gian tích lũy{% endif %}
+            </p>
+        </div>
+
+        <!-- Khối thống kê tóm tắt (KPIs) -->
+        <div class="grid grid-cols-3 gap-4 mb-8">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                <span class="text-[10px] uppercase font-bold text-slate-500 block">Số Đơn Hoàn Tất</span>
+                <span class="text-xl font-black text-slate-800">{{ total_count }} đơn</span>
+            </div>
+            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                <span class="text-[10px] uppercase font-bold text-emerald-700 block">Tổng Doanh Thu</span>
+                <span class="text-xl font-black text-emerald-700">{{ total_revenue_formatted }}</span>
+            </div>
+            <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-center">
+                <span class="text-[10px] uppercase font-bold text-amber-700 block">Trạng Thái Thu Tiền</span>
+                <span class="text-sm font-black text-amber-800">100% Đã Đối Soát Bill</span>
+            </div>
+        </div>
+
+        <!-- Bảng danh sách chi tiết các đơn -->
+        <table class="w-full text-left border-collapse text-xs mb-8">
+            <thead>
+                <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-y border-slate-300">
+                    <th class="py-3 px-3 text-center w-10">STT</th>
+                    <th class="py-3 px-3">Mã Đơn</th>
+                    <th class="py-3 px-3">Thời Gian</th>
+                    <th class="py-3 px-3">Khách Hàng</th>
+                    <th class="py-3 px-3">Sân & Khung Giờ</th>
+                    <th class="py-3 px-3 text-right">Doanh Thu</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+                {% for b in bookings %}
+                <tr>
+                    <td class="py-3 px-3 text-center font-bold text-slate-500">{{ forloop.counter }}</td>
+                    <td class="py-3 px-3 font-mono font-bold text-slate-800">{{ b.booking_code }}</td>
+                    <td class="py-3 px-3 text-slate-600">{{ b.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="py-3 px-3">
+                        <span class="font-bold text-slate-800">{{ b.display_customer_name }}</span>
+                        <span class="block text-[10px] text-slate-500">{{ b.display_customer_phone }}</span>
+                    </td>
+                    <td class="py-3 px-3">
+                        {% for slot in b.slots.all %}
+                        <div class="font-semibold text-slate-700">{{ slot.court.court_name }} - {{ slot.date|date:"d/m" }} ({{ slot.start_time|time:"H:i" }}-{{ slot.end_time|time:"H:i" }})</div>
+                        {% endfor %}
+                    </td>
+                    <td class="py-3 px-3 text-right font-black text-slate-900">
+                        {{ b.total_amount|floatformat:0 }} đ
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="py-8 text-center text-slate-400 font-semibold">
+                        Không có phát sinh doanh thu trong kỳ báo cáo này.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="border-t-2 border-slate-900 bg-slate-50 font-black">
+                    <td colspan="5" class="py-3.5 px-3 text-right uppercase text-xs sm:text-sm">TỔNG CỘNG DOANH THU:</td>
+                    <td class="py-3.5 px-3 text-right text-base sm:text-lg text-emerald-700">{{ total_revenue_formatted }}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Chữ ký xác nhận cuối trang -->
+        <div class="grid grid-cols-2 text-center text-xs mt-12 pt-8 border-t border-slate-200">
+            <div>
+                <p class="font-bold uppercase text-slate-700 mb-1">Người Lập Báo Cáo</p>
+                <p class="text-[11px] text-slate-400 italic mb-16">(Ký và ghi rõ họ tên)</p>
+                <p class="font-black text-slate-900 uppercase">{{ owner_name }}</p>
+            </div>
+            <div>
+                <p class="font-bold uppercase text-slate-700 mb-1">Đại Diện Cụm Sân / Quản Lý</p>
+                <p class="text-[11px] text-slate-400 italic mb-16">(Ký, đóng dấu xác nhận)</p>
+                <p class="font-black text-slate-900 uppercase">{{ facility_selected.owner.get_full_name|default:owner_name }}</p>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
+

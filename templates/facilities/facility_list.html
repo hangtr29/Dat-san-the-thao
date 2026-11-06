@@ -44,10 +44,10 @@
                 <img src="{{ fac.get_cover_image_url }}" alt="{{ fac.name }}" 
                      class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
 
-                <!-- Top Left Combined Badges: [⭐ 5] [Đơn ngày] [Sự kiện] -->
+                <!-- Top Left Combined Badges: [⭐ Rating] [Đơn ngày] [Sự kiện] -->
                 <div class="absolute top-3 left-3 flex items-center shadow-md rounded-full overflow-hidden text-[10px] sm:text-xs font-extrabold z-10">
                     <span class="bg-white text-slate-800 px-2.5 py-1 flex items-center gap-1">
-                        <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> 5
+                        <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> {{ fac.get_average_rating }}
                     </span>
                     <span class="bg-[#10b981] text-white px-2.5 py-1">
                         Đơn ngày
@@ -89,9 +89,14 @@
                             <span class="text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0">({{ fac.get_distance_display }})</span>
                             <span>{{ fac.address }}</span>
                         </p>
-                        <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mt-1">
-                            <i class="fa-regular fa-clock text-slate-400 text-xs"></i>
-                            <span>{{ fac.open_time|time:"H:i" }} - {{ fac.close_time|time:"H:i" }}</span>
+                        <div class="flex items-center gap-3 text-xs font-semibold text-slate-500 mt-1">
+                            <span class="flex items-center gap-1">
+                                <i class="fa-regular fa-clock text-slate-400 text-xs"></i>
+                                {{ fac.open_time|time:"H:i" }} - {{ fac.close_time|time:"H:i" }}
+                            </span>
+                            <span class="text-amber-600 font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-star text-[10px]"></i> {{ fac.get_average_rating }} ({{ fac.get_total_reviews }} đánh giá)
+                            </span>
                         </div>
                     </div>
                 </div>

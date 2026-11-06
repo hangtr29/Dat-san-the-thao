@@ -434,6 +434,14 @@ def booking_detail(request, booking_code):
         except Exception:
             pass
 
+    # Kiểm tra xem đơn này đã được khách hàng đánh giá hay chưa
+    user_review = None
+    try:
+        from facilities.models import FacilityReview
+        user_review = FacilityReview.objects.filter(booking=booking).first()
+    except Exception:
+        pass
+
     total_amount_formatted = f"{int(booking.total_amount):,} đ".replace(',', '.')
     created_at_formatted = booking.created_at.strftime('%H:%M ngày %d/%m/%Y')
 
@@ -454,8 +462,60 @@ def booking_detail(request, booking_code):
         'facility_phone': facility.phone_contact if facility else '',
         'slots_list': slots_list,
         'payment_proof_url': payment_proof_url,
+        'user_review': user_review,
     }
     return render(request, 'bookings/booking_detail.html', context)
+
+
+def submit_court_review(request, booking_code):
+    """
+    Khách hàng gửi đánh giá chất lượng sân (Review & Rating 1-5 sao).
+    Điều kiện: Chỉ khách hàng có mã đơn đặt sân đã được duyệt thành công (CONFIRMED) mới được đánh giá.
+    Mỗi đơn đặt chỉ được đánh giá 1 lần duy nhất (1 booking = 1 review chống spam).
+    """
+    if request.method != 'POST':
+        return redirect('bookings:booking_detail', booking_code=booking_code)
+
+    booking = get_booking_or_restore(request, booking_code)
+    if not booking:
+        messages.error(request, "Không tìm thấy thông tin đơn đặt sân.")
+        return redirect('facilities:facility_list')
+
+    if booking.status != BookingStatus.CONFIRMED:
+        messages.error(request, "Chỉ đơn đặt sân đã được Chủ sân xác nhận thành công mới có thể gửi đánh giá.")
+        return redirect('bookings:booking_detail', booking_code=booking.booking_code)
+
+    first_slot = booking.slots.select_related('court__facility').first()
+    facility = first_slot.court.facility if first_slot else Facility.objects.first()
+    if not facility:
+        messages.error(request, "Không tìm thấy cụm sân cần đánh giá.")
+        return redirect('bookings:booking_detail', booking_code=booking.booking_code)
+
+    try:
+        from facilities.models import FacilityReview
+        if FacilityReview.objects.filter(booking=booking).exists():
+            messages.warning(request, "Đơn đặt này đã được gửi đánh giá trước đó rồi. Xin cảm ơn bạn!")
+            return redirect('bookings:booking_detail', booking_code=booking.booking_code)
+
+        rating = int(request.POST.get('rating', 5))
+        if rating < 1 or rating > 5:
+            rating = 5
+        comment = request.POST.get('comment', '').strip()
+        reviewer_name = booking.display_customer_name
+
+        FacilityReview.objects.create(
+            facility=facility,
+            booking=booking,
+            user=booking.customer,
+            reviewer_name=reviewer_name,
+            rating=rating,
+            comment=comment
+        )
+        messages.success(request, "🎉 Cảm ơn bạn đã gửi đánh giá chất lượng sân! Đánh giá đã được ghi nhận.")
+    except Exception as e:
+        messages.error(request, f"Không thể lưu đánh giá: {e}")
+
+    return redirect('bookings:booking_detail', booking_code=booking.booking_code)
 
 
 def booking_status_api(request, booking_code):
@@ -520,45 +580,225 @@ def booking_lookup(request):
 @login_required
 def owner_dashboard(request):
     """
-    Task 3.3: Dashboard dành riêng cho Chủ sân.
-    Hiển thị danh sách đơn chờ duyệt, soi ảnh Bill và nút bấm [Đã nhận tiền / Từ chối].
+    Task 3.3 & Giai đoạn 2: Dashboard dành riêng cho Chủ sân.
+    - Thống kê doanh thu: Hôm nay, Tháng này, Tổng tích lũy.
+    - Dữ liệu biểu đồ 7 ngày gần nhất cho Chart.js.
+    - Quản lý duyệt đơn / từ chối bill.
+    - Bộ lọc thời gian & Tự động xuất báo cáo (Excel/CSV & PDF).
     """
     if not (request.user.is_owner() or request.user.is_staff):
         messages.warning(request, "Trang này chỉ dành riêng cho Chủ sân.")
         return redirect('facilities:facility_list')
 
-    # Lấy các cụm sân của chủ sân này
-    my_facilities = Facility.objects.filter(owner=request.user)
+    from django.db.models import Sum
+    from datetime import timedelta
 
-    # Đơn đặt tại các sân của chủ sân này
+    my_facilities = Facility.objects.filter(owner=request.user)
+    facility_id = request.GET.get('facility_id', '')
     status_filter = request.GET.get('status', 'WAITING_APPROVAL')
-    
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    target_facilities = my_facilities
+    if facility_id:
+        target_facilities = my_facilities.filter(id=facility_id)
+
+    # Đơn đặt lọc theo trạng thái
     bookings_qs = Booking.objects.filter(
-        slots__court__facility__in=my_facilities
+        slots__court__facility__in=target_facilities
     ).distinct().select_related('customer').prefetch_related('slots__court').order_by('-created_at')
 
     if status_filter != 'ALL':
         bookings_qs = bookings_qs.filter(status=status_filter)
+    if date_from:
+        bookings_qs = bookings_qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        bookings_qs = bookings_qs.filter(created_at__date__lte=date_to)
 
-    # Thống kê nhanh
+    # Đếm số lượng
     pending_count = Booking.objects.filter(
-        slots__court__facility__in=my_facilities,
+        slots__court__facility__in=target_facilities,
         status=BookingStatus.WAITING_APPROVAL
     ).distinct().count()
 
     confirmed_count = Booking.objects.filter(
-        slots__court__facility__in=my_facilities,
+        slots__court__facility__in=target_facilities,
         status=BookingStatus.CONFIRMED
     ).distinct().count()
 
+    today = timezone.localdate()
+    # 1. Doanh thu hôm nay
+    revenue_today = Booking.objects.filter(
+        slots__court__facility__in=target_facilities,
+        status=BookingStatus.CONFIRMED,
+        created_at__date=today
+    ).distinct().aggregate(total=Sum('total_amount'))['total'] or 0
+
+    # 2. Doanh thu tháng này
+    first_day_month = today.replace(day=1)
+    revenue_month = Booking.objects.filter(
+        slots__court__facility__in=target_facilities,
+        status=BookingStatus.CONFIRMED,
+        created_at__date__gte=first_day_month
+    ).distinct().aggregate(total=Sum('total_amount'))['total'] or 0
+
+    # 3. Tổng doanh thu tích lũy
+    revenue_total = Booking.objects.filter(
+        slots__court__facility__in=target_facilities,
+        status=BookingStatus.CONFIRMED
+    ).distinct().aggregate(total=Sum('total_amount'))['total'] or 0
+
+    # 4. Doanh thu trong khoảng đang lọc
+    revenue_filtered = bookings_qs.filter(status=BookingStatus.CONFIRMED).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    # 5. Dữ liệu 7 ngày gần nhất vẽ biểu đồ Chart.js
+    daily_labels = []
+    daily_revenues = []
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        rev = Booking.objects.filter(
+            slots__court__facility__in=target_facilities,
+            status=BookingStatus.CONFIRMED,
+            created_at__date=d
+        ).distinct().aggregate(total=Sum('total_amount'))['total'] or 0
+        daily_labels.append(d.strftime('%d/%m'))
+        daily_revenues.append(int(rev))
+
     context = {
         'my_facilities': my_facilities,
+        'selected_facility_id': facility_id,
         'bookings': bookings_qs,
         'status_filter': status_filter,
+        'date_from': date_from,
+        'date_to': date_to,
         'pending_count': pending_count,
         'confirmed_count': confirmed_count,
+        'revenue_today_str': f"{int(revenue_today):,} đ".replace(',', '.'),
+        'revenue_month_str': f"{int(revenue_month):,} đ".replace(',', '.'),
+        'revenue_total_str': f"{int(revenue_total):,} đ".replace(',', '.'),
+        'revenue_filtered_str': f"{int(revenue_filtered):,} đ".replace(',', '.'),
+        'daily_labels_json': daily_labels,
+        'daily_revenues_json': daily_revenues,
     }
     return render(request, 'bookings/owner_dashboard.html', context)
+
+
+@login_required
+def owner_export_revenue_csv(request):
+    """
+    Giai đoạn 3: Tự động xuất báo cáo doanh thu dạng file Excel / CSV cho Chủ sân.
+    Sử dụng UTF-8 BOM (\ufeff) để Microsoft Excel mở trực tiếp hiển thị tiếng Việt hoàn hảo không lỗi font.
+    """
+    if not (request.user.is_owner() or request.user.is_staff):
+        return HttpResponseForbidden("Chỉ Chủ sân mới có quyền xuất báo cáo doanh thu.")
+
+    import csv
+    from django.http import HttpResponse
+
+    my_facilities = Facility.objects.filter(owner=request.user)
+    facility_id = request.GET.get('facility_id', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    target_facilities = my_facilities
+    if facility_id:
+        target_facilities = my_facilities.filter(id=facility_id)
+
+    bookings_qs = Booking.objects.filter(
+        slots__court__facility__in=target_facilities,
+        status=BookingStatus.CONFIRMED
+    ).distinct().select_related('customer').prefetch_related('slots__court__facility').order_by('-created_at')
+
+    if date_from:
+        bookings_qs = bookings_qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        bookings_qs = bookings_qs.filter(created_at__date__lte=date_to)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    timestamp_str = timezone.now().strftime('%Y%m%d_%H%M')
+    response['Content-Disposition'] = f'attachment; filename="Bao_Cao_Doanh_Thu_SportBook_{timestamp_str}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['BÁO CÁO THỐNG KÊ DOANH THU ĐẶT SÂN - HỆ THỐNG SPORTBOOK'])
+    writer.writerow(['Chủ sân / Quản trị:', request.user.get_full_name() or request.user.username])
+    writer.writerow(['Thời gian kết xuất:', timezone.now().strftime('%H:%M ngày %d/%m/%Y')])
+    writer.writerow(['Khoảng thời gian:', f"{date_from or 'Từ đầu'} đến {date_to or 'Hiện tại'}"])
+    writer.writerow([])
+    writer.writerow(['STT', 'Mã Đơn Đặt', 'Thời Gian Tạo', 'Khách Hàng', 'Số Điện Thoại', 'Cụm Sân', 'Sân Thi Đấu', 'Khung Giờ Đặt', 'Doanh Thu (VNĐ)', 'Trạng Thái'])
+
+    total_revenue = Decimal('0')
+    count = 0
+    for idx, b in enumerate(bookings_qs, start=1):
+        count += 1
+        total_revenue += b.total_amount
+        slots = b.slots.select_related('court__facility').all()
+        courts_str = ", ".join(set(s.court.court_name for s in slots))
+        times_str = ", ".join(f"{s.date.strftime('%d/%m')} ({s.start_time.strftime('%H:%M')}-{s.end_time.strftime('%H:%M')})" for s in slots)
+        fac_name = slots[0].court.facility.name if slots else "N/A"
+
+        writer.writerow([
+            idx,
+            b.booking_code,
+            b.created_at.strftime('%d/%m/%Y %H:%M'),
+            b.display_customer_name,
+            b.display_customer_phone,
+            fac_name,
+            courts_str,
+            times_str,
+            int(b.total_amount),
+            b.get_status_display()
+        ])
+
+    writer.writerow([])
+    writer.writerow(['TỔNG KẾT:', f'Số đơn hoàn tất: {count}', '', '', '', '', '', 'TỔNG DOANH THU (VNĐ):', int(total_revenue)])
+
+    return response
+
+
+@login_required
+def owner_export_revenue_pdf(request):
+    """
+    Giai đoạn 3: Giao diện In ấn / Xuất Báo Cáo Doanh Thu chuẩn khổ giấy A4 (Print to PDF).
+    Bao gồm đầy đủ tiêu đề, kỳ báo cáo, bảng kê chi tiết, tổng kết tài chính và chữ ký phê duyệt.
+    """
+    if not (request.user.is_owner() or request.user.is_staff):
+        return HttpResponseForbidden("Chỉ Chủ sân mới có quyền xem báo cáo doanh thu.")
+
+    my_facilities = Facility.objects.filter(owner=request.user)
+    facility_id = request.GET.get('facility_id', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    target_facilities = my_facilities
+    if facility_id:
+        target_facilities = my_facilities.filter(id=facility_id)
+
+    bookings_qs = Booking.objects.filter(
+        slots__court__facility__in=target_facilities,
+        status=BookingStatus.CONFIRMED
+    ).distinct().select_related('customer').prefetch_related('slots__court__facility').order_by('-created_at')
+
+    if date_from:
+        bookings_qs = bookings_qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        bookings_qs = bookings_qs.filter(created_at__date__lte=date_to)
+
+    total_revenue = sum(b.total_amount for b in bookings_qs)
+    total_count = bookings_qs.count()
+
+    context = {
+        'bookings': bookings_qs,
+        'total_revenue': total_revenue,
+        'total_revenue_formatted': f"{int(total_revenue):,} đ".replace(',', '.'),
+        'total_count': total_count,
+        'date_from': date_from,
+        'date_to': date_to,
+        'export_time': timezone.now().strftime('%H:%M ngày %d/%m/%Y'),
+        'owner_name': request.user.get_full_name() or request.user.username,
+        'my_facilities': my_facilities,
+        'facility_selected': my_facilities.filter(id=facility_id).first() if facility_id else None,
+    }
+    return render(request, 'bookings/owner_revenue_report_print.html', context)
 
 
 @login_required

@@ -664,10 +664,25 @@ def owner_dashboard(request):
         daily_labels.append(d.strftime('%d/%m'))
         daily_revenues.append(int(rev))
 
+    from facilities.models import FacilityReview
+
+    active_tab = request.GET.get('tab', 'orders')
+    reviews_qs = FacilityReview.objects.filter(
+        facility__in=target_facilities
+    ).select_related('facility', 'booking').order_by('-created_at')
+
+    # Cụm sân đang được chọn để cấu hình
+    config_facility = target_facilities.first()
+    if facility_id:
+        config_facility = my_facilities.filter(id=facility_id).first() or config_facility
+
     context = {
         'my_facilities': my_facilities,
         'selected_facility_id': facility_id,
+        'config_facility': config_facility,
+        'active_tab': active_tab,
         'bookings': bookings_qs,
+        'reviews': reviews_qs,
         'status_filter': status_filter,
         'date_from': date_from,
         'date_to': date_to,
@@ -834,6 +849,73 @@ def owner_approve_booking(request, booking_code):
 
 
 @login_required
+def owner_update_facility(request):
+    """
+    Cập nhật thông tin cụm sân, thông tin ngân hàng VietQR và ảnh bìa ngay trên giao diện Chủ Sân.
+    """
+    if not (request.user.is_owner() or request.user.is_staff):
+        return HttpResponseForbidden("Chỉ Chủ sân mới có quyền cập nhật thông tin sân.")
+
+    if request.method != 'POST':
+        return redirect('bookings:owner_dashboard')
+
+    facility_id = request.POST.get('facility_id')
+    facility = Facility.objects.filter(id=facility_id).first()
+    if not facility:
+        messages.error(request, "Không tìm thấy cụm sân.")
+        return redirect('bookings:owner_dashboard')
+
+    if facility.owner != request.user and not request.user.is_staff:
+        return HttpResponseForbidden("Bạn không có quyền quản lý cụm sân này.")
+
+    facility.name = request.POST.get('name', facility.name).strip()
+    facility.address = request.POST.get('address', facility.address).strip()
+    facility.phone_contact = request.POST.get('phone_contact', facility.phone_contact).strip()
+    facility.bank_name = request.POST.get('bank_name', facility.bank_name).strip()
+    facility.bank_account_no = request.POST.get('bank_account_no', facility.bank_account_no).strip()
+    facility.bank_account_name = request.POST.get('bank_account_name', facility.bank_account_name).strip()
+
+    if 'image' in request.FILES:
+        facility.image = request.FILES['image']
+    if 'custom_qr_image' in request.FILES:
+        facility.custom_qr_image = request.FILES['custom_qr_image']
+
+    facility.save()
+    messages.success(request, f"Đã lưu thành công thông tin & cấu hình VietQR cho sân '{facility.name}'!")
+    return redirect(f"{request.POST.get('next') or '/bookings/dashboard/'}?tab=settings&facility_id={facility.id}")
+
+
+@login_required
+def owner_reply_review(request, review_id):
+    """
+    Chủ sân phản hồi đánh giá của khách hàng ngay trên giao diện web.
+    """
+    if not (request.user.is_owner() or request.user.is_staff):
+        return HttpResponseForbidden("Chỉ Chủ sân mới có quyền phản hồi đánh giá.")
+
+    if request.method != 'POST':
+        return redirect('bookings:owner_dashboard')
+
+    from facilities.models import FacilityReview
+    review = FacilityReview.objects.filter(id=review_id).first()
+    if not review:
+        messages.error(request, "Không tìm thấy đánh giá.")
+        return redirect('bookings:owner_dashboard')
+
+    if review.facility.owner != request.user and not request.user.is_staff:
+        return HttpResponseForbidden("Bạn không có quyền quản lý cụm sân này.")
+
+    reply_text = request.POST.get('owner_reply', '').strip()
+    review.owner_reply = reply_text
+    review.owner_reply_at = timezone.now() if reply_text else None
+    review.save()
+
+    messages.success(request, "Đã cập nhật phản hồi của Chủ sân thành công!")
+    return redirect(f"{request.POST.get('next') or '/bookings/dashboard/'}?tab=reviews")
+
+
+
+@login_required
 def owner_reject_booking(request, booking_code):
     """
     Chủ sân từ chối đơn đặt (Chưa nhận tiền, Bill lỗi) -> Hủy và giải phóng slot
@@ -864,3 +946,70 @@ def owner_reject_booking(request, booking_code):
     if next_url:
         return redirect(next_url)
     return redirect('bookings:owner_dashboard')
+
+
+@login_required
+def owner_update_facility(request):
+    """
+    Cập nhật thông tin cụm sân, thông tin ngân hàng VietQR và ảnh bìa ngay trên giao diện Chủ Sân.
+    """
+    if not (request.user.is_owner() or request.user.is_staff):
+        return HttpResponseForbidden("Chỉ Chủ sân mới có quyền cập nhật thông tin sân.")
+
+    if request.method != 'POST':
+        return redirect('bookings:owner_dashboard')
+
+    facility_id = request.POST.get('facility_id')
+    facility = Facility.objects.filter(id=facility_id).first()
+    if not facility:
+        messages.error(request, "Không tìm thấy cụm sân.")
+        return redirect('bookings:owner_dashboard')
+
+    if facility.owner != request.user and not request.user.is_staff:
+        return HttpResponseForbidden("Bạn không có quyền quản lý cụm sân này.")
+
+    facility.name = request.POST.get('name', facility.name).strip()
+    facility.address = request.POST.get('address', facility.address).strip()
+    facility.phone_contact = request.POST.get('phone_contact', facility.phone_contact).strip()
+    facility.bank_name = request.POST.get('bank_name', facility.bank_name).strip()
+    facility.bank_account_no = request.POST.get('bank_account_no', facility.bank_account_no).strip()
+    facility.bank_account_name = request.POST.get('bank_account_name', facility.bank_account_name).strip()
+
+    if 'image' in request.FILES:
+        facility.image = request.FILES['image']
+    if 'custom_qr_image' in request.FILES:
+        facility.custom_qr_image = request.FILES['custom_qr_image']
+
+    facility.save()
+    messages.success(request, f"Đã lưu thành công thông tin & cấu hình VietQR cho sân '{facility.name}'!")
+    return redirect(f"{request.POST.get('next') or '/bookings/dashboard/'}?tab=settings&facility_id={facility.id}")
+
+
+@login_required
+def owner_reply_review(request, review_id):
+    """
+    Chủ sân phản hồi đánh giá của khách hàng ngay trên giao diện web.
+    """
+    if not (request.user.is_owner() or request.user.is_staff):
+        return HttpResponseForbidden("Chỉ Chủ sân mới có quyền phản hồi đánh giá.")
+
+    if request.method != 'POST':
+        return redirect('bookings:owner_dashboard')
+
+    from facilities.models import FacilityReview
+    review = FacilityReview.objects.filter(id=review_id).first()
+    if not review:
+        messages.error(request, "Không tìm thấy đánh giá.")
+        return redirect('bookings:owner_dashboard')
+
+    if review.facility.owner != request.user and not request.user.is_staff:
+        return HttpResponseForbidden("Bạn không có quyền quản lý cụm sân này.")
+
+    reply_text = request.POST.get('owner_reply', '').strip()
+    review.owner_reply = reply_text
+    review.owner_reply_at = timezone.now() if reply_text else None
+    review.save()
+
+    messages.success(request, "Đã cập nhật phản hồi của Chủ sân thành công!")
+    return redirect(f"{request.POST.get('next') or '/bookings/dashboard/'}?tab=reviews")
+

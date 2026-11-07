@@ -20,6 +20,8 @@ urlpatterns = [
     path('dashboard/', views.owner_dashboard, name='owner_dashboard'),
     path('owner/approve/<str:booking_code>/', views.owner_approve_booking, name='owner_approve'),
     path('owner/reject/<str:booking_code>/', views.owner_reject_booking, name='owner_reject'),
+    path('owner/facility/update/', views.owner_update_facility, name='owner_update_facility'),
+    path('owner/review/<uuid:review_id>/reply/', views.owner_reply_review, name='owner_reply_review'),
     path('owner/export/csv/', views.owner_export_revenue_csv, name='owner_export_revenue_csv'),
     path('owner/export/pdf/', views.owner_export_revenue_pdf, name='owner_export_revenue_pdf'),
 ]

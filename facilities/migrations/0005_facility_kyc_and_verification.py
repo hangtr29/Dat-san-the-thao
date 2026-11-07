@@ -5,6 +5,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('facilities', '0004_facility_image_custom_qr_and_review_reply'),
+        ('facilities', '0004_facility_latitude_facility_longitude'),
     ]
 
     operations = [

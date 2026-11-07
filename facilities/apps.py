@@ -11,6 +11,10 @@ class FacilitiesConfig(AppConfig):
         Đảm bảo bảng `facilities_facilityreview` và các trường mở rộng
         (ảnh sân, QR tùy chọn, phản hồi của chủ sân) luôn sẵn sàng trong SQLite.
         """
+        import sys
+        if any(cmd in sys.argv for cmd in ['makemigrations', 'migrate', 'collectstatic', 'check']):
+            return
+
         from django.db import connection
         try:
             with connection.cursor() as cursor:

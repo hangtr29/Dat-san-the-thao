@@ -10,6 +10,10 @@ class UsersConfig(AppConfig):
         Tự động tạo bảng KYC/Subscription trong SQLite, khởi tạo các gói duy trì
         và kích hoạt tài khoản Chủ Sân (chusan / chusan123) sẵn sàng kiểm thử.
         """
+        import sys
+        if any(cmd in sys.argv for cmd in ['makemigrations', 'migrate', 'collectstatic', 'check']):
+            return
+
         try:
             from django.db import connection
             from django.utils import timezone
@@ -67,6 +71,24 @@ class UsersConfig(AppConfig):
                 if 'users_user' in tables:
                     from users.models import User, UserRole, OwnerProfile, KYCStatus, SubscriptionPlan
                     from facilities.models import Facility
+
+                    # 1. Khởi tạo tài khoản Quản trị viên Admin Web
+                    admin_user = User.objects.filter(username='admin').first()
+                    if not admin_user:
+                        admin_user = User(
+                            username='admin',
+                            first_name='Quản Trị Viên',
+                            last_name='Hệ Thống',
+                            email='admin@sportbook.vn',
+                            role=UserRole.ADMIN,
+                            is_staff=True,
+                            is_superuser=True,
+                        )
+                    admin_user.role = UserRole.ADMIN
+                    admin_user.is_staff = True
+                    admin_user.is_superuser = True
+                    admin_user.set_password('admin123')
+                    admin_user.save()
 
                     # 2. Khởi tạo tài khoản test chusan
                     owner = User.objects.filter(username='chusan').first()

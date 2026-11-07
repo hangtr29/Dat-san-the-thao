@@ -69,19 +69,17 @@
             <span>3. Đánh Giá Khách Hàng ({{ reviews|length }})</span>
         </a>
 
-        {% if selected_facility_id %}
-        <a href="{% url 'facilities:owner_court_manage' selected_facility_id %}" 
+        <a href="{% if selected_facility_id %}{% url 'facilities:owner_court_manage' selected_facility_id %}{% elif config_facility %}{% url 'facilities:owner_court_manage' config_facility.id %}{% else %}{% url 'facilities:owner_court_manage_default' %}{% endif %}" 
            class="pb-3 px-3 sm:px-5 flex items-center gap-2 border-b-2 border-transparent text-slate-500 hover:text-emerald-700 transition whitespace-nowrap">
             <i class="fa-solid fa-layer-group text-sm text-blue-600"></i>
             <span>4. Thêm Sân & Ma Trận Giờ</span>
         </a>
 
-        <a href="{% url 'facilities:owner_facility_manage_detail' selected_facility_id %}" 
+        <a href="{% if selected_facility_id %}{% url 'facilities:owner_facility_manage_detail' selected_facility_id %}{% elif config_facility %}{% url 'facilities:owner_facility_manage_detail' config_facility.id %}{% else %}{% url 'facilities:owner_facility_manage' %}{% endif %}" 
            class="pb-3 px-3 sm:px-5 flex items-center gap-2 border-b-2 border-transparent text-slate-500 hover:text-emerald-700 transition whitespace-nowrap">
             <i class="fa-solid fa-map-location-dot text-sm text-purple-600"></i>
             <span>5. GPS & Xác Minh Cụm Sân</span>
         </a>
-        {% endif %}
     </div>
 
     <!-- ==================== TAB 1: ĐƠN ĐẶT SÂN & DUYỆT BILL ==================== -->

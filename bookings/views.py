@@ -676,9 +676,11 @@ def owner_dashboard(request):
     if facility_id:
         config_facility = my_facilities.filter(id=facility_id).first() or config_facility
 
+    current_facility_id = facility_id or (str(config_facility.id) if config_facility else '')
+
     context = {
         'my_facilities': my_facilities,
-        'selected_facility_id': facility_id,
+        'selected_facility_id': current_facility_id,
         'config_facility': config_facility,
         'active_tab': active_tab,
         'bookings': bookings_qs,

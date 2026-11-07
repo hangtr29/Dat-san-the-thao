@@ -11,6 +11,7 @@ urlpatterns = [
     # Phân hệ Nghiệp vụ Chủ Sân (Owner Subsystem)
     path('owner/facility/manage/', views_owner.FacilityManageView.as_view(), name='owner_facility_manage'),
     path('owner/facility/<uuid:facility_id>/manage/', views_owner.FacilityManageView.as_view(), name='owner_facility_manage_detail'),
+    path('owner/courts/', views_owner.CourtCreateUpdateView.as_view(), name='owner_court_manage_default'),
     path('owner/facility/<uuid:facility_id>/courts/', views_owner.CourtCreateUpdateView.as_view(), name='owner_court_manage'),
     path('owner/bookings/approval/', views_owner.OwnerBookingApprovalView.as_view(), name='owner_booking_approval'),
 

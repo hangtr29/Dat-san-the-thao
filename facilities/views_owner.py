@@ -126,9 +126,20 @@ class CourtCreateUpdateView(OwnerBaseView):
     """
     template_name = 'owner/court_manage.html'
 
-    def get(self, request, facility_id):
+    def get_facility(self, request, facility_id=None):
         my_facilities = self.get_owner_facilities(request.user)
-        facility = get_object_or_404(my_facilities, id=facility_id)
+        if facility_id:
+            facility = get_object_or_404(my_facilities, id=facility_id)
+        else:
+            facility = my_facilities.first()
+        return facility, my_facilities
+
+    def get(self, request, facility_id=None):
+        facility, my_facilities = self.get_facility(request, facility_id)
+        if not facility:
+            messages.warning(request, "Bạn chưa có cụm sân nào để quản lý sân con.")
+            return redirect('facilities:facility_list')
+
         categories = SportCategory.objects.all()
         courts = facility.courts.select_related('category').all()
         court_id = request.GET.get('edit_court')
@@ -145,9 +156,10 @@ class CourtCreateUpdateView(OwnerBaseView):
         }
         return render(request, self.template_name, context)
 
-    def post(self, request, facility_id):
-        my_facilities = self.get_owner_facilities(request.user)
-        facility = get_object_or_404(my_facilities, id=facility_id)
+    def post(self, request, facility_id=None):
+        facility, my_facilities = self.get_facility(request, facility_id)
+        if not facility:
+            return HttpResponseForbidden("Không tìm thấy cụm sân.")
 
         court_id = request.POST.get('court_id')
         court_name = request.POST.get('court_name', '').strip()

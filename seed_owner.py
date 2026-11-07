@@ -8,25 +8,24 @@ Script khởi tạo nhanh tài khoản Chủ Sân (OWNER) phục vụ kiểm th�
 import os
 import django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sportbook.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from users.models import User, UserRole
 from facilities.models import Facility
 
 def seed_owner():
-    owner, created = User.objects.get_or_create(
-        username='chusan',
-        defaults={
-            'first_name': 'Chủ Sân',
-            'last_name': 'SportBook',
-            'email': 'chusan@sportbook.vn',
-            'phone': '0988112233',
-            'role': UserRole.OWNER,
-            'is_staff': True,
-            'is_superuser': True,
-        }
-    )
+    owner = User.objects.filter(username='chusan').first()
+    if not owner:
+        owner = User(
+            username='chusan',
+            first_name='Chủ Sân',
+            last_name='SportBook',
+            email='chusan@sportbook.vn',
+            role=UserRole.OWNER,
+            is_staff=True,
+            is_superuser=True,
+        )
     owner.role = UserRole.OWNER
     owner.is_staff = True
     owner.is_superuser = True

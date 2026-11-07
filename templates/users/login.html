@@ -6,7 +6,8 @@
 <div class="max-w-md mx-auto my-12 px-4">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 mb-3 shadow-inner">
+            <div
+                class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 mb-3 shadow-inner">
                 <i class="fa-solid fa-right-to-bracket text-2xl"></i>
             </div>
             <h2 class="text-2xl font-extrabold text-slate-800">Đăng Nhập</h2>
@@ -37,17 +38,44 @@
                 </div>
             </div>
 
-            <button type="submit" 
-                class="w-full py-3 px-4 rounded-xl text-white font-bold bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200 transition duration-150">
+            <button type="submit"
+                class="w-full py-3 px-4 rounded-xl text-white font-bold bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200 transition duration-150 cursor-pointer">
                 Đăng Nhập
             </button>
         </form>
 
+        <!-- HỘP TRỢ GIÚP ĐĂNG NHẬP NHANH TÀI KHOẢN CHỦ SÂN TEST -->
+        <div class="mt-5 p-3.5 bg-amber-50/80 border border-amber-200/90 rounded-2xl">
+            <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                    <i class="fa-solid fa-store text-amber-600"></i> Tài khoản Chủ Sân (Test):
+                </span>
+                <button type="button" onclick="quickFillOwner()"
+                    class="text-[11px] font-bold text-emerald-700 bg-white hover:bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-300 transition cursor-pointer">
+                    ⚡ Điền tự động
+                </button>
+            </div>
+            <div class="text-[11px] text-slate-600 space-y-0.5 font-medium">
+                <div>Tài khoản: <code class="font-bold text-slate-800 bg-amber-100/60 px-1 rounded">chusan</code></div>
+                <div>Mật khẩu: <code class="font-bold text-slate-800 bg-amber-100/60 px-1 rounded">chusan123</code>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function quickFillOwner() {
+                const u = document.querySelector('input[name="username"]');
+                const p = document.querySelector('input[name="password"]');
+                if (u) u.value = 'chusan';
+                if (p) p.value = 'chusan123';
+            }
+        </script>
+
         <div class="mt-6 pt-6 border-t border-slate-100 text-center text-sm text-slate-600">
-            Chưa có tài khoản? 
-            <a href="{% url 'users:register' %}" class="font-bold text-emerald-600 hover:text-emerald-700">Đăng ký ngay</a>
+            Chưa có tài khoản?
+            <a href="{% url 'users:register' %}" class="font-bold text-emerald-600 hover:text-emerald-700">Đăng ký
+                ngay</a>
         </div>
     </div>
 </div>
 {% endblock %}
-

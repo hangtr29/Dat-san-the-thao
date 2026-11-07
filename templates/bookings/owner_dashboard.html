@@ -27,8 +27,24 @@
             </p>
         </div>
 
-        <!-- CẶP NÚT XUẤT BÁO CÁO DOANH THU (EXCEL/CSV & PDF) -->
-        <div class="flex flex-wrap items-center gap-3">
+        <!-- NHÓM NÚT TÁC VỤ CHỦ SÂN: CẤU HÌNH SÂN, VIETQR, ĐÁNH GIÁ & XUẤT BÁO CÁO -->
+        <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Nút Cấu hình Sân & VietQR -->
+            <a href="/admin/facilities/facility/" target="_blank"
+               class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-xs uppercase tracking-wider shadow-2xs hover:shadow-sm transition flex items-center gap-2 cursor-pointer"
+               title="Chỉnh sửa thông tin sân, upload ảnh bìa sân, đổi tài khoản ngân hàng hoặc upload ảnh QR code riêng">
+                <i class="fa-solid fa-qrcode text-emerald-600"></i>
+                <span>Cấu hình Sân & VietQR</span>
+            </a>
+
+            <!-- Nút Quản lý & Phản hồi Đánh giá -->
+            <a href="/admin/facilities/facilityreview/" target="_blank"
+               class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-xs uppercase tracking-wider shadow-2xs hover:shadow-sm transition flex items-center gap-2 cursor-pointer"
+               title="Xem nhận xét của khách và viết phản hồi của chủ sân">
+                <i class="fa-solid fa-comment-dots text-amber-500"></i>
+                <span>Phản Hồi Đánh Giá</span>
+            </a>
+
             <!-- Nút 1: Xuất Excel / CSV -->
             <a href="{% url 'bookings:owner_export_revenue_csv' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}" 
                class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">

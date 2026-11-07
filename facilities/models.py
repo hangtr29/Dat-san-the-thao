@@ -58,6 +58,10 @@ class Facility(models.Model):
     bank_name = models.CharField(max_length=50, verbose_name="Tên ngân hàng (VD: MBBank, VCB, ICB)")
     bank_account_no = models.CharField(max_length=50, verbose_name="Số tài khoản nhận tiền")
     bank_account_name = models.CharField(max_length=150, verbose_name="Tên chủ tài khoản")
+
+    # Ảnh đại diện cụm sân và ảnh mã QR tùy chọn do chủ sân tự upload
+    image = models.ImageField(upload_to='facilities/', null=True, blank=True, verbose_name="Ảnh bìa cụm sân")
+    custom_qr_image = models.ImageField(upload_to='qrcodes/', null=True, blank=True, verbose_name="Ảnh mã QR thanh toán (Tùy chọn)")
     
     open_time = models.TimeField(default=time(6, 0), verbose_name="Giờ mở cửa")
     close_time = models.TimeField(default=time(22, 0), verbose_name="Giờ đóng cửa")
@@ -73,9 +77,16 @@ class Facility(models.Model):
 
     def generate_vietqr_url(self, amount: int, memo: str) -> str:
         """
-        Tính đóng gói (Encapsulation): Tự động sinh link ảnh VietQR API
-        theo chuẩn https://img.vietqr.io/image/{bank_id}-{account_no}-compact.png?amount={total}&addInfo={booking_code}
+        Tính đóng gói (Encapsulation):
+        Nếu chủ sân đã tải lên ảnh mã QR cá nhân/cửa hàng thì ưu tiên sử dụng.
+        Nếu không, tự động sinh mã VietQR API chuẩn động theo thông tin ngân hàng.
         """
+        if self.custom_qr_image:
+            try:
+                return self.custom_qr_image.url
+            except Exception:
+                pass
+
         bank_code = self.bank_name.strip().lower()
         # Chuẩn hóa một số tên ngân hàng thông dụng sang mã chuẩn VietQR
         bank_map = {
@@ -102,6 +113,11 @@ class Facility(models.Model):
 
     def get_cover_image_url(self) -> str:
         """Ảnh đại diện sân thi đấu sống động chuẩn phong cách thể thao Alobo"""
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                pass
         name_lower = self.name.lower()
         if 'pickleball' in name_lower:
             return "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80"
@@ -253,6 +269,8 @@ class FacilityReview(models.Model):
         verbose_name="Số sao đánh giá (1-5)"
     )
     comment = models.TextField(verbose_name="Nhận xét chất lượng sân")
+    owner_reply = models.TextField(blank=True, null=True, verbose_name="Phản hồi của Chủ sân")
+    owner_reply_at = models.DateTimeField(blank=True, null=True, verbose_name="Thời gian chủ sân phản hồi")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Thời gian đánh giá")
 
     class Meta:

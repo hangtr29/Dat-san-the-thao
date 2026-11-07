@@ -415,6 +415,17 @@ select-none{% endblock %}
                     <p class="text-slate-600 leading-relaxed pl-9">
                         {{ rev.comment }}
                     </p>
+                    {% if rev.owner_reply %}
+                    <div class="ml-9 mt-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-950">
+                        <div class="flex items-center gap-1.5 font-bold text-[11px] text-emerald-800 mb-1">
+                            <i class="fa-solid fa-reply text-[10px]"></i> Phản hồi từ Chủ sân:
+                            {% if rev.owner_reply_at %}
+                            <span class="text-[10px] text-emerald-600 font-normal">({{ rev.owner_reply_at|date:"d/m/Y H:i" }})</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-slate-700 text-xs italic">{{ rev.owner_reply }}</p>
+                    </div>
+                    {% endif %}
                 </div>
                 {% empty %}
                 <div class="py-12 text-center text-slate-400">

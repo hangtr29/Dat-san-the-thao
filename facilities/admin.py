@@ -29,6 +29,18 @@ class FacilityAdmin(admin.ModelAdmin):
     list_filter = ('active_status', 'bank_name')
     search_fields = ('name', 'address', 'phone_contact', 'bank_account_no', 'bank_account_name')
     inlines = [CourtInline, PricingRuleInline, FacilityReviewInline]
+    fieldsets = (
+        ("Thông tin chung", {
+            'fields': ('name', 'owner', 'address', 'phone_contact', 'image', 'active_status')
+        }),
+        ("Cấu hình Ngân hàng & Mã QR Thanh toán (VietQR)", {
+            'fields': ('bank_name', 'bank_account_no', 'bank_account_name', 'custom_qr_image'),
+            'description': "Hệ thống tự động sinh VietQR chuẩn Napas 247 theo thông tin ngân hàng. Nếu tải lên 'Ảnh mã QR', hệ thống sẽ ưu tiên hiển thị ảnh đó."
+        }),
+        ("Khung giờ mở cửa & Tọa độ", {
+            'fields': ('open_time', 'close_time', 'latitude', 'longitude')
+        }),
+    )
 
     def average_rating_display(self, obj):
         return f"{obj.get_average_rating()} ★ ({obj.get_total_reviews()})"
@@ -47,7 +59,19 @@ class PricingRuleAdmin(admin.ModelAdmin):
 
 @admin.register(FacilityReview)
 class FacilityReviewAdmin(admin.ModelAdmin):
-    list_display = ('facility', 'rating', 'reviewer_name', 'booking', 'created_at')
+    list_display = ('facility', 'rating', 'reviewer_name', 'booking', 'has_owner_reply_display', 'created_at')
     list_filter = ('rating', 'facility')
-    search_fields = ('reviewer_name', 'comment', 'facility__name', 'booking__booking_code')
+    search_fields = ('reviewer_name', 'comment', 'owner_reply', 'facility__name', 'booking__booking_code')
     readonly_fields = ('created_at',)
+    fields = ('facility', 'booking', 'user', 'reviewer_name', 'rating', 'comment', 'owner_reply', 'owner_reply_at', 'created_at')
+
+    def has_owner_reply_display(self, obj):
+        return "✅ Đã phản hồi" if obj.owner_reply else "⏳ Chưa phản hồi"
+    has_owner_reply_display.short_description = "Phản hồi chủ sân"
+
+    def save_model(self, request, obj, form, change):
+        if obj.owner_reply and not obj.owner_reply_at:
+            from django.utils import timezone
+            obj.owner_reply_at = timezone.now()
+        super().save_model(request, obj, form, change)
+

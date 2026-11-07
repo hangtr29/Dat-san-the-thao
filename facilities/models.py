@@ -38,10 +38,16 @@ class SportCategory(models.Model):
     def __str__(self):
         return self.name
 
+class FacilityStatus(models.TextChoices):
+    PENDING_REVIEW = 'PENDING_REVIEW', 'Chờ duyệt hồ sơ'
+    ACTIVE = 'ACTIVE', 'Đang hoạt động'
+    SUSPENDED = 'SUSPENDED', 'Tạm ngưng hoạt động'
+
+
 class Facility(models.Model):
     """
     Tính đóng gói (Encapsulation): Cụm sân thể thao.
-    Đóng gói thông tin tài khoản ngân hàng của Chủ sân để phục vụ cơ chế sinh VietQR động.
+    Đóng gói thông tin tọa độ GPS, tích xanh xác thực KYC, điểm uy tín và tài khoản ngân hàng.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(
@@ -53,6 +59,18 @@ class Facility(models.Model):
     name = models.CharField(max_length=255, verbose_name="Tên cụm sân", db_index=True)
     address = models.TextField(verbose_name="Địa chỉ cụ thể")
     phone_contact = models.CharField(max_length=20, verbose_name="Hotline / Zalo liên hệ")
+    hotline = models.CharField(max_length=20, blank=True, default='', verbose_name="Hotline chính thức")
+
+    # Mục tiêu 1: Chống sân ma - Xác thực thực địa & Điểm uy tín
+    is_verified = models.BooleanField(default=True, verbose_name="Đã xác thực (Tích xanh)", db_index=True)
+    reputation_score = models.FloatField(default=5.0, verbose_name="Điểm uy tín (1-5)")
+    status = models.CharField(
+        max_length=20,
+        choices=FacilityStatus.choices,
+        default=FacilityStatus.ACTIVE,
+        verbose_name="Trạng thái hoạt động",
+        db_index=True
+    )
     
     # Thông tin tài khoản ngân hàng của Chủ sân (Không qua trung gian giữ tiền)
     bank_name = models.CharField(max_length=50, verbose_name="Tên ngân hàng (VD: MBBank, VCB, ICB)")
@@ -74,6 +92,23 @@ class Facility(models.Model):
     class Meta:
         verbose_name = "Cụm sân"
         verbose_name_plural = "Danh sách cụm sân"
+
+    def can_accept_bookings(self) -> bool:
+        """
+        Tính đóng gói (Encapsulation): Kiểm tra cơ sở có đủ điều kiện nhận khách hay không.
+        Điều kiện:
+        1. Cụm sân ở trạng thái ACTIVE và active_status == True.
+        2. Chủ sân sở hữu phải có gói duy trì nền tảng còn hạn (is_subscription_active() == True).
+        """
+        if self.status != FacilityStatus.ACTIVE or not self.active_status:
+            return False
+        if hasattr(self.owner, 'owner_profile'):
+            return self.owner.owner_profile.is_subscription_active()
+        return True
+
+    def get_display_hotline(self) -> str:
+        """Lấy số hotline chuẩn hiển thị cho khách"""
+        return self.hotline or self.phone_contact
 
     def generate_vietqr_url(self, amount: int, memo: str) -> str:
         """

@@ -5,23 +5,25 @@ from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from .models import Facility, SportCategory, Court, PricingRule
+from .models import Facility, SportCategory, Court, PricingRule, FacilityStatus
 from bookings.models import BookingSlot, BookingStatus
 from bookings.services import SlotGeneratorService, CleanExpiredLocksService
 
 def search_suggest(request):
     """
     API Gợi ý tìm kiếm (Auto-suggest) theo thời gian thực khi người dùng gõ từ khóa.
-    Trả về danh sách Cụm sân và Môn thể thao phù hợp.
+    Chỉ hiển thị các cụm sân đã được xác minh tích xanh (is_verified=True) và đang hoạt động (ACTIVE).
     """
     query = request.GET.get('q', '').strip()
     if not query or len(query) < 1:
         return JsonResponse({'facilities': [], 'categories': []})
 
-    # 1. Tìm cụm sân theo tên hoặc địa chỉ
+    # 1. Tìm cụm sân theo tên hoặc địa chỉ (Chống sân ma)
     facilities = Facility.objects.filter(
         Q(name__icontains=query) | Q(address__icontains=query),
-        active_status=True
+        active_status=True,
+        is_verified=True,
+        status=FacilityStatus.ACTIVE
     ).prefetch_related('courts')[:5]
 
     fac_data = []
@@ -56,6 +58,8 @@ def search_suggest(request):
 def facility_list(request):
     """
     Trang chủ & Danh sách Cụm sân Thể thao (Theo phong cách Alobo).
+    Mục tiêu 1: Chỉ cho phép các sân đã xác minh tích xanh (is_verified=True)
+    và đang hoạt động (status='ACTIVE') xuất hiện trên công cụ tìm kiếm của khách hàng.
     """
     try:
         CleanExpiredLocksService.cleanup()
@@ -66,8 +70,15 @@ def facility_list(request):
     selected_category_slug = request.GET.get('category')
     search_query = request.GET.get('q', '').strip()
 
-    total_facilities_count = Facility.objects.filter(active_status=True).count()
-    facilities = Facility.objects.filter(active_status=True).prefetch_related('courts')
+    # Bộ lọc chống sân ma: Phải có tích xanh và ở trạng thái ACTIVE
+    base_qs = Facility.objects.filter(
+        active_status=True,
+        is_verified=True,
+        status=FacilityStatus.ACTIVE
+    )
+
+    total_facilities_count = base_qs.count()
+    facilities = base_qs.prefetch_related('courts')
 
     if selected_category_slug:
         facilities = facilities.filter(courts__category__slug=selected_category_slug).distinct()

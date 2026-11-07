@@ -114,8 +114,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                     <div class="flex justify-between items-center">
                         <span class="text-emerald-300 font-semibold">Số tài khoản:</span>
                         <div class="flex items-center gap-2">
-                            <span class="font-black font-mono text-[#facc15] text-sm sm:text-base">{{ bank_account_no
-                                }}</span>
+                            <span class="font-black font-mono text-[#facc15] text-sm sm:text-base">{{ bank_account_no }}</span>
                             <button type="button" onclick="copyToClipboard('{{ bank_account_no }}')"
                                 class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer"
                                 title="Sao chép số tài khoản">
@@ -132,8 +131,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                     <div class="flex justify-between items-center">
                         <span class="text-emerald-300 font-semibold">Số tiền thanh toán:</span>
                         <div class="flex items-center gap-2">
-                            <span class="font-black text-[#facc15] text-base sm:text-lg">{{ total_amount_formatted
-                                }}</span>
+                            <span class="font-black text-[#facc15] text-base sm:text-lg">{{ total_amount_formatted }}</span>
                             <button type="button" onclick="copyToClipboard('{{ total_amount_formatted }}')"
                                 class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer"
                                 title="Sao chép số tiền">
@@ -145,9 +143,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                     <div class="flex justify-between items-center pt-2 border-t border-emerald-800/60">
                         <span class="text-emerald-300 font-semibold">Nội dung (Bắt buộc):</span>
                         <div class="flex items-center gap-2">
-                            <span
-                                class="font-black font-mono text-slate-900 bg-[#facc15] px-2.5 py-0.5 rounded text-xs sm:text-sm shadow-xs">{{
-                                booking_code }}</span>
+                            <span class="font-black font-mono text-slate-900 bg-[#facc15] px-2.5 py-0.5 rounded text-xs sm:text-sm shadow-xs">{{ booking_code }}</span>
                             <button type="button" onclick="copyToClipboard('{{ booking_code }}')"
                                 class="text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition cursor-pointer"
                                 title="Sao chép nội dung">
@@ -200,8 +196,7 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         <div
                             class="flex justify-between items-center p-2.5 rounded-xl bg-[#023319] border border-emerald-800/60">
                             <div>
-                                <span class="font-extrabold text-white">{{ slot.facility_name }} - {{ slot.court_name
-                                    }}</span>
+                                <span class="font-extrabold text-white">{{ slot.facility_name }} - {{ slot.court_name }}</span>
                                 <span class="text-emerald-300 block text-[11px] mt-0.5">
                                     {{ slot.date_str }} | {{ slot.time_range }}
                                 </span>

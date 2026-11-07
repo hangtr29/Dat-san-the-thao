@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import SportCategory, Facility, Court, PricingRule, FacilityReview
+from django.utils.html import format_html
+from .models import SportCategory, Facility, Court, PricingRule, FacilityReview, FacilityStatus
 
 class CourtInline(admin.TabularInline):
     model = Court
@@ -25,26 +26,56 @@ class SportCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Facility)
 class FacilityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'phone_contact', 'bank_name', 'bank_account_no', 'bank_account_name', 'average_rating_display', 'active_status')
-    list_filter = ('active_status', 'bank_name')
-    search_fields = ('name', 'address', 'phone_contact', 'bank_account_no', 'bank_account_name')
+    list_display = ('name', 'owner', 'status_badge', 'verified_badge', 'hotline_display', 'reputation_score', 'average_rating_display', 'active_status')
+    list_filter = ('status', 'is_verified', 'active_status', 'bank_name')
+    search_fields = ('name', 'address', 'phone_contact', 'hotline', 'bank_account_no', 'bank_account_name')
     inlines = [CourtInline, PricingRuleInline, FacilityReviewInline]
+    actions = ['verify_facility_action', 'suspend_facility_action']
+
     fieldsets = (
-        ("Thông tin chung", {
-            'fields': ('name', 'owner', 'address', 'phone_contact', 'image', 'active_status')
+        ("Thông tin chung & Xác thực kiểm duyệt", {
+            'fields': ('name', 'owner', 'status', 'is_verified', 'reputation_score', 'address', 'phone_contact', 'hotline', 'image', 'active_status')
         }),
         ("Cấu hình Ngân hàng & Mã QR Thanh toán (VietQR)", {
             'fields': ('bank_name', 'bank_account_no', 'bank_account_name', 'custom_qr_image'),
             'description': "Hệ thống tự động sinh VietQR chuẩn Napas 247 theo thông tin ngân hàng. Nếu tải lên 'Ảnh mã QR', hệ thống sẽ ưu tiên hiển thị ảnh đó."
         }),
-        ("Khung giờ mở cửa & Tọa độ", {
+        ("Khung giờ mở cửa & Tọa độ GPS", {
             'fields': ('open_time', 'close_time', 'latitude', 'longitude')
         }),
     )
 
+    def status_badge(self, obj):
+        if obj.status == FacilityStatus.ACTIVE:
+            return format_html('<span style="background-color:#16a34a;color:white;padding:3px 8px;border-radius:4px;font-weight:600;font-size:11px;">Hoạt động</span>')
+        elif obj.status == FacilityStatus.PENDING_REVIEW:
+            return format_html('<span style="background-color:#d97706;color:white;padding:3px 8px;border-radius:4px;font-weight:600;font-size:11px;">Chờ duyệt</span>')
+        return format_html('<span style="background-color:#dc2626;color:white;padding:3px 8px;border-radius:4px;font-weight:600;font-size:11px;">Tạm ngưng</span>')
+    status_badge.short_description = "Trạng thái vận hành"
+
+    def verified_badge(self, obj):
+        if obj.is_verified:
+            return format_html('<span style="color:#0284c7;font-weight:bold;">Tích xanh ✓</span>')
+        return format_html('<span style="color:#94a3b8;">Chưa xác thực</span>')
+    verified_badge.short_description = "Xác minh"
+
+    def hotline_display(self, obj):
+        return obj.get_display_hotline()
+    hotline_display.short_description = "Hotline"
+
     def average_rating_display(self, obj):
         return f"{obj.get_average_rating()} ★ ({obj.get_total_reviews()})"
     average_rating_display.short_description = "Đánh giá"
+
+    def verify_facility_action(self, request, queryset):
+        updated = queryset.update(is_verified=True, status=FacilityStatus.ACTIVE, active_status=True)
+        self.message_user(request, f"Đã cấp tích xanh và kích hoạt {updated} cụm sân thành công.")
+    verify_facility_action.short_description = "Cấp tích xanh KYC & Kích hoạt cụm sân"
+
+    def suspend_facility_action(self, request, queryset):
+        updated = queryset.update(status=FacilityStatus.SUSPENDED)
+        self.message_user(request, f"Đã chuyển {updated} cụm sân sang trạng thái tạm ngưng.")
+    suspend_facility_action.short_description = "Tạm ngưng hoạt động cụm sân"
 
 @admin.register(Court)
 class CourtAdmin(admin.ModelAdmin):

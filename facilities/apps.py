@@ -35,11 +35,19 @@ class FacilitiesConfig(AppConfig):
                     except Exception:
                         pass
 
-                for col, typ in [('image', 'varchar(100)'), ('custom_qr_image', 'varchar(100)')]:
+                for col, typ in [('image', 'varchar(100)'), ('custom_qr_image', 'varchar(100)'), 
+                                 ('hotline', 'varchar(20) DEFAULT ""'), ('is_verified', 'bool DEFAULT 1'), 
+                                 ('reputation_score', 'real DEFAULT 5.0'), ('status', 'varchar(20) DEFAULT "ACTIVE"')]:
                     try:
                         cursor.execute(f"ALTER TABLE facilities_facility ADD COLUMN {col} {typ};")
                     except Exception:
                         pass
+
+                # Đồng bộ tích xanh và trạng thái ACTIVE cho toàn bộ sân mẫu
+                try:
+                    cursor.execute("UPDATE facilities_facility SET is_verified = 1, status = 'ACTIVE' WHERE is_verified IS NULL OR status IS NULL;")
+                except Exception:
+                    pass
         except Exception:
             pass
 

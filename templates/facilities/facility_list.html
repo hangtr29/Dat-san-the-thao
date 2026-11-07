@@ -82,8 +82,13 @@
 
                     <!-- Text Info (Rộng rãi, hiển thị trọn vẹn tên và địa chỉ) -->
                     <div class="min-w-0 flex-1">
-                        <h3 class="text-sm sm:text-base font-black text-[#04331b] truncate group-hover:text-[#0b6b3a] transition">
-                            {{ fac.name }}
+                        <h3 class="text-sm sm:text-base font-black text-[#04331b] truncate group-hover:text-[#0b6b3a] transition flex items-center gap-1.5">
+                            <span class="truncate">{{ fac.name }}</span>
+                            {% if fac.is_verified %}
+                            <span class="text-emerald-600 text-xs inline-flex items-center flex-shrink-0" title="Cụm sân đã xác minh thực địa KYC (Tích xanh)">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                            {% endif %}
                         </h3>
                         <p class="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
                             <span class="text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0">({{ fac.get_distance_display }})</span>

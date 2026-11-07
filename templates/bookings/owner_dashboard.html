@@ -278,7 +278,7 @@
                             <div class="flex items-center justify-center gap-2">
                                 <form method="post" action="{% url 'bookings:owner_approve' b.booking_code %}">
                                     {% csrf_token %}
-                                    <input type="hidden" name="next" value="?tab=orders">
+                                    <input type="hidden" name="next" value="/bookings/dashboard/?tab=orders">
                                     <button type="submit" onclick="return confirm('Bạn xác nhận đã nhận đủ tiền {{ b.total_amount|floatformat:0 }} đ cho đơn này?')"
                                         class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm flex items-center gap-1 cursor-pointer">
                                         <i class="fa-solid fa-check"></i> Xác Nhận
@@ -286,7 +286,7 @@
                                 </form>
                                 <form method="post" action="{% url 'bookings:owner_reject' b.booking_code %}">
                                     {% csrf_token %}
-                                    <input type="hidden" name="next" value="?tab=orders">
+                                    <input type="hidden" name="next" value="/bookings/dashboard/?tab=orders">
                                     <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn TỪ CHỐI đơn này và giải phóng slot?')"
                                         class="px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[11px] border border-rose-200 cursor-pointer">
                                         Từ Chối

@@ -9,10 +9,7 @@
 
 {% block breadcrumb_current %}
 <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 shrink-0"></i>
-<span class="text-emerald-700 font-extrabold truncate">
-    {% if active_tab == 'settings' %}Thông Tin Cơ Sở & VietQR{% elif active_tab == 'reviews' %}Đánh Giá & Phản Hồi{%
-    else %}Tổng Quan Doanh Thu{% endif %}
-</span>
+<span class="text-emerald-700 font-extrabold truncate">{% if active_tab == 'settings' %}Thông Tin Cơ Sở & VietQR{% elif active_tab == 'reviews' %}Đánh Giá & Phản Hồi{% else %}Tổng Quan Doanh Thu{% endif %}</span>
 {% endblock %}
 
 {% block owner_content %}
@@ -20,10 +17,7 @@
 
     <!-- TIÊU ĐỀ GỌN GÀNG & NÚT XUẤT BÁO CÁO -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-        <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            {% if active_tab == 'settings' %}Thông Tin Cơ Sở & VietQR{% elif active_tab == 'reviews' %}Đánh Giá & Phản
-            Hồi{% else %}Tổng Quan Doanh Thu{% endif %}
-        </h1>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{% if active_tab == 'settings' %}Thông Tin Cơ Sở & VietQR{% elif active_tab == 'reviews' %}Đánh Giá & Phản Hồi{% else %}Tổng Quan Doanh Thu{% endif %}</h1>
 
         {% if active_tab == 'orders' %}
         <div class="flex items-center gap-2">
@@ -135,8 +129,7 @@
                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="">-- Tất cả cụm sân --</option>
                     {% for f in my_facilities %}
-                    <option value="{{ f.id }}" {% if selected_facility_id==f.id|stringformat:"s" %}selected{% endif %}>
-                        {{ f.name }}</option>
+                    <option value="{{ f.id }}" {% if selected_facility_id == f.id|stringformat:"s" %}selected{% endif %}>{{ f.name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -145,11 +138,9 @@
                 <label class="block text-[11px] font-bold text-slate-500 mb-1">Trạng Thái Đơn:</label>
                 <select name="status"
                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <option value="WAITING_APPROVAL" {% if status_filter=='WAITING_APPROVAL' %}selected{% endif %}>Chờ
-                        duyệt bill ({{ pending_count }})</option>
-                    <option value="CONFIRMED" {% if status_filter=='CONFIRMED' %}selected{% endif %}>Đã duyệt thành công
-                        ({{ confirmed_count }})</option>
-                    <option value="ALL" {% if status_filter=='ALL' %}selected{% endif %}>Tất cả trạng thái</option>
+                    <option value="WAITING_APPROVAL" {% if status_filter == 'WAITING_APPROVAL' %}selected{% endif %}>Chờ duyệt bill ({{ pending_count }})</option>
+                    <option value="CONFIRMED" {% if status_filter == 'CONFIRMED' %}selected{% endif %}>Đã duyệt thành công ({{ confirmed_count }})</option>
+                    <option value="ALL" {% if status_filter == 'ALL' %}selected{% endif %}>Tất cả trạng thái</option>
                 </select>
             </div>
 
@@ -579,10 +570,8 @@
         document.addEventListener('DOMContentLoaded', function () {
             const ctx = document.getElementById('revenueTrendChart');
             if (ctx) {
-                const labels = {{ daily_labels_json| safe
-            }
-        };
-        const dataRevenues = {{ daily_revenues_json| safe }};
+                const labels = {{ daily_labels_json|safe }};
+                const dataRevenues = {{ daily_revenues_json|safe }};
 
         new Chart(ctx, {
             type: 'line',

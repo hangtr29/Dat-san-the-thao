@@ -1,29 +1,91 @@
-{% extends 'base.html' %}
+{% extends 'base_owner.html' %}
 
-{% block title %}Kênh Quản Trị Chủ Sân | SportBook{% endblock %}
+{% block title %}Tổng Quan & Doanh Thu | SportBook Manager{% endblock %}
 
 {% block extra_head %}
 <!-- Chart.js CDN vẽ biểu đồ doanh thu trực quan -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
-{% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+{% block breadcrumb_current %}
+<i class="fa-solid fa-chevron-right text-[10px] text-slate-300 shrink-0"></i>
+<span class="text-emerald-700 font-extrabold truncate">
+    {% if active_tab == 'settings' %}Cài Đặt Sân & VietQR{% elif active_tab == 'reviews' %}Đánh Giá Khách Hàng{% else %}Tổng Quan & Doanh Thu{% endif %}
+</span>
+{% endblock %}
+
+{% block owner_content %}
+<div class="space-y-6">
+
+    <!-- 0. HƯỚNG DẪN 3 BƯỚC THIẾT LẬP VẬN HÀNH DÀNH CHO CHỦ SÂN (GIẢI QUYẾT: "TIẾP THEO TÔI LÀM GÌ?") -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-3xl p-5 sm:p-6 text-white shadow-md relative overflow-hidden border border-slate-700/60">
+        <div class="relative z-10">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div>
+                    <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 mb-1.5">
+                        <i class="fa-solid fa-compass"></i> Hướng Dẫn Vận Hành Chuẩn
+                    </span>
+                    <h2 class="text-lg sm:text-xl font-black tracking-tight">Quy trình 3 bước chuẩn bị để cụm sân bắt đầu đón khách</h2>
+                    <p class="text-xs text-slate-300 mt-0.5">Hoàn tất đầy đủ 3 bước dưới đây để sân thể thao tự động kích hoạt và hiển thị cho người chơi.</p>
+                </div>
+                <div class="shrink-0 flex items-center gap-2">
+                    <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-emerald-400"></i> Trạng thái: Sẵn sàng nhận khách
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <!-- Bước 1 -->
+                <a href="{% if selected_facility_id %}{% url 'facilities:owner_facility_manage_detail' selected_facility_id %}{% else %}{% url 'facilities:owner_facility_manage' %}{% endif %}"
+                   class="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition block group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-black text-emerald-400 flex items-center gap-1.5">
+                            <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black flex items-center justify-center">1</span>
+                            Định Vị GPS & Hotline
+                        </span>
+                        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                    </div>
+                    <p class="text-[11px] text-slate-300">Ghim vị trí thực địa chống sân ma và lưu số điện thoại hỗ trợ khách.</p>
+                </a>
+
+                <!-- Bước 2 -->
+                <a href="?tab=settings{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}"
+                   class="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition block group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-black text-amber-400 flex items-center gap-1.5">
+                            <span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black flex items-center justify-center">2</span>
+                            Tài Khoản VietQR
+                        </span>
+                        <i class="fa-solid fa-circle-check text-amber-400"></i>
+                    </div>
+                    <p class="text-[11px] text-slate-300">Cấu hình số tài khoản ngân hàng để tự động nhận tiền trực tiếp từ khách.</p>
+                </a>
+
+                <!-- Bước 3 -->
+                <a href="{% if selected_facility_id %}{% url 'facilities:owner_court_manage' selected_facility_id %}{% else %}{% url 'facilities:owner_court_manage_default' %}{% endif %}"
+                   class="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition block group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-black text-sky-400 flex items-center gap-1.5">
+                            <span class="w-5 h-5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-black flex items-center justify-center">3</span>
+                            Sân Con & Bảng Giá
+                        </span>
+                        <i class="fa-solid fa-arrow-right text-sky-400 group-hover:translate-x-1 transition text-xs"></i>
+                    </div>
+                    <p class="text-[11px] text-slate-300">Thêm mới Sân 1, Sân 2... đặt giá giờ thường/cao điểm và tự sinh lịch.</p>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- 1. HEADER & THAO TÁC XUẤT BÁO CÁO -->
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-            <div class="flex items-center gap-2 mb-1.5">
-                <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5">
-                    <i class="fa-solid fa-store"></i> Kênh Quản Trị Chủ Sân
-                </span>
-                <span class="text-xs text-slate-400 font-semibold">• Quản lý trực tiếp</span>
-            </div>
             <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Bảng Điều Khiển & Nghiệp Vụ Chủ Sân
+                Bảng Điều Khiển & Nghiệp Vụ Vận Hành
             </h1>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                Theo dõi dòng tiền, duyệt đơn đặt sân, cấu hình tài khoản VietQR và phản hồi đánh giá khách hàng.
+                Theo dõi dòng tiền thời gian thực, duyệt đơn đặt sân, cấu hình tài khoản VietQR và chăm sóc khách hàng.
             </p>
         </div>
 
@@ -46,7 +108,7 @@
         </div>
     </div>
 
-    <!-- 2. THANH CHUYỂN TAB QUẢN TRỊ NGAY TRÊN TRANG (TABS NAVIGATION) -->
+    <!-- 2. THANH CHUYỂN TAB QUẢN TRỊ NGAY TRÊN TRANG -->
     <div class="flex border-b border-slate-200 overflow-x-auto gap-2 sm:gap-4 text-xs font-black">
         <a href="?tab=orders{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}" 
            class="pb-3 px-3 sm:px-5 flex items-center gap-2 border-b-2 transition whitespace-nowrap {% if active_tab == 'orders' %}border-emerald-600 text-emerald-700 font-extrabold{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %}">
@@ -571,7 +633,9 @@
     {% endif %}
 
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <!-- Script Chart.js vẽ biểu đồ xu hướng doanh thu -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {

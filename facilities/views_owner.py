@@ -63,7 +63,10 @@ class FacilityManageView(OwnerBaseView):
 
         context = {
             'facility': facility,
+            'config_facility': facility,
+            'selected_facility_id': str(facility.id),
             'my_facilities': my_facilities,
+            'active_menu': 'facility_profile',
             'is_subscription_active': request.user.is_subscription_active,
             'subscription_expires_at': getattr(getattr(request.user, 'owner_profile', None), 'subscription_expires_at', None),
         }
@@ -149,7 +152,10 @@ class CourtCreateUpdateView(OwnerBaseView):
 
         context = {
             'facility': facility,
+            'config_facility': facility,
+            'selected_facility_id': str(facility.id),
             'my_facilities': my_facilities,
+            'active_menu': 'courts',
             'categories': categories,
             'courts': courts,
             'edit_court': edit_court,
@@ -286,7 +292,9 @@ class OwnerBookingApprovalView(OwnerBaseView):
         context = {
             'bookings': bookings_qs,
             'my_facilities': my_facilities,
-            'selected_facility_id': facility_id,
+            'config_facility': target_facilities.first(),
+            'selected_facility_id': facility_id or (str(target_facilities.first().id) if target_facilities.first() else ''),
+            'active_menu': 'approval',
             'status_filter': status_filter,
             'pending_count': pending_count,
             'confirmed_count': confirmed_count,

@@ -114,10 +114,7 @@
                         <select name="facility_id" onchange="this.form.submit()"
                             class="w-full bg-slate-800/90 text-white font-bold text-xs rounded-xl px-3 py-2.5 pr-8 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer appearance-none">
                             {% for f in my_facilities %}
-                            <option value="{{ f.id }}" {% if selected_facility_id==f.id|stringformat:"s" or
-                                config_facility.id==f.id %}selected{% endif %}>
-                                {{ f.name }}
-                            </option>
+                            <option value="{{ f.id }}" {% if selected_facility_id == f.id|stringformat:"s" or config_facility.id == f.id %}selected{% endif %}>{{ f.name }}</option>
                             {% empty %}
                             <option value="">(Chưa có cụm sân)</option>
                             {% endfor %}
@@ -157,9 +154,7 @@
                                 <span>Duyệt Đơn & Biên Lai</span>
                             </div>
                             {% if pending_count and pending_count > 0 %}
-                            <span
-                                class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">{{
-                                pending_count }}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">{{ pending_count }}</span>
                             {% endif %}
                         </a>
 
@@ -258,8 +253,7 @@
                             {{ user.first_name|first|default:user.username|first|upper }}
                         </div>
                         <div class="truncate">
-                            <span class="text-xs font-extrabold text-white block truncate">{{
-                                user.get_full_name|default:user.username }}</span>
+                            <span class="text-xs font-extrabold text-white block truncate">{{ user.get_full_name|default:user.username }}</span>
                             <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
                                 <i class="fa-solid fa-circle-check text-[8px]"></i> Chủ Sân Đối Tác
                             </span>
@@ -299,8 +293,7 @@
                         </a>
                         <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 shrink-0"></i>
                         <span class="text-slate-700 font-extrabold truncate shrink-0 max-w-[140px] sm:max-w-xs">
-                            {% if config_facility %}{{ config_facility.name }}{% elif facility %}{{ facility.name }}{%
-                            else %}Tổng quan{% endif %}
+                            {% if config_facility %}{{ config_facility.name }}{% elif facility %}{{ facility.name }}{% else %}Tổng quan{% endif %}
                         </span>
                         {% block breadcrumb_current %}
                         {% endblock %}

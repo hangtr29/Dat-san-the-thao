@@ -76,6 +76,7 @@ class UsersConfig(AppConfig):
                     admin_user = User.objects.filter(username='admin').first()
                     if not admin_user:
                         admin_user = User(
+                            id=uuid.UUID('00000000-0000-0000-0000-000000000001'),
                             username='admin',
                             first_name='Quản Trị Viên',
                             last_name='Hệ Thống',
@@ -94,6 +95,7 @@ class UsersConfig(AppConfig):
                     owner = User.objects.filter(username='chusan').first()
                     if not owner:
                         owner = User(
+                            id=uuid.UUID('11111111-1111-1111-1111-111111111111'),
                             username='chusan',
                             first_name='Chủ Sân',
                             last_name='SportBook',

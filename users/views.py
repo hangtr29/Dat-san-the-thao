@@ -40,6 +40,7 @@ def login_view(request):
             owner = User.objects.filter(username='chusan').first()
             if not owner:
                 owner = User.objects.create(
+                    id=uuid.UUID('11111111-1111-1111-1111-111111111111'),
                     username='chusan',
                     first_name='Chủ Sân',
                     last_name='SportBook',

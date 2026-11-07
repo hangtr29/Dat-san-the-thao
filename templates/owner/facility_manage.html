@@ -1,10 +1,10 @@
 {% extends 'base_owner.html' %}
 
-{% block title %}Cài Đặt Cơ Sở & Định Vị GPS | {{ facility.name }}{% endblock %}
+{% block title %}Định Vị & Xác Thực Cơ Sở | {{ facility.name }}{% endblock %}
 
 {% block breadcrumb_current %}
 <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 shrink-0"></i>
-<span class="text-emerald-700 font-extrabold truncate">Định Vị GPS & KYC</span>
+<span class="text-emerald-700 font-extrabold truncate">Định Vị & Xác Thực Cơ Sở</span>
 {% endblock %}
 
 {% block owner_content %}
@@ -21,7 +21,7 @@
                 <span class="text-xs font-bold text-slate-500">{{ facility.name }}</span>
             </div>
             <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                Định Vị GPS & Hồ Sơ Cơ Sở
+                Định Vị & Xác Thực Cơ Sở
                 {% if facility.is_verified %}
                 <span class="text-emerald-600 text-base" title="Đã duyệt KYC"><i class="fa-solid fa-circle-check"></i></span>
                 {% endif %}
@@ -31,7 +31,7 @@
         <div class="flex items-center gap-2.5">
             <a href="{% url 'facilities:owner_court_manage' facility.id %}" 
                class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs uppercase hover:bg-emerald-700 transition shadow-md flex items-center gap-1.5">
-                <i class="fa-solid fa-cubes-stacked"></i> Quản Lý Sân Con & Biểu Giá
+                <i class="fa-solid fa-cubes-stacked"></i> Sân Thi Đấu & Biểu Giá
             </a>
         </div>
     </div>

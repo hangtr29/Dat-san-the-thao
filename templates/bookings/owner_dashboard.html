@@ -10,7 +10,8 @@
 {% block breadcrumb_current %}
 <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 shrink-0"></i>
 <span class="text-emerald-700 font-extrabold truncate">
-    {% if active_tab == 'settings' %}Cài Đặt Sân & VietQR{% elif active_tab == 'reviews' %}Đánh Giá Khách Hàng{% else %}Tổng Quan & Doanh Thu{% endif %}
+    {% if active_tab == 'settings' %}Thông Tin Cơ Sở & VietQR{% elif active_tab == 'reviews' %}Đánh Giá & Phản Hồi{%
+    else %}Tổng Quan Doanh Thu{% endif %}
 </span>
 {% endblock %}
 
@@ -20,19 +21,20 @@
     <!-- TIÊU ĐỀ GỌN GÀNG & NÚT XUẤT BÁO CÁO -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            {% if active_tab == 'settings' %}Cài Đặt Sân & VietQR{% elif active_tab == 'reviews' %}Đánh Giá Khách Hàng{% else %}Tổng Quan Doanh Thu{% endif %}
+            {% if active_tab == 'settings' %}Thông Tin Cơ Sở & VietQR{% elif active_tab == 'reviews' %}Đánh Giá & Phản
+            Hồi{% else %}Tổng Quan Doanh Thu{% endif %}
         </h1>
 
         {% if active_tab == 'orders' %}
         <div class="flex items-center gap-2">
-            <a href="{% url 'bookings:owner_export_revenue_csv' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}" 
-               class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase shadow-xs transition flex items-center gap-1.5">
+            <a href="{% url 'bookings:owner_export_revenue_csv' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}"
+                class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase shadow-xs transition flex items-center gap-1.5">
                 <i class="fa-solid fa-file-excel"></i>
                 <span>Xuất Excel</span>
             </a>
-            <a href="{% url 'bookings:owner_export_revenue_pdf' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}" 
-               target="_blank"
-               class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase shadow-xs transition flex items-center gap-1.5">
+            <a href="{% url 'bookings:owner_export_revenue_pdf' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}"
+                target="_blank"
+                class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase shadow-xs transition flex items-center gap-1.5">
                 <i class="fa-solid fa-file-pdf text-rose-400"></i>
                 <span>Xuất PDF</span>
             </a>
@@ -42,14 +44,15 @@
 
     <!-- ==================== TAB 1: ĐƠN ĐẶT SÂN & DUYỆT BILL ==================== -->
     {% if active_tab == 'orders' %}
-    
+
     <!-- THẺ THỐNG KÊ DOANH THU & KPI CHÍNH -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <!-- Card 1: Doanh thu hôm nay -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-bold text-slate-500 uppercase">Doanh Thu Hôm Nay</span>
-                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                <div
+                    class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">
                     <i class="fa-solid fa-calendar-day"></i>
                 </div>
             </div>
@@ -61,7 +64,8 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-bold text-slate-500 uppercase">Doanh Thu Tháng</span>
-                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                <div
+                    class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
                     <i class="fa-solid fa-calendar-week"></i>
                 </div>
             </div>
@@ -73,7 +77,8 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-bold text-slate-500 uppercase">Tổng Doanh Thu</span>
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
+                <div
+                    class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
                     <i class="fa-solid fa-sack-dollar"></i>
                 </div>
             </div>
@@ -85,7 +90,8 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-bold text-slate-500 uppercase">Trạng Thái Đơn</span>
-                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm">
+                <div
+                    class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm">
                     <i class="fa-solid fa-receipt"></i>
                 </div>
             </div>
@@ -106,7 +112,8 @@
                 <i class="fa-solid fa-chart-line text-emerald-600"></i>
                 Xu Hướng Doanh Thu (7 Ngày)
             </h3>
-            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span
+                class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                 VNĐ
             </span>
         </div>
@@ -124,38 +131,48 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
                 <label class="block text-[11px] font-bold text-slate-500 mb-1">Cụm Sân:</label>
-                <select name="facility_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <select name="facility_id"
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="">-- Tất cả cụm sân --</option>
                     {% for f in my_facilities %}
-                    <option value="{{ f.id }}" {% if selected_facility_id == f.id|stringformat:"s" %}selected{% endif %}>{{ f.name }}</option>
+                    <option value="{{ f.id }}" {% if selected_facility_id==f.id|stringformat:"s" %}selected{% endif %}>
+                        {{ f.name }}</option>
                     {% endfor %}
                 </select>
             </div>
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-500 mb-1">Trạng Thái Đơn:</label>
-                <select name="status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <option value="WAITING_APPROVAL" {% if status_filter == 'WAITING_APPROVAL' %}selected{% endif %}>Chờ duyệt bill ({{ pending_count }})</option>
-                    <option value="CONFIRMED" {% if status_filter == 'CONFIRMED' %}selected{% endif %}>Đã duyệt thành công ({{ confirmed_count }})</option>
-                    <option value="ALL" {% if status_filter == 'ALL' %}selected{% endif %}>Tất cả trạng thái</option>
+                <select name="status"
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="WAITING_APPROVAL" {% if status_filter=='WAITING_APPROVAL' %}selected{% endif %}>Chờ
+                        duyệt bill ({{ pending_count }})</option>
+                    <option value="CONFIRMED" {% if status_filter=='CONFIRMED' %}selected{% endif %}>Đã duyệt thành công
+                        ({{ confirmed_count }})</option>
+                    <option value="ALL" {% if status_filter=='ALL' %}selected{% endif %}>Tất cả trạng thái</option>
                 </select>
             </div>
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-500 mb-1">Từ Ngày:</label>
-                <input type="date" name="date_from" value="{{ date_from }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input type="date" name="date_from" value="{{ date_from }}"
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-500 mb-1">Đến Ngày:</label>
-                <input type="date" name="date_to" value="{{ date_to }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input type="date" name="date_to" value="{{ date_to }}"
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
 
             <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                <button type="submit"
+                    class="flex-1 py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-magnifying-glass"></i> Lọc Dữ Liệu
                 </button>
-                <a href="?tab=orders" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition" title="Đặt lại bộ lọc">
+                <a href="?tab=orders"
+                    class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition"
+                    title="Đặt lại bộ lọc">
                     <i class="fa-solid fa-rotate-left"></i>
                 </a>
             </div>
@@ -164,14 +181,16 @@
 
     <!-- BẢNG DANH SÁCH CHI TIẾT CÁC ĐƠN ĐẶT & XÉT DUYỆT -->
     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden space-y-0">
-        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+        <div
+            class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
             <div>
                 <h3 class="font-black text-slate-900 text-sm sm:text-base flex items-center gap-2">
                     <i class="fa-solid fa-list-check text-emerald-600"></i>
                     Danh Sách Đơn Đặt Sân & Đối Soát Biên Lai
                 </h3>
                 <span class="text-xs text-slate-500 font-semibold">
-                    Đang hiển thị {{ bookings|length }} đơn • Doanh thu theo lọc: <strong class="text-emerald-700">{{ revenue_filtered_str }}</strong>
+                    Đang hiển thị {{ bookings|length }} đơn • Doanh thu theo lọc: <strong class="text-emerald-700">{{
+                        revenue_filtered_str }}</strong>
                 </span>
             </div>
         </div>
@@ -180,7 +199,8 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                    <tr class="bg-slate-50 text-slate-500 font-extrabold uppercase tracking-wider border-b border-slate-200">
+                    <tr
+                        class="bg-slate-50 text-slate-500 font-extrabold uppercase tracking-wider border-b border-slate-200">
                         <th class="py-4 px-4">Mã đơn & Thời gian</th>
                         <th class="py-4 px-4">Khách hàng</th>
                         <th class="py-4 px-4">Sân & Khung giờ</th>
@@ -195,7 +215,8 @@
                     <tr class="hover:bg-slate-50/70 transition">
                         <td class="py-4 px-4 font-mono font-bold text-slate-800">
                             {{ b.booking_code }}
-                            <span class="block text-[10px] font-normal text-slate-400 mt-0.5">{{ b.created_at|date:"d/m/Y H:i" }}</span>
+                            <span class="block text-[10px] font-normal text-slate-400 mt-0.5">{{
+                                b.created_at|date:"d/m/Y H:i" }}</span>
                         </td>
                         <td class="py-4 px-4">
                             <div class="font-bold text-slate-800">{{ b.display_customer_name }}</div>
@@ -204,7 +225,8 @@
                             <div class="text-[10px] text-slate-500 italic mt-0.5">Ghi chú: {{ b.customer_note }}</div>
                             {% endif %}
                             {% if b.student_card_image %}
-                            <a href="{{ b.student_card_image.url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline mt-0.5">
+                            <a href="{{ b.student_card_image.url }}" target="_blank"
+                                class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline mt-0.5">
                                 <i class="fa-solid fa-id-card"></i> Xem Thẻ HSSV
                             </a>
                             {% endif %}
@@ -213,7 +235,8 @@
                             {% for slot in b.slots.all %}
                             <div class="font-semibold text-slate-700">{{ slot.court.court_name }}</div>
                             <div class="text-[10px] text-slate-400">
-                                {{ slot.date|date:"d/m" }} | {{ slot.start_time|time:"H:i" }}-{{ slot.end_time|time:"H:i" }}
+                                {{ slot.date|date:"d/m" }} | {{ slot.start_time|time:"H:i" }}-{{
+                                slot.end_time|time:"H:i" }}
                             </div>
                             {% endfor %}
                         </td>
@@ -222,8 +245,10 @@
                         </td>
                         <td class="py-4 px-4 text-center">
                             {% if b.payment_proof %}
-                            <a href="{{ b.payment_proof.url }}" target="_blank" class="inline-block relative group cursor-pointer" title="Nhấp để xem ảnh gốc">
-                                <img src="{{ b.payment_proof.url }}" alt="Bill" class="w-12 h-12 object-cover rounded-xl border border-slate-200 shadow-xs group-hover:scale-110 transition mx-auto">
+                            <a href="{{ b.payment_proof.url }}" target="_blank"
+                                class="inline-block relative group cursor-pointer" title="Nhấp để xem ảnh gốc">
+                                <img src="{{ b.payment_proof.url }}" alt="Bill"
+                                    class="w-12 h-12 object-cover rounded-xl border border-slate-200 shadow-xs group-hover:scale-110 transition mx-auto">
                                 <span class="text-[9px] block text-emerald-600 font-bold mt-0.5">Soi ảnh</span>
                             </a>
                             {% else %}
@@ -246,7 +271,8 @@
                                 <form method="post" action="{% url 'bookings:owner_approve' b.booking_code %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="/bookings/dashboard/?tab=orders">
-                                    <button type="submit" onclick="return confirm('Bạn xác nhận đã nhận đủ tiền {{ b.total_amount|floatformat:0 }} đ cho đơn này?')"
+                                    <button type="submit"
+                                        onclick="return confirm('Bạn xác nhận đã nhận đủ tiền {{ b.total_amount|floatformat:0 }} đ cho đơn này?')"
                                         class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm flex items-center gap-1 cursor-pointer">
                                         <i class="fa-solid fa-check"></i> Xác Nhận
                                     </button>
@@ -254,14 +280,16 @@
                                 <form method="post" action="{% url 'bookings:owner_reject' b.booking_code %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="/bookings/dashboard/?tab=orders">
-                                    <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn TỪ CHỐI đơn này và giải phóng slot?')"
+                                    <button type="submit"
+                                        onclick="return confirm('Bạn có chắc chắn muốn TỪ CHỐI đơn này và giải phóng slot?')"
                                         class="px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[11px] border border-rose-200 cursor-pointer">
                                         Từ Chối
                                     </button>
                                 </form>
                             </div>
                             {% else %}
-                            <a href="{% url 'bookings:booking_detail' b.booking_code %}" class="text-emerald-600 hover:underline font-bold text-[11px] inline-flex items-center gap-1">
+                            <a href="{% url 'bookings:booking_detail' b.booking_code %}"
+                                class="text-emerald-600 hover:underline font-bold text-[11px] inline-flex items-center gap-1">
                                 <i class="fa-solid fa-ticket"></i> Xem vé
                             </a>
                             {% endif %}
@@ -273,11 +301,13 @@
         </div>
         {% else %}
         <div class="p-12 text-center max-w-md mx-auto">
-            <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-4">
+            <div
+                class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-4">
                 <i class="fa-solid fa-clipboard-check"></i>
             </div>
             <h3 class="text-base font-bold text-slate-800">Không có đơn đặt nào phù hợp bộ lọc</h3>
-            <p class="text-xs text-slate-500 mt-1">Khi khách hàng đặt sân và chuyển khoản, danh sách đơn sẽ tự động hiển thị tại đây.</p>
+            <p class="text-xs text-slate-500 mt-1">Khi khách hàng đặt sân và chuyển khoản, danh sách đơn sẽ tự động hiển
+                thị tại đây.</p>
         </div>
         {% endif %}
     </div>
@@ -296,12 +326,13 @@
         {% if config_facility %}
         <!-- Bộ chọn cụm sân cần chỉnh sửa -->
         {% if my_facilities|length > 1 %}
-        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div
+            class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span class="text-xs font-bold text-slate-700">Đang chọn cấu hình cho Cụm sân:</span>
             <div class="flex items-center gap-2">
                 {% for f in my_facilities %}
-                <a href="?tab=settings&facility_id={{ f.id }}" 
-                   class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition {% if config_facility.id == f.id %}bg-emerald-600 text-white shadow-sm{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-slate-100{% endif %}">
+                <a href="?tab=settings&facility_id={{ f.id }}"
+                    class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition {% if config_facility.id == f.id %}bg-emerald-600 text-white shadow-sm{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-slate-100{% endif %}">
                     {{ f.name }}
                 </a>
                 {% endfor %}
@@ -309,7 +340,8 @@
         </div>
         {% endif %}
 
-        <form method="post" action="{% url 'bookings:owner_update_facility' %}" enctype="multipart/form-data" class="space-y-6">
+        <form method="post" action="{% url 'bookings:owner_update_facility' %}" enctype="multipart/form-data"
+            class="space-y-6">
             {% csrf_token %}
             <input type="hidden" name="facility_id" value="{{ config_facility.id }}">
             <input type="hidden" name="next" value="/bookings/dashboard/">
@@ -323,17 +355,17 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Tên Cụm Sân *</label>
                         <input type="text" name="name" value="{{ config_facility.name }}" required
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Hotline / Zalo Liên Hệ *</label>
                         <input type="text" name="phone_contact" value="{{ config_facility.phone_contact }}" required
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div class="sm:col-span-2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">Địa Chỉ Chi Tiết *</label>
                         <textarea name="address" rows="2" required
-                                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">{{ config_facility.address }}</textarea>
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">{{ config_facility.address }}</textarea>
                     </div>
                 </div>
             </div>
@@ -344,7 +376,8 @@
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider">
                         2. Cấu hình Ngân hàng Nhận Tiền (Tạo VietQR Tự Động)
                     </h3>
-                    <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    <span
+                        class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                         Chuẩn Napas 247
                     </span>
                 </div>
@@ -353,19 +386,19 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Ngân Hàng (Mã/Tên) *</label>
                         <input type="text" name="bank_name" value="{{ config_facility.bank_name }}" required
-                               placeholder="VD: MBBank, VCB, Techcombank, ICB..."
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            placeholder="VD: MBBank, VCB, Techcombank, ICB..."
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Số Tài Khoản Nhận Tiền *</label>
                         <input type="text" name="bank_account_no" value="{{ config_facility.bank_account_no }}" required
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Tên Chủ Tài Khoản *</label>
-                        <input type="text" name="bank_account_name" value="{{ config_facility.bank_account_name }}" required
-                               placeholder="VD: NGUYEN VAN A"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" name="bank_account_name" value="{{ config_facility.bank_account_name }}"
+                            required placeholder="VD: NGUYEN VAN A"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
             </div>
@@ -375,15 +408,17 @@
                 <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider">
                     3. Hình Ảnh Đại Diện Cụm Sân & Ảnh QR Riêng (Tùy Chọn)
                 </h3>
-                
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <!-- Ảnh bìa sân -->
                     <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                         <label class="block text-xs font-bold text-slate-800">Ảnh Bìa Cụm Sân:</label>
                         <div class="flex items-center gap-3">
-                            <img src="{{ config_facility.get_cover_image_url }}" alt="Cover" class="w-20 h-14 object-cover rounded-xl border border-slate-300 shadow-2xs">
+                            <img src="{{ config_facility.get_cover_image_url }}" alt="Cover"
+                                class="w-20 h-14 object-cover rounded-xl border border-slate-300 shadow-2xs">
                             <div class="flex-1">
-                                <input type="file" name="image" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                                <input type="file" name="image" accept="image/*"
+                                    class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
                                 <span class="text-[10px] text-slate-400 block mt-1">Hỗ trợ JPG, PNG (Tối đa 5MB)</span>
                             </div>
                         </div>
@@ -391,18 +426,23 @@
 
                     <!-- Ảnh mã QR riêng -->
                     <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                        <label class="block text-xs font-bold text-slate-800">Ảnh Mã QR Thanh Toán Riêng (Tùy chọn):</label>
+                        <label class="block text-xs font-bold text-slate-800">Ảnh Mã QR Thanh Toán Riêng (Tùy
+                            chọn):</label>
                         <div class="flex items-center gap-3">
                             {% if config_facility.custom_qr_image %}
-                            <img src="{{ config_facility.custom_qr_image.url }}" alt="QR" class="w-14 h-14 object-contain rounded-xl border border-slate-300 shadow-2xs bg-white p-1">
+                            <img src="{{ config_facility.custom_qr_image.url }}" alt="QR"
+                                class="w-14 h-14 object-contain rounded-xl border border-slate-300 shadow-2xs bg-white p-1">
                             {% else %}
-                            <div class="w-14 h-14 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-lg">
+                            <div
+                                class="w-14 h-14 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-lg">
                                 <i class="fa-solid fa-qrcode"></i>
                             </div>
                             {% endif %}
                             <div class="flex-1">
-                                <input type="file" name="custom_qr_image" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
-                                <span class="text-[10px] text-slate-400 block mt-1">Nếu không tải ảnh, hệ thống tự sinh mã VietQR động</span>
+                                <input type="file" name="custom_qr_image" accept="image/*"
+                                    class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                                <span class="text-[10px] text-slate-400 block mt-1">Nếu không tải ảnh, hệ thống tự sinh
+                                    mã VietQR động</span>
                             </div>
                         </div>
                     </div>
@@ -410,8 +450,8 @@
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex justify-end">
-                <button type="submit" 
-                        class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">
+                <button type="submit"
+                    class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-floppy-disk"></i>
                     <span>Lưu Cập Nhật Cụm Sân & VietQR</span>
                 </button>
@@ -435,10 +475,12 @@
                     <i class="fa-solid fa-comments text-amber-500"></i> Đánh Giá Từ Khách Hàng & Phản Hồi Của Chủ Sân
                 </h2>
                 <p class="text-xs text-slate-500 mt-1">
-                    Chỉ khách có mã đơn đặt sân đã được duyệt thành công (CONFIRMED) mới được đánh giá để đảm bảo chống spam.
+                    Chỉ khách có mã đơn đặt sân đã được duyệt thành công (CONFIRMED) mới được đánh giá để đảm bảo chống
+                    spam.
                 </p>
             </div>
-            <span class="text-xs font-black text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 w-fit">
+            <span
+                class="text-xs font-black text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 w-fit">
                 Tổng cộng {{ reviews|length }} đánh giá
             </span>
         </div>
@@ -449,145 +491,152 @@
             <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-black text-sm flex items-center justify-center uppercase">
+                        <div
+                            class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-black text-sm flex items-center justify-center uppercase">
                             {{ r.reviewer_name|slice:":1" }}
                         </div>
                         <div>
                             <span class="font-extrabold text-slate-900 text-sm block">{{ r.reviewer_name }}</span>
                             <span class="text-[10px] text-slate-400 font-semibold">
                                 Cụm sân: <strong class="text-slate-700">{{ r.facility.name }}</strong>
-                                {% if r.booking %} • Mã đơn: <strong class="text-emerald-700">{{ r.booking.booking_code }}</strong>{% endif %}
+                                {% if r.booking %} • Mã đơn: <strong class="text-emerald-700">{{ r.booking.booking_code
+                                    }}</strong>{% endif %}
                             </span>
                         </div>
                     </div>
                     <div class="text-right">
                         <div class="text-[#facc15] font-black text-sm">
                             {% for i in "12345"|make_list %}
-                            {% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}
-                            {% endfor %}
+                            {% if forloop.counter <= r.rating %}★{% else %}☆{% endif %} {% endfor %} </div>
+                                <span class="text-[10px] text-slate-400 block">{{ r.created_at|date:"d/m/Y H:i"
+                                    }}</span>
                         </div>
-                        <span class="text-[10px] text-slate-400 block">{{ r.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+
+                    <p class="text-xs text-slate-700 leading-relaxed pl-12">
+                        "{{ r.comment }}"
+                    </p>
+
+                    <!-- Ô hiển thị / gõ phản hồi của Chủ sân -->
+                    <div class="ml-12 pt-3 border-t border-slate-200/60">
+                        <form method="post" action="{% url 'bookings:owner_reply_review' r.id %}" class="space-y-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="/bookings/dashboard/">
+
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-reply"></i> Phản hồi của Chủ Sân:
+                                    {% if r.owner_reply_at %}
+                                    <span class="text-[10px] text-emerald-600 font-normal">({{
+                                        r.owner_reply_at|date:"d/m/Y H:i" }})</span>
+                                    {% endif %}
+                                </label>
+                                {% if r.owner_reply %}
+                                <span
+                                    class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                    ✓ Đã phản hồi
+                                </span>
+                                {% else %}
+                                <span
+                                    class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                    ⏳ Chưa trả lời
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="flex gap-2">
+                                <input type="text" name="owner_reply" value="{{ r.owner_reply|default:'' }}"
+                                    placeholder="Nhập câu cảm ơn hoặc phản hồi của chủ sân gửi đến khách hàng..."
+                                    class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <button type="submit"
+                                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase transition shadow-xs cursor-pointer">
+                                    Gửi
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-
-                <p class="text-xs text-slate-700 leading-relaxed pl-12">
-                    "{{ r.comment }}"
-                </p>
-
-                <!-- Ô hiển thị / gõ phản hồi của Chủ sân -->
-                <div class="ml-12 pt-3 border-t border-slate-200/60">
-                    <form method="post" action="{% url 'bookings:owner_reply_review' r.id %}" class="space-y-2">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="/bookings/dashboard/">
-
-                        <div class="flex items-center justify-between">
-                            <label class="text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
-                                <i class="fa-solid fa-reply"></i> Phản hồi của Chủ Sân:
-                                {% if r.owner_reply_at %}
-                                <span class="text-[10px] text-emerald-600 font-normal">({{ r.owner_reply_at|date:"d/m/Y H:i" }})</span>
-                                {% endif %}
-                            </label>
-                            {% if r.owner_reply %}
-                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                ✓ Đã phản hồi
-                            </span>
-                            {% else %}
-                            <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                                ⏳ Chưa trả lời
-                            </span>
-                            {% endif %}
-                        </div>
-
-                        <div class="flex gap-2">
-                            <input type="text" name="owner_reply" value="{{ r.owner_reply|default:'' }}" 
-                                   placeholder="Nhập câu cảm ơn hoặc phản hồi của chủ sân gửi đến khách hàng..."
-                                   class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <button type="submit" 
-                                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase transition shadow-xs cursor-pointer">
-                                Gửi
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+            {% else %}
+            <div class="p-12 text-center text-slate-400">
+                <i class="fa-regular fa-comments text-4xl mb-2 text-slate-300 block"></i>
+                <p class="font-bold text-slate-600">Chưa có đánh giá nào từ khách hàng.</p>
+                <p class="text-xs text-slate-400 mt-1">Khi khách đặt sân thành công và chơi tại sân, họ sẽ gửi đánh giá
+                    về cụm sân của bạn tại đây.</p>
+            </div>
+            {% endif %}
         </div>
-        {% else %}
-        <div class="p-12 text-center text-slate-400">
-            <i class="fa-regular fa-comments text-4xl mb-2 text-slate-300 block"></i>
-            <p class="font-bold text-slate-600">Chưa có đánh giá nào từ khách hàng.</p>
-            <p class="text-xs text-slate-400 mt-1">Khi khách đặt sân thành công và chơi tại sân, họ sẽ gửi đánh giá về cụm sân của bạn tại đây.</p>
-        </div>
+
         {% endif %}
+
     </div>
+    {% endblock %}
 
-    {% endif %}
+    {% block extra_js %}
+    <!-- Script Chart.js vẽ biểu đồ xu hướng doanh thu -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('revenueTrendChart');
+            if (ctx) {
+                const labels = {{ daily_labels_json| safe
+            }
+        };
+        const dataRevenues = {{ daily_revenues_json| safe }};
 
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<!-- Script Chart.js vẽ biểu đồ xu hướng doanh thu -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const ctx = document.getElementById('revenueTrendChart');
-        if (ctx) {
-            const labels = {{ daily_labels_json|safe }};
-            const dataRevenues = {{ daily_revenues_json|safe }};
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Doanh thu (VNĐ)',
-                        data: dataRevenues,
-                        borderColor: '#059669',
-                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#d97706',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        tension: 0.35,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.parsed.y.toLocaleString('vi-VN') + ' đ';
-                                }
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: dataRevenues,
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#d97706',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    tension: 0.35,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return context.parsed.y.toLocaleString('vi-VN') + ' đ';
                             }
                         }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    if (value >= 1000000) return (value / 1000000) + ' Tr';
-                                    if (value >= 1000) return (value / 1000) + ' k';
-                                    return value;
-                                },
-                                font: { weight: 'bold', size: 10 }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                if (value >= 1000000) return (value / 1000000) + ' Tr';
+                                if (value >= 1000) return (value / 1000) + ' k';
+                                return value;
                             },
-                            grid: { color: '#f1f5f9' }
+                            font: { weight: 'bold', size: 10 }
                         },
-                        x: {
-                            ticks: { font: { weight: 'bold', size: 11 } },
-                            grid: { display: false }
-                        }
+                        grid: { color: '#f1f5f9' }
+                    },
+                    x: {
+                        ticks: { font: { weight: 'bold', size: 11 } },
+                        grid: { display: false }
                     }
                 }
-            });
+            }
+        });
         }
     });
-</script>
-{% endblock %}
+    </script>
+    {% endblock %}

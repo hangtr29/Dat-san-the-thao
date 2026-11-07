@@ -27,7 +27,7 @@ class OwnerBaseView(LoginRequiredMixin, View):
     """
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return redirect('users:login')
+            return redirect(f"/users/login/?next={request.path}")
         if not (request.user.is_owner() or request.user.is_staff):
             messages.error(request, "Bạn không có quyền truy cập Kênh Chủ Sân.")
             return redirect('facilities:facility_list')

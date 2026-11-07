@@ -130,41 +130,37 @@
             <!-- DANH SÁCH MENU ĐIỀU HƯỚNG THEO NHÓM CHUYÊN BIỆT -->
             <nav class="flex-1 overflow-y-auto p-3.5 space-y-6">
 
-                <!-- NHÓM 1: VẬN HÀNH & KINH DOANH -->
+                <!-- NHÓM 1: VẬN HÀNH & ĐƠN HÀNG -->
                 <div>
-                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Vận
-                        Hành & Đơn Hàng</span>
+                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Vận Hành & Đơn Hàng</span>
                     <div class="space-y-1">
-                        <!-- 1.1 Tổng quan & Doanh thu -->
+                        <!-- 1.1 Tổng quan doanh thu -->
                         <a href="{% url 'bookings:owner_dashboard' %}?tab=orders{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'overview' or active_tab == 'orders' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i
-                                    class="fa-solid fa-chart-pie w-4 text-center {% if active_menu == 'overview' or active_tab == 'orders' %}text-white{% else %}text-emerald-400{% endif %}"></i>
-                                <span>Tổng Quan & Doanh Thu</span>
+                                <i class="fa-solid fa-chart-pie w-4 text-center {% if active_menu == 'overview' or active_tab == 'orders' %}text-white{% else %}text-emerald-400{% endif %}"></i>
+                                <span>Tổng Quan Doanh Thu</span>
                             </div>
                         </a>
 
-                        <!-- 1.2 Duyệt đơn & Biên lai chuyển khoản -->
+                        <!-- 1.2 Xác nhận đơn đặt sân -->
                         <a href="{% url 'facilities:owner_booking_approval' %}{% if selected_facility_id %}?facility_id={{ selected_facility_id }}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'approval' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i
-                                    class="fa-solid fa-receipt w-4 text-center {% if active_menu == 'approval' %}text-white{% else %}text-amber-400{% endif %}"></i>
-                                <span>Duyệt Đơn & Biên Lai</span>
+                                <i class="fa-solid fa-receipt w-4 text-center {% if active_menu == 'approval' %}text-white{% else %}text-amber-400{% endif %}"></i>
+                                <span>Xác Nhận Đơn Đặt Sân</span>
                             </div>
                             {% if pending_count and pending_count > 0 %}
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">{{ pending_count }}</span>
                             {% endif %}
                         </a>
 
-                        <!-- 1.3 Đánh giá khách hàng -->
+                        <!-- 1.3 Đánh giá & Phản hồi -->
                         <a href="{% url 'bookings:owner_dashboard' %}?tab=reviews{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'reviews' or active_tab == 'reviews' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i
-                                    class="fa-solid fa-star w-4 text-center {% if active_menu == 'reviews' or active_tab == 'reviews' %}text-white{% else %}text-yellow-400{% endif %}"></i>
-                                <span>Đánh Giá Khách Hàng</span>
+                                <i class="fa-solid fa-star w-4 text-center {% if active_menu == 'reviews' or active_tab == 'reviews' %}text-white{% else %}text-yellow-400{% endif %}"></i>
+                                <span>Đánh Giá & Phản Hồi</span>
                             </div>
                             {% if reviews %}
                             <span class="text-[11px] text-slate-400 font-bold">({{ reviews|length }})</span>
@@ -173,68 +169,63 @@
                     </div>
                 </div>
 
-                <!-- NHÓM 2: CẤU HÌNH SÂN & BẢNG GIÁ -->
+                <!-- NHÓM 2: CẤU HÌNH & DỊCH VỤ -->
                 <div>
-                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Cấu
-                        Hình Sân Thi Đấu</span>
+                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Cấu Hình & Dịch Vụ</span>
                     <div class="space-y-1">
-                        <!-- 2.1 Quản lý Sân con & Ma trận giờ -->
+                        <!-- 2.1 Sân thi đấu & Biểu giá -->
                         <a href="{% if selected_facility_id %}{% url 'facilities:owner_court_manage' selected_facility_id %}{% elif config_facility %}{% url 'facilities:owner_court_manage' config_facility.id %}{% else %}{% url 'facilities:owner_court_manage_default' %}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'courts' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i
-                                    class="fa-solid fa-layer-group w-4 text-center {% if active_menu == 'courts' %}text-white{% else %}text-blue-400{% endif %}"></i>
-                                <span>Sân Con & Ma Trận Giờ</span>
+                                <i class="fa-solid fa-layer-group w-4 text-center {% if active_menu == 'courts' %}text-white{% else %}text-blue-400{% endif %}"></i>
+                                <span>Sân Thi Đấu & Biểu Giá</span>
                             </div>
                             <i class="fa-solid fa-plus text-[10px] text-slate-400"></i>
                         </a>
 
-                        <!-- 2.2 Thông tin cụm sân & Mã VietQR nhận tiền -->
+                        <!-- 2.2 Thông tin cơ sở & VietQR -->
                         <a href="{% url 'bookings:owner_dashboard' %}?tab=settings{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'settings' or active_tab == 'settings' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i
-                                    class="fa-solid fa-qrcode w-4 text-center {% if active_menu == 'settings' or active_tab == 'settings' %}text-white{% else %}text-emerald-400{% endif %}"></i>
-                                <span>Cài Đặt Sân & VietQR</span>
+                                <i class="fa-solid fa-qrcode w-4 text-center {% if active_menu == 'settings' or active_tab == 'settings' %}text-white{% else %}text-emerald-400{% endif %}"></i>
+                                <span>Thông Tin Cơ Sở & VietQR</span>
                             </div>
                         </a>
 
-                        <!-- 2.3 GPS định vị thực địa & KYC chống sân ma -->
+                        <!-- 2.3 Định vị & Xác thực cơ sở -->
                         <a href="{% if selected_facility_id %}{% url 'facilities:owner_facility_manage_detail' selected_facility_id %}{% elif config_facility %}{% url 'facilities:owner_facility_manage_detail' config_facility.id %}{% else %}{% url 'facilities:owner_facility_manage' %}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'facility_profile' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i
-                                    class="fa-solid fa-map-location-dot w-4 text-center {% if active_menu == 'facility_profile' %}text-white{% else %}text-purple-400{% endif %}"></i>
-                                <span>Định Vị GPS & Hồ Sơ</span>
+                                <i class="fa-solid fa-map-location-dot w-4 text-center {% if active_menu == 'facility_profile' %}text-white{% else %}text-purple-400{% endif %}"></i>
+                                <span>Định Vị & Xác Thực Cơ Sở</span>
                             </div>
-                            <span class="text-[10px] text-sky-400 font-bold">✓ KYC</span>
+                            <span class="text-[10px] text-sky-400 font-bold">✓ Tích Xanh</span>
                         </a>
                     </div>
                 </div>
 
                 <!-- NHÓM 3: LIÊN KẾT NHANH -->
                 <div>
-                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Cổng
-                        Khách & Quản Trị</span>
+                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Liên Kết Nhanh</span>
                     <div class="space-y-1">
-                        <!-- Xem với tư cách khách hàng -->
+                        <!-- Xem giao diện đặt sân của khách -->
                         <a href="{% if config_facility %}{% url 'facilities:facility_detail' config_facility.id %}{% else %}{% url 'facilities:facility_list' %}{% endif %}"
                             target="_blank"
                             class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-arrow-up-right-from-square w-4 text-center text-slate-400"></i>
-                                <span>Xem Trang Bán (Khách)</span>
+                                <span>Xem Giao Diện Đặt Sân</span>
                             </div>
                             <span class="text-[10px] text-slate-400">↗</span>
                         </a>
 
                         {% if user.is_staff or user.is_superuser %}
-                        <!-- Trang Django Admin (Dành cho Quản trị viên duyệt KYC) -->
+                        <!-- Cổng Quản Trị Hệ Thống -->
                         <a href="/admin/" target="_blank"
                             class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-amber-300 transition">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-shield-halved w-4 text-center text-amber-400"></i>
-                                <span>Trang Quản Trị Django</span>
+                                <span>Cổng Quản Trị Hệ Thống</span>
                             </div>
                             <span class="text-[10px] text-amber-400 font-bold">Admin</span>
                         </a>

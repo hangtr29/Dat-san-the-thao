@@ -160,8 +160,7 @@ select-none{% endblock %}
     <div
         class="flex-none bg-[#e5f8ef] border-b border-emerald-100/80 px-4 sm:px-8 py-1.5 text-center text-xs sm:text-[13px] font-semibold text-slate-700 w-full shadow-sm">
         <span class="text-[#c25e1a] font-bold">Lưu ý:</span> Nếu bạn cần đặt lịch cố định vui lòng liên hệ:
-        <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{ facility.phone_contact
-            }}</a> để được hỗ trợ.
+        <a href="tel:{{ facility.phone_contact }}" class="font-bold text-slate-900 underline">{{ facility.phone_contact }}</a> để được hỗ trợ.
     </div>
 
     <!-- 3. MIDDLE SECTION: MA TRẬN ĐẶT SÂN (Continuous Matrix Timeline Grid) -->
@@ -251,8 +250,7 @@ select-none{% endblock %}
                                         class="w-full h-full bg-[#b2b2b2] cursor-not-allowed">
                                     </div>
 
-                                    {% elif slot.booking and slot.booking.status == 'WAITING_APPROVAL' or
-                                    slot.booking.status == 'CONFIRMED' %}
+                                    {% elif slot.booking and slot.booking.status == 'WAITING_APPROVAL' or slot.booking.status == 'CONFIRMED' %}
                                     <!-- ĐÃ ĐẶT (KHỐI ĐỎ SAN HÔ GẠCH #b54848 ĐẶC PHẲNG LIỀN MẢNG CHÍNH XÁC NHƯ ẢNH MẪU) -->
                                     <div title="Đã đặt: {{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }}"
                                         class="w-full h-full bg-[#b54848] cursor-not-allowed">
@@ -378,8 +376,7 @@ select-none{% endblock %}
                     <i class="fa-solid fa-star text-amber-400"></i> ĐÁNH GIÁ CHẤT LƯỢNG SÂN
                 </h3>
                 <span class="text-xs text-slate-400 font-semibold block mt-0.5">
-                    Điểm trung bình: <strong class="text-amber-500 font-extrabold text-sm">{{
-                        facility.get_average_rating }}/5.0</strong> ({{ facility.get_total_reviews }} lượt đánh giá)
+                    Điểm trung bình: <strong class="text-amber-500 font-extrabold text-sm">{{ facility.get_average_rating }}/5.0</strong> ({{ facility.get_total_reviews }} lượt đánh giá)
                 </span>
             </div>
             <button onclick="document.getElementById('reviews-modal').classList.add('hidden')"
@@ -408,10 +405,12 @@ select-none{% endblock %}
                     <div class="text-right">
                         <div class="text-[#facc15] font-black text-xs">
                             {% for i in "12345"|make_list %}
-                            {% if forloop.counter <= rev.rating %}★{% else %}☆{% endif %} {% endfor %} </div>
-                                <span class="text-[10px] text-slate-400 block">{{ rev.created_at|date:"d/m/Y" }}</span>
+                            {% if forloop.counter <= rev.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
                         </div>
+                        <span class="text-[10px] text-slate-400 block">{{ rev.created_at|date:"d/m/Y" }}</span>
                     </div>
+                </div>
                     <p class="text-slate-600 leading-relaxed pl-9">
                         {{ rev.comment }}
                     </p>

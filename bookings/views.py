@@ -51,7 +51,7 @@ def save_booking_to_session(request, booking, proof_data_url=None):
         'created_at': booking.created_at.isoformat() if booking.created_at else timezone.now().isoformat(),
         'slot_ids': slot_ids,
         'slots_info': slots_info,
-        'user_id': booking.customer_id,
+        'user_id': str(booking.customer_id) if booking.customer_id else None,
         'proof_data_url': proof,
     }
     request.session['saved_bookings'] = saved

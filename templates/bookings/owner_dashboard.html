@@ -17,131 +17,27 @@
 {% block owner_content %}
 <div class="space-y-6">
 
-    <!-- 0. HƯỚNG DẪN 3 BƯỚC THIẾT LẬP VẬN HÀNH DÀNH CHO CHỦ SÂN (GIẢI QUYẾT: "TIẾP THEO TÔI LÀM GÌ?") -->
-    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-3xl p-5 sm:p-6 text-white shadow-md relative overflow-hidden border border-slate-700/60">
-        <div class="relative z-10">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <div>
-                    <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 mb-1.5">
-                        <i class="fa-solid fa-compass"></i> Hướng Dẫn Vận Hành Chuẩn
-                    </span>
-                    <h2 class="text-lg sm:text-xl font-black tracking-tight">Quy trình 3 bước chuẩn bị để cụm sân bắt đầu đón khách</h2>
-                    <p class="text-xs text-slate-300 mt-0.5">Hoàn tất đầy đủ 3 bước dưới đây để sân thể thao tự động kích hoạt và hiển thị cho người chơi.</p>
-                </div>
-                <div class="shrink-0 flex items-center gap-2">
-                    <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-check text-emerald-400"></i> Trạng thái: Sẵn sàng nhận khách
-                    </span>
-                </div>
-            </div>
+    <!-- TIÊU ĐỀ GỌN GÀNG & NÚT XUẤT BÁO CÁO -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            {% if active_tab == 'settings' %}Cài Đặt Sân & VietQR{% elif active_tab == 'reviews' %}Đánh Giá Khách Hàng{% else %}Tổng Quan Doanh Thu{% endif %}
+        </h1>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                <!-- Bước 1 -->
-                <a href="{% if selected_facility_id %}{% url 'facilities:owner_facility_manage_detail' selected_facility_id %}{% else %}{% url 'facilities:owner_facility_manage' %}{% endif %}"
-                   class="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition block group">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="font-black text-emerald-400 flex items-center gap-1.5">
-                            <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black flex items-center justify-center">1</span>
-                            Định Vị GPS & Hotline
-                        </span>
-                        <i class="fa-solid fa-circle-check text-emerald-400"></i>
-                    </div>
-                    <p class="text-[11px] text-slate-300">Ghim vị trí thực địa chống sân ma và lưu số điện thoại hỗ trợ khách.</p>
-                </a>
-
-                <!-- Bước 2 -->
-                <a href="?tab=settings{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}"
-                   class="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition block group">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="font-black text-amber-400 flex items-center gap-1.5">
-                            <span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black flex items-center justify-center">2</span>
-                            Tài Khoản VietQR
-                        </span>
-                        <i class="fa-solid fa-circle-check text-amber-400"></i>
-                    </div>
-                    <p class="text-[11px] text-slate-300">Cấu hình số tài khoản ngân hàng để tự động nhận tiền trực tiếp từ khách.</p>
-                </a>
-
-                <!-- Bước 3 -->
-                <a href="{% if selected_facility_id %}{% url 'facilities:owner_court_manage' selected_facility_id %}{% else %}{% url 'facilities:owner_court_manage_default' %}{% endif %}"
-                   class="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition block group">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="font-black text-sky-400 flex items-center gap-1.5">
-                            <span class="w-5 h-5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-black flex items-center justify-center">3</span>
-                            Sân Con & Bảng Giá
-                        </span>
-                        <i class="fa-solid fa-arrow-right text-sky-400 group-hover:translate-x-1 transition text-xs"></i>
-                    </div>
-                    <p class="text-[11px] text-slate-300">Thêm mới Sân 1, Sân 2... đặt giá giờ thường/cao điểm và tự sinh lịch.</p>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- 1. HEADER & THAO TÁC XUẤT BÁO CÁO -->
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Bảng Điều Khiển & Nghiệp Vụ Vận Hành
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                Theo dõi dòng tiền thời gian thực, duyệt đơn đặt sân, cấu hình tài khoản VietQR và chăm sóc khách hàng.
-            </p>
-        </div>
-
-        <!-- CẶP NÚT XUẤT BÁO CÁO DOANH THU (EXCEL/CSV & PDF) -->
-        <div class="flex flex-wrap items-center gap-2.5">
-            <!-- Nút Xuất Excel / CSV -->
+        {% if active_tab == 'orders' %}
+        <div class="flex items-center gap-2">
             <a href="{% url 'bookings:owner_export_revenue_csv' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}" 
-               class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-file-excel text-sm"></i>
-                <span>Xuất Excel / CSV</span>
+               class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase shadow-xs transition flex items-center gap-1.5">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Xuất Excel</span>
             </a>
-
-            <!-- Nút In / Tải PDF A4 -->
             <a href="{% url 'bookings:owner_export_revenue_pdf' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}" 
                target="_blank"
-               class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-file-pdf text-sm text-rose-400"></i>
-                <span>In / Xuất PDF (A4)</span>
+               class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase shadow-xs transition flex items-center gap-1.5">
+                <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                <span>Xuất PDF</span>
             </a>
         </div>
-    </div>
-
-    <!-- 2. THANH CHUYỂN TAB QUẢN TRỊ NGAY TRÊN TRANG -->
-    <div class="flex border-b border-slate-200 overflow-x-auto gap-2 sm:gap-4 text-xs font-black">
-        <a href="?tab=orders{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}" 
-           class="pb-3 px-3 sm:px-5 flex items-center gap-2 border-b-2 transition whitespace-nowrap {% if active_tab == 'orders' %}border-emerald-600 text-emerald-700 font-extrabold{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %}">
-            <i class="fa-solid fa-receipt text-sm"></i>
-            <span>1. Đơn Đặt Sân & Duyệt Bill</span>
-            {% if pending_count > 0 %}
-            <span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-black">{{ pending_count }}</span>
-            {% endif %}
-        </a>
-
-        <a href="?tab=settings{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}" 
-           class="pb-3 px-3 sm:px-5 flex items-center gap-2 border-b-2 transition whitespace-nowrap {% if active_tab == 'settings' %}border-emerald-600 text-emerald-700 font-extrabold{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %}">
-            <i class="fa-solid fa-sliders text-sm"></i>
-            <span>2. Cài Đặt Sân & Mã VietQR</span>
-        </a>
-
-        <a href="?tab=reviews{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}" 
-           class="pb-3 px-3 sm:px-5 flex items-center gap-2 border-b-2 transition whitespace-nowrap {% if active_tab == 'reviews' %}border-emerald-600 text-emerald-700 font-extrabold{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %}">
-            <i class="fa-solid fa-star text-sm text-amber-500"></i>
-            <span>3. Đánh Giá Khách Hàng ({{ reviews|length }})</span>
-        </a>
-
-        <a href="{% if selected_facility_id %}{% url 'facilities:owner_court_manage' selected_facility_id %}{% elif config_facility %}{% url 'facilities:owner_court_manage' config_facility.id %}{% else %}{% url 'facilities:owner_court_manage_default' %}{% endif %}" 
-           class="pb-3 px-3 sm:px-5 flex items-center gap-2 border-b-2 border-transparent text-slate-500 hover:text-emerald-700 transition whitespace-nowrap">
-            <i class="fa-solid fa-layer-group text-sm text-blue-600"></i>
-            <span>4. Thêm Sân & Ma Trận Giờ</span>
-        </a>
-
-        <a href="{% if selected_facility_id %}{% url 'facilities:owner_facility_manage_detail' selected_facility_id %}{% elif config_facility %}{% url 'facilities:owner_facility_manage_detail' config_facility.id %}{% else %}{% url 'facilities:owner_facility_manage' %}{% endif %}" 
-           class="pb-3 px-3 sm:px-5 flex items-center gap-2 border-b-2 border-transparent text-slate-500 hover:text-emerald-700 transition whitespace-nowrap">
-            <i class="fa-solid fa-map-location-dot text-sm text-purple-600"></i>
-            <span>5. GPS & Xác Minh Cụm Sân</span>
-        </a>
+        {% endif %}
     </div>
 
     <!-- ==================== TAB 1: ĐƠN ĐẶT SÂN & DUYỆT BILL ==================== -->
@@ -158,19 +54,19 @@
                 </div>
             </div>
             <div class="text-2xl font-black text-emerald-700">{{ revenue_today_str }}</div>
-            <span class="text-[11px] text-slate-400 font-semibold block mt-1">Cập nhật thời gian thực</span>
+            <span class="text-[11px] text-slate-400 font-bold block mt-1">Hôm nay</span>
         </div>
 
         <!-- Card 2: Doanh thu tháng này -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold text-slate-500 uppercase">Doanh Thu Tháng Này</span>
+                <span class="text-xs font-bold text-slate-500 uppercase">Doanh Thu Tháng</span>
                 <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
                     <i class="fa-solid fa-calendar-week"></i>
                 </div>
             </div>
             <div class="text-2xl font-black text-blue-700">{{ revenue_month_str }}</div>
-            <span class="text-[11px] text-slate-400 font-semibold block mt-1">Tính từ ngày 1 đầu tháng</span>
+            <span class="text-[11px] text-slate-400 font-bold block mt-1">Tháng hiện tại</span>
         </div>
 
         <!-- Card 3: Tổng doanh thu tích lũy -->
@@ -182,7 +78,7 @@
                 </div>
             </div>
             <div class="text-2xl font-black text-[#b45309]">{{ revenue_total_str }}</div>
-            <span class="text-[11px] text-slate-400 font-semibold block mt-1">Tổng cộng các đơn đã duyệt</span>
+            <span class="text-[11px] text-slate-400 font-bold block mt-1">Tích lũy</span>
         </div>
 
         <!-- Card 4: Số đơn chờ duyệt & Đã duyệt -->
@@ -195,26 +91,23 @@
             </div>
             <div class="flex items-baseline gap-2">
                 <span class="text-2xl font-black text-amber-600">{{ pending_count }}</span>
-                <span class="text-xs font-bold text-slate-400">chờ duyệt /</span>
+                <span class="text-xs font-bold text-slate-400">chờ /</span>
                 <span class="text-lg font-black text-emerald-600">{{ confirmed_count }}</span>
-                <span class="text-xs font-bold text-slate-400">đã xong</span>
+                <span class="text-xs font-bold text-slate-400">xong</span>
             </div>
-            <span class="text-[11px] text-slate-400 font-semibold block mt-1">Tỷ lệ lấp đầy ổn định</span>
+            <span class="text-[11px] text-slate-400 font-bold block mt-1">Đơn đặt sân</span>
         </div>
     </div>
 
     <!-- BIỂU ĐỒ DOANH THU 7 NGÀY GẦN NHẤT (CHART.JS) -->
     <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-            <div>
-                <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-chart-line text-emerald-600"></i>
-                    Biểu Đồ Xu Hướng Doanh Thu (7 Ngày Gần Nhất)
-                </h3>
-                <p class="text-xs text-slate-400 font-semibold mt-0.5">Biểu diễn dòng tiền thực tế thu được từ các đơn đặt sân đã xác thực</p>
-            </div>
-            <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 w-fit">
-                Đơn vị: VNĐ
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-black text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-emerald-600"></i>
+                Xu Hướng Doanh Thu (7 Ngày)
+            </h3>
+            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                VNĐ
             </span>
         </div>
         <div class="h-64 sm:h-72 w-full">
@@ -226,7 +119,7 @@
     <form method="get" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
         <input type="hidden" name="tab" value="orders">
         <div class="font-black text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
-            <i class="fa-solid fa-filter text-emerald-600"></i> Bộ Lọc Doanh Thu & Đơn Đặt Sân
+            <i class="fa-solid fa-filter text-emerald-600"></i> Bộ Lọc Đơn Hàng
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
@@ -393,13 +286,11 @@
     {% elif active_tab == 'settings' %}
 
     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
-        <div>
-            <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-store text-emerald-600"></i> Cấu Hình Cụm Sân & Tài Khoản Nhận Tiền VietQR
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h2 class="text-base font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-store text-emerald-600"></i> Thông Tin Cơ Sở & Tài Khoản VietQR
             </h2>
-            <p class="text-xs text-slate-500 mt-1">
-                Chỉnh sửa trực tiếp tên sân, địa chỉ, ảnh đại diện và thông tin ngân hàng. Hệ thống sẽ tự động đồng bộ mã VietQR động khi khách đặt sân!
-            </p>
+            <span class="text-xs text-emerald-600 font-bold hidden sm:inline">● Tự động tạo mã thanh toán</span>
         </div>
 
         {% if config_facility %}

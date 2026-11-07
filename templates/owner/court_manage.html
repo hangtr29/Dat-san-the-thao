@@ -92,10 +92,7 @@
                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <option value="">-- Chọn môn thể thao --</option>
                         {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if edit_court and edit_court.category.id==cat.id %}selected{%
-                            endif %}>
-                            {{ cat.name }}
-                        </option>
+                        <option value="{{ cat.id }}" {% if edit_court and edit_court.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -106,12 +103,9 @@
                         <label class="block text-xs font-bold text-slate-700 mb-1">Khu Vực</label>
                         <select name="court_area"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="Sân trong nhà" {% if edit_court and edit_court.court_area=='Sân trong nhà'
-                                %}selected{% endif %}>Sân trong nhà</option>
-                            <option value="Sân ngoài trời" {% if edit_court and edit_court.court_area=='Sân ngoài trời'
-                                %}selected{% endif %}>Sân ngoài trời</option>
-                            <option value="Khu sân VIP" {% if edit_court and edit_court.court_area=='Khu sân VIP'
-                                %}selected{% endif %}>Khu sân VIP</option>
+                            <option value="Sân trong nhà" {% if edit_court and edit_court.court_area == 'Sân trong nhà' %}selected{% endif %}>Sân trong nhà</option>
+                            <option value="Sân ngoài trời" {% if edit_court and edit_court.court_area == 'Sân ngoài trời' %}selected{% endif %}>Sân ngoài trời</option>
+                            <option value="Khu sân VIP" {% if edit_court and edit_court.court_area == 'Khu sân VIP' %}selected{% endif %}>Khu sân VIP</option>
                         </select>
                     </div>
 
@@ -138,8 +132,7 @@
                                     class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                                 <span class="absolute right-2.5 top-2 text-[10px] text-slate-400 font-bold">đ/h</span>
                             </div>
-                            <span class="text-[10px] text-slate-400 block mt-0.5">{{ facility.open_time|time:"H:i" }} -
-                                17:00</span>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">{{ facility.open_time|time:"H:i" }} - 17:00</span>
                         </div>
 
                         <div>
@@ -149,23 +142,19 @@
                                     class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-extrabold text-[#c2410c] focus:outline-none focus:ring-2 focus:ring-emerald-500">
                                 <span class="absolute right-2.5 top-2 text-[10px] text-slate-400 font-bold">đ/h</span>
                             </div>
-                            <span class="text-[10px] text-slate-400 block mt-0.5">17:00 - {{
-                                facility.close_time|time:"H:i" }}</span>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">17:00 - {{ facility.close_time|time:"H:i" }}</span>
                         </div>
                     </div>
 
-                    <div
-                        class="p-2.5 bg-white/80 rounded-xl border border-emerald-200/60 text-[11px] text-emerald-800 font-medium leading-relaxed">
+                    <div class="p-2.5 bg-white/80 rounded-xl border border-emerald-200/60 text-[11px] text-emerald-800 font-medium leading-relaxed">
                         <i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-1"></i>
-                        Hệ thống sẽ <strong>tự động phát sinh ma trận slot giờ 60 phút</strong> cho 8 ngày liên tiếp
-                        theo biểu giá này.
+                        Hệ thống sẽ <strong>tự động phát sinh ma trận slot giờ 60 phút</strong> cho 8 ngày liên tiếp theo biểu giá này.
                     </div>
                 </div>
 
                 <!-- Trạng thái hoạt động -->
                 <div class="flex items-center gap-2 pt-1">
-                    <input type="checkbox" id="is_active" name="is_active" class="w-4 h-4 accent-emerald-600 rounded" {%
-                        if edit_court %}{% if edit_court.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+                    <input type="checkbox" id="is_active" name="is_active" class="w-4 h-4 accent-emerald-600 rounded" {% if edit_court %}{% if edit_court.is_active %}checked{% endif %}{% else %}checked{% endif %}>
                     <label for="is_active" class="text-xs font-bold text-slate-700 cursor-pointer">
                         Sân sẵn sàng mở bán và nhận khách đặt
                     </label>

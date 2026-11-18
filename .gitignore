@@ -48,3 +48,6 @@ media/
 .DS_Store
 Thumbs.db
 
+
+# Database (khong push du lieu nghiep vu len GitHub)
+db.sqlite3

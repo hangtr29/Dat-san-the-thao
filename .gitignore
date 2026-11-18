@@ -37,7 +37,9 @@ db.sqlite3-journal
 
 # Biến môi trường / secrets (chứa GOOGLE_MAPS_API_KEY)
 .env
-.env.*
+.env.local
+.env.production
+!.env.example
 
 # Media upload (bill chuyển khoản, avatar, QR)
 media/

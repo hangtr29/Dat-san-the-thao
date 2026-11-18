@@ -12,6 +12,8 @@ urlpatterns = [
     path('api/status/<str:booking_code>/', views.booking_status_api, name='booking_status_api'),
     path('history/', views.booking_history, name='booking_history'),
     path('lookup/', views.booking_lookup, name='booking_lookup'),
+    path('terms/', views.booking_terms, name='booking_terms'),
+    path('refund-policy/', views.booking_refund_policy, name='booking_refund_policy'),
     
     # Đánh giá chất lượng sân (Review & Rating)
     path('review/<str:booking_code>/', views.submit_court_review, name='submit_review'),

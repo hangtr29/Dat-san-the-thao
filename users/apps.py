@@ -7,11 +7,18 @@ class UsersConfig(AppConfig):
 
     def ready(self):
         """
-        Tự động tạo bảng KYC/Subscription trong SQLite, khởi tạo các gói duy trì
-        và kích hoạt tài khoản Chủ Sân (chusan / chusan123) sẵn sàng kiểm thử.
+        Đảm bảo bảng KYC/Subscription tồn tại trong SQLite và khởi tạo
+        các dữ liệu mẫu (gói dịch vụ) CHỈ KHI CHƯA CÓ.
+
+        NGUYÊN TẮC (đã sửa):
+        - KHÔNG reset mật khẩu người dùng đã tồn tại (tránh mất mật khẩu đã đổi khi restart server).
+        - KHÔNG gán đè toàn bộ cụm sân về một tài khoản (tránh mất quyền sở hữu thật).
+        - KHÔNG chạy khi thực hiện các lệnh quản trị (makemigrations/migrate/collectstatic/check/test).
         """
         import sys
-        if any(cmd in sys.argv for cmd in ['makemigrations', 'migrate', 'collectstatic', 'check']):
+        if any(cmd in sys.argv for cmd in [
+            'makemigrations', 'migrate', 'collectstatic', 'check', 'test', 'shell', 'dumpdata', 'loaddata'
+        ]):
             return
 
         try:
@@ -67,87 +74,71 @@ class UsersConfig(AppConfig):
                     );
                 """)
 
-                tables = connection.introspection.table_names(cursor)
-                if 'users_user' in tables:
-                    from users.models import User, UserRole, OwnerProfile, KYCStatus, SubscriptionPlan
-                    from facilities.models import Facility
+            tables = connection.introspection.table_names()
+            if 'users_user' not in tables:
+                return
 
-                    # 1. Khởi tạo tài khoản Quản trị viên Admin Web
-                    admin_user = User.objects.filter(username='admin').first()
-                    if not admin_user:
-                        admin_user = User(
-                            id=uuid.UUID('00000000-0000-0000-0000-000000000001'),
-                            username='admin',
-                            first_name='Quản Trị Viên',
-                            last_name='Hệ Thống',
-                            email='admin@sportbook.vn',
-                            role=UserRole.ADMIN,
-                            is_staff=True,
-                            is_superuser=True,
-                        )
-                    admin_user.role = UserRole.ADMIN
-                    admin_user.is_staff = True
-                    admin_user.is_superuser = True
-                    admin_user.set_password('admin123')
-                    admin_user.save()
+            from users.models import User, UserRole, OwnerProfile, KYCStatus, SubscriptionPlan
 
-                    # 2. Khởi tạo tài khoản test chusan
-                    owner = User.objects.filter(username='chusan').first()
-                    if not owner:
-                        owner = User(
-                            id=uuid.UUID('11111111-1111-1111-1111-111111111111'),
-                            username='chusan',
-                            first_name='Chủ Sân',
-                            last_name='SportBook',
-                            email='chusan@sportbook.vn',
-                            role=UserRole.OWNER,
-                            is_staff=True,
-                            is_superuser=True,
-                        )
-                    owner.role = UserRole.OWNER
-                    owner.is_staff = True
-                    owner.is_superuser = True
-                    owner.set_password('chusan123')
-                    owner.save()
+            # 1. Khởi tạo tài khoản Quản trị viên Admin Web (CHỈ TẠO MỚI NẾU CHƯA CÓ)
+            admin_user = User.objects.filter(username='admin').first()
+            if not admin_user:
+                admin_user = User(
+                    username='admin',
+                    first_name='Quản Trị Viên',
+                    last_name='Hệ Thống',
+                    email='admin@sportbook.vn',
+                    role=UserRole.ADMIN,
+                    is_staff=True,
+                    is_superuser=True,
+                )
+                admin_user.set_password('admin123')
+                admin_user.save()
 
-                    # 3. Tạo hồ sơ KYC và kích hoạt gói duy trì 1 năm cho chusan
-                    profile, _ = OwnerProfile.objects.get_or_create(
-                        user=owner,
-                        defaults={
-                            'id_card_number': '079098765432',
-                            'bank_name': 'MBBank',
-                            'bank_account_number': '0988112233',
-                            'bank_account_holder': 'CHU SAN SPORTBOOK',
-                            'kyc_status': KYCStatus.KYC_VERIFIED,
-                            'subscription_expires_at': timezone.now() + timedelta(days=365),
-                        }
-                    )
-                    profile.kyc_status = KYCStatus.KYC_VERIFIED
-                    if not profile.subscription_expires_at or profile.subscription_expires_at <= timezone.now():
-                        profile.subscription_expires_at = timezone.now() + timedelta(days=365)
-                    profile.save()
+            # 2. Khởi tạo tài khoản test chusan (CHỈ TẠO MỚI NẾU CHƯA CÓ)
+            owner = User.objects.filter(username='chusan').first()
+            if not owner:
+                owner = User(
+                    username='chusan',
+                    first_name='Chủ Sân',
+                    last_name='SportBook',
+                    email='chusan@sportbook.vn',
+                    role=UserRole.OWNER,
+                    is_staff=True,
+                    is_superuser=True,
+                )
+                owner.set_password('chusan123')
+                owner.save()
 
-                    # 4. Gán tất cả Cụm sân cho chủ sân này
-                    if 'facilities_facility' in tables:
-                        Facility.objects.all().update(owner=owner)
+                # 3. Tạo hồ sơ KYC và kích hoạt gói duy trì 1 năm (chỉ khi vừa tạo user)
+                profile, _ = OwnerProfile.objects.get_or_create(
+                    user=owner,
+                    defaults={
+                        'id_card_number': '079098765432',
+                        'bank_name': 'MBBank',
+                        'bank_account_number': '0988112233',
+                        'bank_account_holder': 'CHU SAN SPORTBOOK',
+                        'kyc_status': KYCStatus.KYC_VERIFIED,
+                        'subscription_expires_at': timezone.now() + timedelta(days=365),
+                    }
+                )
+                profile.save()
 
-                    # 5. Khởi tạo các Gói Thu Phí Duy Trì mẫu
-                    plans_data = [
-                        ("Gói Khởi Nghiệp (1 Tháng)", 30, Decimal('199000'), "Phù hợp chủ sân mới trải nghiệm hệ thống."),
-                        ("Gói Tiêu Chuẩn (3 Tháng)", 90, Decimal('499000'), "Tiết kiệm 20% chi phí vận hành."),
-                        ("Gói Doanh Nghiệp (1 Năm)", 365, Decimal('1490000'), "Đầy đủ tính năng, ưu tiên hiển thị Top 1 tìm kiếm."),
-                    ]
-                    for name, days, price, desc in plans_data:
-                        SubscriptionPlan.objects.get_or_create(
-                            name=name,
-                            defaults={
-                                'duration_days': days,
-                                'price': price,
-                                'description': desc,
-                                'is_active': True,
-                            }
-                        )
+            # 4. Khởi tạo các Gói Thu Phí Duy Trì mẫu (get_or_create -> không ghi đè dữ liệu cũ)
+            plans_data = [
+                ("Gói Khởi Nghiệp (1 Tháng)", 30, Decimal('199000'), "Phù hợp chủ sân mới trải nghiệm hệ thống."),
+                ("Gói Tiêu Chuẩn (3 Tháng)", 90, Decimal('499000'), "Tiết kiệm 20% chi phí vận hành."),
+                ("Gói Doanh Nghiệp (1 Năm)", 365, Decimal('1490000'), "Đầy đủ tính năng, ưu tiên hiển thị Top 1 tìm kiếm."),
+            ]
+            for name, days, price, desc in plans_data:
+                SubscriptionPlan.objects.get_or_create(
+                    name=name,
+                    defaults={
+                        'duration_days': days,
+                        'price': price,
+                        'description': desc,
+                        'is_active': True,
+                    }
+                )
         except Exception:
             pass
-
-

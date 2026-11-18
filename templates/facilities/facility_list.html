@@ -7,6 +7,12 @@
 
     <!-- Categories Filter Chips -->
     <div class="flex items-center gap-2.5 overflow-x-auto pb-2 mb-6 text-xs font-black">
+        <a href="{% url 'facilities:facility_map' %}"
+            class="px-5 py-2.5 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm bg-[#c2410c] text-white hover:bg-[#9a3412]">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span>Xem trên bản đồ</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/25">{{ total_facilities_count }}</span>
+        </a>
         <a href="{% url 'facilities:facility_list' %}"
             class="px-5 py-2.5 rounded-full transition flex items-center gap-2 whitespace-nowrap shadow-sm 
            {% if not selected_category %} bg-[#0b6b3a] text-white {% else %} bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 {% endif %}">
@@ -57,11 +63,11 @@
                     </span>
                 </div>
 
-                <!-- Top Right Action Icons: [♡] [🗺️ Chỉ đường Google Maps] -->
+                <!-- Top Right Action Icons: [♡ Lưu yêu thích] [🗺️ Chỉ đường Google Maps] -->
                 <div class="absolute top-3 right-3 flex items-center gap-2 z-10">
-                    <button type="button" title="Lưu yêu thích"
-                        class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
-                        <i class="fa-regular fa-heart"></i>
+                    <button type="button" title="Lưu yêu thích" data-fav-btn data-facility-id="{{ fac.id }}"
+                        class="fav-btn w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
+                        <i class="{% if fac.id in favorite_ids %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
                     </button>
                     <a href="https://www.google.com/maps/dir/?api=1&destination={{ fac.latitude }},{{ fac.longitude }}" 
                        target="_blank" title="Chỉ đường Google Maps đến sân"
@@ -138,4 +144,85 @@
     {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Xử lý nút Lưu yêu thích (trái tim) - gọi API toggle yêu thích
+    document.addEventListener('DOMContentLoaded', function () {
+        function getCookie(name) {
+            const v = `; ${document.cookie}`;
+            const parts = v.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return '';
+        }
+        const csrfToken = getCookie('csrftoken');
+
+        function showToast(message, type) {
+            let toast = document.getElementById('fav-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'fav-toast';
+                toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-2xl shadow-2xl text-xs font-black text-white transition-all duration-300 opacity-0 pointer-events-none';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.background = type === 'error' ? '#dc2626' : '#0b6b3a';
+            toast.style.opacity = '1';
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2600);
+        }
+
+        document.querySelectorAll('[data-fav-btn]').forEach(function (btn) {
+            btn.addEventListener('click', async function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const facilityId = this.dataset.facilityId;
+                const icon = this.querySelector('i');
+
+                try {
+                    const res = await fetch(`/facilities/api/favorite/${facilityId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    const data = await res.json();
+
+                    if (data.require_login) {
+                        showToast('Vui lòng đăng nhập để lưu sân yêu thích.', 'error');
+                        setTimeout(() => {
+                            window.location.href = `/users/login/?next=${encodeURIComponent(window.location.pathname)}`;
+                        }, 1200);
+                        return;
+                    }
+
+                    if (!data.ok) {
+                        showToast(data.message || 'Không thể lưu yêu thích.', 'error');
+                        return;
+                    }
+
+                    if (data.is_favorite) {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid');
+                        this.classList.add('text-rose-500');
+                    } else {
+                        icon.classList.remove('fa-solid');
+                        icon.classList.add('fa-regular');
+                        this.classList.remove('text-rose-500');
+                    }
+
+                    showToast(data.message || 'Đã cập nhật.', 'success');
+                } catch (err) {
+                    showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

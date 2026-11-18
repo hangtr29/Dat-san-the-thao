@@ -32,6 +32,17 @@ class User(AbstractUser):
     )
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Ảnh đại diện")
 
+    # Liên kết tài khoản Chủ Sân với tài khoản Quản trị phụ trách (được tạo & quản lý bởi Admin).
+    # Dùng cho việc truy vết: biết chủ sân nào do quản trị viên nào phụ trách.
+    managed_by = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='managed_users',
+        verbose_name="Được quản lý bởi (Quản trị viên)"
+    )
+
     class Meta:
         verbose_name = "Người dùng"
         verbose_name_plural = "Người dùng"
@@ -73,6 +84,18 @@ class User(AbstractUser):
         if hasattr(self, 'owner_profile'):
             return self.owner_profile.is_kyc_approved()
         return False
+
+    @property
+    def managed_facilities(self):
+        """Danh sách cụm sân mà chủ sân này phụ trách (quan hệ đóng gói)"""
+        return self.facilities.filter(active_status=True)
+
+    @property
+    def manager_display(self) -> str:
+        """Tên quản trị viên phụ trách (dùng để hiển thị trong bảng quản trị)"""
+        if self.managed_by:
+            return self.managed_by.get_full_name() or self.managed_by.username
+        return "Chưa phân công"
 
     def __str__(self):
         role_label = self.get_role_display()

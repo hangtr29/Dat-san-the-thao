@@ -83,6 +83,9 @@ python manage.py migrate
 
 # Nạp dữ liệu mẫu (Cụm sân, Sân đơn, Môn thể thao, Tài khoản & Slot)
 python seed_data.py
+
+# Bổ sung 5 cụm sân mẫu (tọa độ thực tế khu vực TP.HCM) cho phần Bản đồ
+python seed_map_facilities.py
 ```
 
 ### 5.3. Chạy Unit Tests kiểm thử
@@ -102,10 +105,14 @@ Truy cập trình duyệt tại: **http://127.0.0.1:8000/**
 ## 6. DANH SÁCH ĐƯỜNG DẪN (SITEMAP)
 
 * **Trang chủ & Danh sách sân:** `http://127.0.0.1:8000/facilities/`
+* **Bản đồ sân (Leaflet + Marker + Popup):** `http://127.0.0.1:8000/facilities/map/`
+* **Sân yêu thích:** `http://127.0.0.1:8000/facilities/favorites/`
 * **Ma trận đặt sân Alobo Grid 2D:** `http://127.0.0.1:8000/facilities/<facility_id>/`
 * **Bảng điều khiển duyệt bill của Chủ sân:** `http://127.0.0.1:8000/bookings/dashboard/`
 * **Tra cứu mã đơn đặt:** `http://127.0.0.1:8000/bookings/lookup/`
 * **Lịch sử đặt sân của tôi:** `http://127.0.0.1:8000/bookings/history/`
+* **Điều khoản đặt sân:** `http://127.0.0.1:8000/bookings/terms/`
+* **Chính sách hoàn tiền & huỷ lịch:** `http://127.0.0.1:8000/bookings/refund-policy/`
 * **Đăng nhập:** `http://127.0.0.1:8000/users/login/`
 * **Đăng ký:** `http://127.0.0.1:8000/users/register/`
 * **Django Admin:** `http://127.0.0.1:8000/admin/`

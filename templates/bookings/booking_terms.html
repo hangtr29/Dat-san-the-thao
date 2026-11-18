@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Điều khoản đặt sân - SPORTBOOK{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-[#032614] via-[#0b6b3a] to-[#04331b] text-white rounded-3xl p-7 sm:p-9 shadow-xl mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center text-2xl flex-shrink-0">
+                <i class="fa-solid fa-file-contract"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black tracking-wide">ĐIỀU KHOẢN ĐẶT SÂN</h1>
+                <p class="text-xs text-emerald-300 font-semibold mt-1">
+                    Nền tảng SportBook &mdash; Cập nhật lần cuối: 19/11/2026
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nội dung -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-9 space-y-7 text-sm text-slate-700 leading-relaxed">
+
+        <section>
+            <h2 class="text-base font-black text-[#04331b] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-[#0b6b3a] flex items-center justify-center text-xs font-black">1</span>
+                Phạm vi áp dụng
+            </h2>
+            <p>
+                Điều khoản này áp dụng cho mọi giao dịch đặt khung giờ thi đấu tại các cụm sân thể thao
+                (Cầu lông, Pickleball, Bóng bàn) đang hoạt động trên nền tảng SportBook.
+                Khi bạn bấm <strong>&ldquo;Xác nhận &amp; Thanh toán&rdquo;</strong>, đồng thời chọn khung giờ
+                và chuyển khoản, bạn được xem là đã đọc, hiểu và đồng ý với toàn bộ nội dung dưới đây.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#04331b] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-[#0b6b3a] flex items-center justify-center text-xs font-black">2</span>
+                Cơ chế giữ chỗ tạm thời (10 phút)
+            </h2>
+            <ul class="space-y-2 list-disc list-inside marker:text-emerald-500">
+                <li>Khi bạn chọn khung giờ, hệ thống <strong>giữ chỗ (lock)</strong> khung giờ đó trong <strong>10 phút</strong> để bạn hoàn tất thanh toán.</li>
+                <li>Trong 10 phút đó, khung giờ không thể được người khác đặt &mdash; đảm bảo công bằng cho mọi khách hàng.</li>
+                <li>Nếu hết 10 phút mà bạn chưa nộp ảnh bill, đơn sẽ tự động hủy và khung giờ được giải phóng về trạng thái khả dụng.</li>
+                <li>Hệ thống sẽ <strong>không tự động chuyển hướng</strong> bạn ra khỏi trang thanh toán nếu bạn đang tải ảnh bill lên.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#04331b] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-[#0b6b3a] flex items-center justify-center text-xs font-black">3</span>
+                Thanh toán trực tiếp &mdash; Không giữ tiền trung gian
+            </h2>
+            <p>
+                SportBook là <strong>nền tảng trung gian kết nối</strong>, không giữ tiền trung gian.
+                Tiền được chuyển <strong>trực tiếp</strong> từ tài khoản ngân hàng của bạn đến tài khoản
+                của chủ sân thông qua mã VietQR (chuẩn Napas 247).
+            </p>
+            <ul class="space-y-2 list-disc list-inside marker:text-emerald-500 mt-3">
+                <li>Mã QR hiển thị luôn kèm <strong>số tiền</strong> và <strong>nội dung chuyển khoản</strong> (mã đơn đặt) &mdash; bạn không cần tự nhập tay.</li>
+                <li>Mỗi đơn đặt chỉ được thuộc về <strong>một cụm sân</strong>. Hệ thống sẽ từ chối đơn có khung giờ từ nhiều cụm sân khác nhau nhằm tránh việc tiền về nhầm chủ sân.</li>
+                <li>Chủ sân có trách nhiệm kiểm tra ảnh bill và xác nhận đơn. Thời gian xử lý phụ thuộc vào chủ sân (khuyến nghị trong vòng 24 giờ).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#04331b] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-[#0b6b3a] flex items-center justify-center text-xs font-black">4</span>
+                Quyền &amp; Trách nhiệm của Khách Hàng
+            </h2>
+            <ul class="space-y-2 list-disc list-inside marker:text-emerald-500">
+                <li>Cung cấp thông tin <strong>chính xác</strong>: họ tên và số điện thoại liên hệ để chủ sân gọi xác nhận khi cần.</li>
+                <li>Ảnh bill phải là ảnh chụp màn hình biên lai <strong>thật</strong>, hiển thị rõ số tiền, số tài khoản và nội dung chuyển khoản.</li>
+                <li>Không sử dụng ảnh bill đã sửa, sao chép từ đơn khác, hoặc ảnh không liên quan &mdash; đơn sẽ bị từ chối và khung giờ được giải phóng.</li>
+                <li>Tuân thủ quy định của cụm sân về giờ chơi, trang phục, thiết bị và luật chơi nội bộ.</li>
+                <li>Chịu trách nhiệm về thiệt hại do hành vi của mình gây ra tại cơ sở.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#04331b] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-[#0b6b3a] flex items-center justify-center text-xs font-black">5</span>
+                Đánh giá &amp; Xác thực Chủ Sân
+            </h2>
+            <p>
+                Mỗi cụm sân trên nền tảng đều được đánh dấu <strong>&ldquo;Tích xanh&rdquo;</strong> sau khi
+                chủ sân hoàn tất hồ sơ xác minh (KYC). Bạn nên ưu tiên những cụm sân đã tích xanh.
+                Chỉ khách hàng có đơn đặt được chủ sân <strong>xác nhận thành công</strong> mới được đánh giá
+                (mỗi đơn 1 lần &mdash; chống spam).
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#04331b] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-[#0b6b3a] flex items-center justify-center text-xs font-black">6</span>
+                Giải quyết Tranh chấp
+            </h2>
+            <p>
+                Mỗi phiếu đặt sân đều hiển thị rõ <strong>Hotline/Zalo</strong> của chủ sân để hai bên
+                liên hệ trực tiếp giải quyết các vấn đề phát sinh tại chỗ.
+                Nếu cần hỗ trợ từ nền tảng, vui lòng liên hệ Ban quản trị qua Hotline 1900-xxxx.
+            </p>
+        </section>
+
+        <section class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
+            <h2 class="text-sm font-black text-emerald-900 uppercase tracking-wide mb-2">Liên kết liên quan</h2>
+            <p class="text-xs text-emerald-800">
+                Xem thêm
+                <a href="{% url 'bookings:booking_refund_policy' %}" class="font-black underline">Chính sách hoàn tiền &amp; huỷ lịch</a>
+                hoặc quay lại
+                <a href="{% url 'facilities:facility_list' %}" class="font-black underline">trang đặt sân</a>.
+            </p>
+        </section>
+    </div>
+</div>
+{% endblock %}

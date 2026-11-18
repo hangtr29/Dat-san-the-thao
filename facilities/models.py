@@ -110,18 +110,10 @@ class Facility(models.Model):
         """Lấy số hotline chuẩn hiển thị cho khách"""
         return self.hotline or self.phone_contact
 
-    def generate_vietqr_url(self, amount: int, memo: str) -> str:
+    def get_vietqr_bank_id(self) -> str:
         """
-        Tính đóng gói (Encapsulation):
-        Nếu chủ sân đã tải lên ảnh mã QR cá nhân/cửa hàng thì ưu tiên sử dụng.
-        Nếu không, tự động sinh mã VietQR API chuẩn động theo thông tin ngân hàng.
+        Chuẩn hóa tên ngân hàng về mã chuẩn VietQR (đóng gói logic ánh xạ).
         """
-        if self.custom_qr_image:
-            try:
-                return self.custom_qr_image.url
-            except Exception:
-                pass
-
         bank_code = self.bank_name.strip().lower()
         # Chuẩn hóa một số tên ngân hàng thông dụng sang mã chuẩn VietQR
         bank_map = {
@@ -133,10 +125,43 @@ class Facility(models.Model):
             'tpbank': 'tpb',
             'vpbank': 'vpb',
             'acb': 'acb',
+            'vietbank': 'vcb',
+            'agribank': 'agribank',
+            'sacombank': 'sacombank',
+            'eximbank': 'eximbank',
         }
-        bank_id = bank_map.get(bank_code, bank_code)
+        return bank_map.get(bank_code, bank_code)
+
+    def generate_vietqr_url(self, amount: int, memo: str) -> str:
+        """
+        Tính đóng gói (Encapsulation):
+        Sinh mã VietQR ĐỘNG luôn kèm SỐ TIỀN và NỘI DUNG chuyển khoản (mã đơn),
+        để khách không phải tự nhập tay số tiền & nội dung khi quét mã.
+
+        LƯU Ý (đã sửa):
+        - Ảnh QR tùy chỉnh do chủ sân tải lên là mã QR TĨNH, không mang số tiền/nội dung.
+          Vì vậy ảnh đó CHỈ được dùng làm phương án dự phòng khi hệ thống chưa có đủ
+          thông tin ngân hàng (thiếu tên ngân hàng hoặc số tài khoản).
+        - Mặc định (có đủ thông tin ngân hàng) luôn dùng VietQR API động.
+        """
+        bank_id = self.get_vietqr_bank_id()
         account_no = self.bank_account_no.strip()
-        return f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact.png?amount={int(amount)}&addInfo={memo}"
+
+        # Đủ thông tin ngân hàng -> sinh QR động kèm số tiền & nội dung
+        if bank_id and account_no:
+            return (
+                f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact.png"
+                f"?amount={int(amount)}&addInfo={memo}"
+            )
+
+        # Thiếu thông tin ngân hàng -> dùng QR tùy chỉnh của chủ sân (nếu có)
+        if self.custom_qr_image:
+            try:
+                return self.custom_qr_image.url
+            except Exception:
+                pass
+
+        return ''
 
     def is_open_at(self, check_time: time) -> bool:
         """Kiểm tra thời điểm có nằm trong khung giờ mở cửa không"""
@@ -261,6 +286,39 @@ class PricingRule(models.Model):
     def __str__(self):
         day_label = dict(self._meta.get_field('day_of_week').choices).get(self.day_of_week)
         return f"{self.facility.name} [{day_label}: {self.start_time.strftime('%H:%M')}-{self.end_time.strftime('%H:%M')}] -> {int(self.price_per_hour):,} đ/h"
+
+
+class Favorite(models.Model):
+    """
+    Tính đóng gói (Encapsulation): Lưu yêu thích cụm sân của khách hàng.
+    Trước đây nút hình trái tim ở danh sách sân chỉ là giao diện, bấm vào không có tác dụng.
+    Mỗi (user, facility) chỉ được lưu 1 lần (ràng buộc unique) - tránh trùng lặp.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='facility_favorites',
+        verbose_name="Khách hàng"
+    )
+    facility = models.ForeignKey(
+        Facility,
+        on_delete=models.CASCADE,
+        related_name='favorited_by',
+        verbose_name="Cụm sân"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Thời gian lưu yêu thích")
+
+    class Meta:
+        verbose_name = "Sân yêu thích"
+        verbose_name_plural = "Danh sách sân yêu thích"
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'facility'], name='unique_user_facility_favorite')
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} ♥ {self.facility.name}"
 
 
 class FacilityReview(models.Model):

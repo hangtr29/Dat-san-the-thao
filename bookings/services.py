@@ -104,6 +104,18 @@ class BookingEngineService:
                     if not is_auth and slot.locked_session and session_key and slot.locked_session != session_key:
                         return False, f"Khung giờ {slot.start_time.strftime('%H:%M')} sân {slot.court.court_name} đang được người khác giữ chỗ.", None
 
+            # 3. Kiểm tra tất cả slot phải thuộc CÙNG MỘT cụm sân
+            # (nếu không, mã QR thanh toán sẽ chỉ chuyển tiền về 1 chủ sân duy nhất)
+            facility_ids = {slot.court.facility_id for slot in slots}
+            if len(facility_ids) > 1:
+                facility_names = ', '.join(
+                    Facility.objects.filter(id__in=facility_ids).values_list('name', flat=True)
+                )
+                return False, (
+                    f"Không thể đặt khung giờ từ nhiều cụm sân khác nhau trong cùng một đơn "
+                    f"({facility_names}). Vui lòng chỉ chọn khung giờ của một cụm sân."
+                ), None
+
             # Tính tổng tiền
             total_amount = sum(slot.price for slot in slots)
 
@@ -133,9 +145,27 @@ class BookingEngineService:
 
 class CleanExpiredLocksService:
     """Dọn dẹp các đơn PENDING_BILL quá hạn 10 phút để giải phóng slot"""
-    @staticmethod
-    def cleanup():
+    @classmethod
+    def cleanup(cls):
+        """
+        Dọn dẹp các đơn PENDING_BILL quá hạn 10 phút để giải phóng slot.
+        Việc dọn dẹp giờ khóa hết hạn (lock_time quá hạn) cũng nằm ở đây,
+        để hàm is_locked() của Model giữ được tính thuần khiết (read-only).
+        """
         expired_time = timezone.now() - timedelta(minutes=10)
+
+        # 1. Giải phóng các slot bị khoá quá hạn mà KHÔNG gắn vào đơn nào.
+        #    (Slot đã gắn đơn PENDING_BILL sẽ được xử lý ở bước 2 qua cancel_booking)
+        BookingSlot.objects.filter(
+            lock_time__lt=expired_time,
+            booking__isnull=True,
+        ).update(
+            locked_by=None,
+            locked_session=None,
+            lock_time=None,
+        )
+
+        # 2. Hủy các đơn PENDING_BILL quá hạn (giải phóng toàn bộ slot của đơn)
         expired_bookings = Booking.objects.filter(
             status=BookingStatus.PENDING_BILL,
             created_at__lt=expired_time

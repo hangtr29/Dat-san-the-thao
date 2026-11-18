@@ -68,7 +68,9 @@ class OOPAndBookingEngineTests(TestCase):
         )
 
         # 4. Sinh Slot kiểm thử
-        self.test_date = date(2026, 11, 2) # Thứ 2
+        # (đã sửa: dùng ngày TƯƠNG LAI thay vì ngày cố định đã trôi qua,
+        #  vì BookingEngineService chặn đặt khung giờ đã trôi qua)
+        self.test_date = timezone.localdate() + timedelta(days=1)
         self.slot1 = BookingSlot.objects.create(
             court=self.court1,
             date=self.test_date,
@@ -181,3 +183,163 @@ class OOPAndBookingEngineTests(TestCase):
         self.slot1.refresh_from_db()
         self.assertIsNone(self.slot1.booking)
         self.assertIsNone(self.slot1.locked_by)
+
+
+class SecurityAndDataIntegrityTests(TestCase):
+    """
+    Kiểm thử cho các lỗi bảo mật & toàn vẹn dữ liệu đã sửa:
+    - Không tạo đơn giả khi tra cứu mã đơn không tồn tại
+    - is_locked() không được tự gỡ slot (side-effect khi đọc dữ liệu)
+    - Chặn đặt slot từ nhiều cụm sân trong cùng 1 đơn
+    - Tra cứu bằng SĐT yêu cầu đăng nhập
+    - QR do chủ sân tải lên vẫn sinh QR động kèm số tiền & nội dung
+    """
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username='owner_int_test',
+            password='password123',
+            role=UserRole.OWNER,
+            phone='0987000001'
+        )
+        self.customer = User.objects.create_user(
+            username='customer_int_test',
+            password='password123',
+            role=UserRole.CUSTOMER,
+            phone='0912000002'
+        )
+        self.category = SportCategory.objects.create(name='Cầu lông Int', slug='cau-long-int')
+        self.facility_a = Facility.objects.create(
+            owner=self.owner,
+            name='Cụm Sân A',
+            address='A',
+            phone_contact='0987000001',
+            bank_name='MBBank',
+            bank_account_no='1111111111',
+            bank_account_name='A',
+            active_status=True
+        )
+        self.facility_b = Facility.objects.create(
+            owner=self.owner,
+            name='Cụm Sân B',
+            address='B',
+            phone_contact='0987000001',
+            bank_name='MBBank',
+            bank_account_no='2222222222',
+            bank_account_name='B',
+            active_status=True
+        )
+        self.court_a = Court.objects.create(facility=self.facility_a, category=self.category, court_name='A1')
+        self.court_b = Court.objects.create(facility=self.facility_b, category=self.category, court_name='B1')
+
+        self.future = timezone.localdate() + timedelta(days=3)
+        self.slot_a = BookingSlot.objects.create(
+            court=self.court_a, date=self.future, start_time=time(10, 0),
+            end_time=time(11, 0), price=Decimal('120000')
+        )
+        self.slot_b = BookingSlot.objects.create(
+            court=self.court_b, date=self.future, start_time=time(10, 0),
+            end_time=time(11, 0), price=Decimal('120000')
+        )
+
+    def test_lookup_nonexistent_code_does_not_create_booking(self):
+        """Tra cứu mã đơn không tồn tại KHÔNG được tạo đơn giả với dữ liệu ghi cứng"""
+        from bookings.views import get_booking_or_restore
+        from django.test import RequestFactory
+
+        request = RequestFactory().get('/bookings/detail/BKNOTEXIST123/')
+        request.session = {}
+        booking = get_booking_or_restore(request, 'BKNOTEXIST123')
+
+        self.assertIsNone(booking)
+        self.assertFalse(Booking.objects.filter(booking_code='BKNOTEXIST123').exists())
+
+    def test_is_locked_has_no_side_effect(self):
+        """is_locked() phải thuần khiết: đọc trạng thái không được gỡ khóa slot"""
+        self.slot_a.lock_slot(user=self.customer)
+        self.slot_a.refresh_from_db()
+        self.assertTrue(self.slot_a.is_locked())
+
+        # Gia hạn thời gian lock về quá khứ (mô phỏng lock hết hạn)
+        BookingSlot.objects.filter(id=self.slot_a.id).update(
+            lock_time=timezone.now() - timedelta(minutes=30)
+        )
+        self.slot_a.refresh_from_db()
+
+        # is_locked() phải trả về False
+        self.assertFalse(self.slot_a.is_locked())
+
+        # Nhưng KHÔNG được tự gỡ slot khỏi đơn / xóa khóa
+        self.slot_a.refresh_from_db()
+        self.assertIsNotNone(self.slot_a.lock_time)
+        self.assertIsNotNone(self.slot_a.locked_by)
+
+    def test_cannot_book_slots_from_multiple_facilities(self):
+        """Chặn chọn slot từ 2 cụm sân khác nhau trong cùng 1 đơn (tránh QR về nhầm chủ sân)"""
+        success, msg, booking = BookingEngineService.lock_slots_and_create_booking(
+            self.customer, [self.slot_a.id, self.slot_b.id]
+        )
+        self.assertFalse(success)
+        self.assertIsNone(booking)
+        self.assertIn("nhiều cụm sân", msg)
+
+    def test_single_facility_booking_is_allowed(self):
+        """Vẫn cho phép đặt slot từ cùng một cụm sân"""
+        success, msg, booking = BookingEngineService.lock_slots_and_create_booking(
+            self.customer, [self.slot_a.id]
+        )
+        self.assertTrue(success)
+        self.assertIsNotNone(booking)
+
+    def test_lookup_by_phone_requires_login(self):
+        """Tra cứu đơn bằng Số điện thoại phải yêu cầu đăng nhập"""
+        from django.test import Client
+
+        # Tạo 1 đơn gắn với khách hàng đã đăng nhập
+        _, _, booking = BookingEngineService.lock_slots_and_create_booking(
+            self.customer, [self.slot_a.id]
+        )
+        booking.customer_name = 'Khách Test'
+        booking.customer_phone = '0912000002'
+        booking.save()
+
+        client = Client()
+        # Chưa đăng nhập -> bị từ chối tra cứu bằng SĐT
+        resp = client.get('/bookings/lookup/?code=0912000002')
+        self.assertContains(resp, 'cần đăng nhập')
+
+        # Đã đăng nhập -> được xem
+        client.login(username='customer_int_test', password='password123')
+        resp = client.get('/bookings/lookup/?code=0912000002')
+        self.assertContains(resp, booking.booking_code)
+
+    def test_vietqr_always_includes_amount_and_memo(self):
+        """QR tùy chỉnh của chủ sân không được làm mất số tiền & nội dung"""
+        # Tạo ảnh QR tùy chỉnh giả (dùng file tạm)
+        from django.core.files.base import ContentFile
+        self.facility_a.custom_qr_image.save(
+            'test_qr.png', ContentFile(b'fake-png-data'), save=True
+        )
+        self.facility_a.refresh_from_db()
+
+        qr_url = self.facility_a.generate_vietqr_url(150000, 'BKTEST999')
+        self.assertIn('amount=150000', qr_url)
+        self.assertIn('BKTEST999', qr_url)
+        self.assertIn('1111111111', qr_url)
+
+    def test_session_does_not_store_base64_proof(self):
+        """Ảnh bill KHÔNG được nhét base64 vào cookie session"""
+        from django.test import RequestFactory
+        from bookings.views import save_booking_to_session
+
+        _, _, booking = BookingEngineService.lock_slots_and_create_booking(
+            self.customer, [self.slot_b.id]
+        )
+
+        request = RequestFactory().get('/')
+        request.session = {}
+        save_booking_to_session(request, booking)
+
+        saved = request.session['saved_bookings'][booking.booking_code]
+        self.assertNotIn('proof_data_url', saved)
+        self.assertIn('proof_path', saved)

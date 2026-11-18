@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Chính sách hoàn tiền và huỷ lịch - SPORTBOOK{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-[#7a2e0e] via-[#c2410c] to-[#7a2e0e] text-white rounded-3xl p-7 sm:p-9 shadow-xl mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center text-2xl flex-shrink-0">
+                <i class="fa-solid fa-rotate-left"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black tracking-wide">CHÍNH SÁCH HOÀN TIỀN &amp; HUỶ LỊCH</h1>
+                <p class="text-xs text-orange-200 font-semibold mt-1">
+                    Nền tảng SportBook &mdash; Cập nhật lần cuối: 19/11/2026
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng tóm tắt nhanh -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+        <div class="px-5 py-3 bg-slate-50 border-b border-slate-200">
+            <h2 class="text-xs font-black text-slate-700 uppercase tracking-wider">Tóm tắt nhanh</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs sm:text-sm">
+                <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                        <th class="px-5 py-3 text-left font-black uppercase tracking-wide">Tình huống</th>
+                        <th class="px-5 py-3 text-left font-black uppercase tracking-wide">Kết quả</th>
+                        <th class="px-5 py-3 text-left font-black uppercase tracking-wide">Thời điểm áp dụng</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <tr>
+                        <td class="px-5 py-3.5 font-bold text-slate-800">Huỷ trước khi thanh toán</td>
+                        <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">Hoàn 100%</span></td>
+                        <td class="px-5 py-3.5 text-slate-600">Trong 10 phút giữ chỗ</td>
+                    </tr>
+                    <tr class="bg-orange-50/40">
+                        <td class="px-5 py-3.5 font-bold text-slate-800">Chủ sân từ chối đơn (bill sai)</td>
+                        <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">Hoàn 100%</span></td>
+                        <td class="px-5 py-3.5 text-slate-600">Ngay khi chủ sân từ chối</td>
+                    </tr>
+                    <tr>
+                        <td class="px-5 py-3.5 font-bold text-slate-800">Khách vãng lai (không có tài khoản)</td>
+                        <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">Hoàn 100%</span></td>
+                        <td class="px-5 py-3.5 text-slate-600">Cần tra mã đơn hoặc liên hệ chủ sân</td>
+                    </tr>
+                    <tr class="bg-orange-50/40">
+                        <td class="px-5 py-3.5 font-bold text-slate-800">Huỷ sau khi chủ sân xác nhận</td>
+                        <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">Theo thỏa thuận</span></td>
+                        <td class="px-5 py-3.5 text-slate-600">Liên hệ trực tiếp chủ sân</td>
+                    </tr>
+                    <tr>
+                        <td class="px-5 py-3.5 font-bold text-slate-800">Khách vắng mặt / không thể chơi</td>
+                        <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold">Không hoàn</span></td>
+                        <td class="px-5 py-3.5 text-slate-600">Sau mốc xác nhận của chủ sân</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Nội dung chi tiết -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-9 space-y-7 text-sm text-slate-700 leading-relaxed">
+
+        <section>
+            <h2 class="text-base font-black text-[#7a2e0e] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-orange-100 text-[#c2410c] flex items-center justify-center text-xs font-black">1</span>
+                Nguyên tắc chung
+            </h2>
+            <p>
+                Vì SportBook <strong>không giữ tiền trung gian</strong>, tiền của bạn được chuyển thẳng
+                từ ngân hàng của bạn đến ngân hàng của chủ sân. Vì vậy việc hoàn tiền phụ thuộc vào
+                <strong>quyết định của chủ sân</strong> và thời điểm bạn yêu cầu.
+            </p>
+            <p class="mt-2">
+                Chính sách này ưu tiên bảo vệ quyền lợi khách hàng trong các trường hợp do
+                <strong>lỗi của hệ thống hoặc của chủ sân</strong>, đồng thời giữ sân ổn định cho cả hai bên.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#7a2e0e] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-orange-100 text-[#c2410c] flex items-center justify-center text-xs font-black">2</span>
+                Hoàn tiền 100% (không điều kiện)
+            </h2>
+            <ul class="space-y-2.5 list-disc list-inside marker:text-orange-400">
+                <li>
+                    <strong>Huỷ trong 10 phút giữ chỗ:</strong> bạn huỷ trước khi chuyển khoản hoặc trước khi
+                    nộp bill. Khung giờ được giải phóng ngay lập tức.
+                </li>
+                <li>
+                    <strong>Chủ sân từ chối đơn:</strong> khi chủ sân không nhận được tiền, ảnh bill không hợp lệ
+                    hoặc không thể phục vụ. Khung giờ được giải phóng và bạn được hoàn lại toàn bộ số tiền.
+                </li>
+                <li>
+                    <strong>Hệ thống tự hủy đơn quá hạn:</strong> đơn không được nộp bill trong 10 phút sẽ bị hủy
+                    và khung giờ trở lại trạng thái khả dụng.
+                </li>
+                <li>
+                    <strong>Sự cố kỹ thuật:</strong> nếu bạn đã chuyển khoản thành công nhưng hệ thống ghi nhận
+                    lỗi, liên hệ Ban quản trị &mdash; chúng tôi hỗ trợ trực tiếp với chủ sân.
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#7a2e0e] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-orange-100 text-[#c2410c] flex items-center justify-center text-xs font-black">3</span>
+                Huỷ lịch sau khi chủ sân đã xác nhận
+            </h2>
+            <p>
+                Khi chủ sân đã xác nhận đơn (<strong>CONFIRMED</strong>), khung giờ được cam kết và không thể
+                bán lại cho khách khác. Do đó:
+            </p>
+            <ul class="space-y-2.5 list-disc list-inside marker:text-orange-400 mt-3">
+                <li>Việc hoàn tiền sẽ do <strong>chủ sân và khách hàng thỏa thuận</strong> dựa trên tình hình thực tế.</li>
+                <li>SportBook khuyến nghị liên hệ Hotline/Zalo của chủ sân (hiển thị ngay trên phiếu đặt) để thống nhất trước.</li>
+                <li>Trường hợp chủ sân <strong>không liên lạc được</strong> hoặc từ chối thỏa thuận, bạn có quyền gửi khiếu nại lên Ban quản trị để được hỗ trợ.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#7a2e0e] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-orange-100 text-[#c2410c] flex items-center justify-center text-xs font-black">4</span>
+                Không hoàn tiền
+            </h2>
+            <ul class="space-y-2.5 list-disc list-inside marker:text-rose-400">
+                <li>Khách đã chuyển khoản và nộp bill nhưng <strong>không xuất hiện</strong> tại sân đúng giờ (không thông báo trước).</li>
+                <li>Khách vắng mặt quá 15 phút kể từ giờ bắt đầu mà không có thông báo cho chủ sân.</li>
+                <li>Khách hủy lịch liên tục nhiều lần mà không có lý do chính đáng, gây ảnh hưởng doanh thu của cụm sân.</li>
+                <li>Trường hợp gian lận: ảnh bill giả, bill của đơn khác, chuyển khoản không đúng số tiền.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#7a2e0e] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-orange-100 text-[#c2410c] flex items-center justify-center text-xs font-black">5</span>
+                Quy trình yêu cầu hoàn tiền
+            </h2>
+            <ol class="space-y-3 list-decimal list-inside marker:font-black marker:text-[#c2410c]">
+                <li><strong>Bước 1:</strong> Liên hệ chủ sân qua Hotline/Zalo hiển thị trên phiếu đặt sân.</li>
+                <li><strong>Bước 2:</strong> Cung cấp <strong>mã đơn (mã bắt đầu bằng BK)</strong> và ảnh bill đã chuyển khoản.</li>
+                <li><strong>Bước 3:</strong> Chủ sân kiểm tra và chuyển khoản hoàn lại trực tiếp vào tài khoản của bạn.</li>
+                <li><strong>Bước 4:</strong> Nếu không thỏa thuận được, gửi khiếu nại lên Ban quản trị SportBook kèm mã đơn và ảnh bill để được xử lý.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2 class="text-base font-black text-[#7a2e0e] uppercase tracking-wide flex items-center gap-2.5 mb-3">
+                <span class="w-8 h-8 rounded-lg bg-orange-100 text-[#c2410c] flex items-center justify-center text-xs font-black">6</span>
+                Quyền riêng tư &amp; Bảo mật thông tin
+            </h2>
+            <ul class="space-y-2.5 list-disc list-inside marker:text-orange-400">
+                <li>Thông tin tra cứu đơn bằng <strong>số điện thoại</strong> chỉ dành cho <strong>chính chủ tài khoản</strong> đã đăng nhập.</li>
+                <li>Khách vãng lai tra cứu bằng <strong>mã đơn (BK...)</strong> &mdash; mã ngẫu nhiên 8 ký tự, không thể dò tuần tự.</li>
+                <li>Ảnh bill chuyển khoản được lưu trong hệ thống để chủ sân đối soát, không chia sẻ cho bên thứ ba.</li>
+            </ul>
+        </section>
+
+        <section class="bg-orange-50 border border-orange-200 rounded-2xl p-5">
+            <h2 class="text-sm font-black text-orange-900 uppercase tracking-wide mb-2">Liên kết liên quan</h2>
+            <p class="text-xs text-orange-800">
+                Xem thêm
+                <a href="{% url 'bookings:booking_terms' %}" class="font-black underline">Điều khoản đặt sân</a>
+                hoặc quay lại
+                <a href="{% url 'facilities:facility_list' %}" class="font-black underline">trang đặt sân</a>.
+            </p>
+        </section>
+    </div>
+</div>
+{% endblock %}

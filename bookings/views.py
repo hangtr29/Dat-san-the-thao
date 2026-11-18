@@ -1,7 +1,7 @@
 import uuid
-import base64
 from decimal import Decimal
 from datetime import datetime, date
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -17,6 +17,10 @@ def save_booking_to_session(request, booking, proof_data_url=None):
     Lưu snapshot đơn đặt sân vào signed_cookies session để phục hồi trên Vercel serverless.
     Vì các serverless container độc lập và có /tmp/db.sqlite3 riêng, cookie session là cầu nối
     bền vững duy nhất xuyên suốt mọi request của người dùng.
+
+    LƯU Ý (đã sửa): KHÔNG lưu ảnh bill dạng base64/data-url vào cookie.
+    Cookie session bị giới hạn ~4KB, ảnh bill nặng sẽ làm lỗi trang ("Cookie header too large")
+    và khiến toàn bộ session mất. Ảnh bill được lưu trong DB (ImageField) / Media storage.
     """
     if not hasattr(request, 'session'):
         return
@@ -36,9 +40,6 @@ def save_booking_to_session(request, booking, proof_data_url=None):
             'price': str(s.price),
         })
 
-    prev = saved.get(booking.booking_code, {})
-    proof = proof_data_url or prev.get('proof_data_url', '')
-
     saved[booking.booking_code] = {
         'id': str(booking.id),
         'booking_code': booking.booking_code,
@@ -52,10 +53,12 @@ def save_booking_to_session(request, booking, proof_data_url=None):
         'slot_ids': slot_ids,
         'slots_info': slots_info,
         'user_id': str(booking.customer_id) if booking.customer_id else None,
-        'proof_data_url': proof,
+        # Đường dẫn ảnh bill trong media storage (KHÔNG nhúng base64 vào cookie)
+        'proof_path': getattr(booking.payment_proof, 'name', '') or '',
     }
     request.session['saved_bookings'] = saved
-    request.session.modified = True
+    if hasattr(request.session, 'modified'):
+        request.session.modified = True
 
 
 def get_booking_or_restore(request, booking_code):
@@ -63,8 +66,10 @@ def get_booking_or_restore(request, booking_code):
     Tìm Booking theo booking_code:
     1. Kiểm tra trong DB hiện tại của container.
     2. Nếu không có (do Vercel chuyển sang container Lambda mới), phục hồi từ session cookie.
-    3. Nếu vẫn không có (link chia sẻ hoặc mất cookie), tạo record dự phòng gắn với sân thực tế
-       để người dùng không bao giờ gặp lỗi 404.
+    3. Nếu vẫn không có -> trả về None (KHÔNG tự tạo đơn giả với dữ liệu ghi cứng,
+       tránh làm sai lệch dữ liệu và gắp bừa khung giờ của sân thật).
+
+    Bảo mật: Chỉ phục hồi đơn từ session nếu session đó thuộc về chính người đang yêu cầu.
     """
     # 1. Tra cứu trực tiếp trong Database
     booking = Booking.objects.filter(booking_code=booking_code).first()
@@ -94,50 +99,26 @@ def get_booking_or_restore(request, booking_code):
                     'customer_name': b_data.get('customer_name', ''),
                     'customer_phone': b_data.get('customer_phone', ''),
                     'customer_note': b_data.get('customer_note', ''),
-                    'total_amount': Decimal(str(b_data.get('total_amount', '150000'))),
+                    'total_amount': Decimal(str(b_data.get('total_amount', '0'))),
                     'status': b_data.get('status', BookingStatus.PENDING_BILL),
                     'reject_reason': b_data.get('reject_reason', ''),
                     'customer_id': b_data.get('user_id'),
                 }
             )
             # Gán lại slot_ids nếu có trong DB mới
+            # (đã sửa: trường 'is_locked' KHÔNG tồn tại trong model BookingSlot,
+            #  nên lệnh update trước đây luôn lỗi thầm lặng và bị bỏ qua)
             slot_ids = b_data.get('slot_ids', [])
             if slot_ids:
-                BookingSlot.objects.filter(id__in=slot_ids).update(booking=booking, is_locked=True)
-
-            if not booking.slots.exists():
-                first_slot = BookingSlot.objects.first()
-                if first_slot:
-                    first_slot.booking = booking
-                    first_slot.save()
+                BookingSlot.objects.filter(id__in=slot_ids).update(booking=booking)
 
             save_booking_to_session(request, booking)
             return booking
         except Exception:
             pass
 
-    # 3. Fallback an toàn tuyệt đối chống 404
-    try:
-        facility = Facility.objects.first()
-        court = facility.courts.first() if facility else None
-        slot = BookingSlot.objects.filter(court=court).first() if court else None
-
-        booking, _ = Booking.objects.get_or_create(
-            booking_code=booking_code,
-            defaults={
-                'customer_name': "Khách đặt sân",
-                'customer_phone': "0987654321",
-                'total_amount': Decimal('150000'),
-                'status': BookingStatus.WAITING_APPROVAL,
-            }
-        )
-        if slot and not booking.slots.exists():
-            slot.booking = booking
-            slot.save()
-        save_booking_to_session(request, booking)
-        return booking
-    except Exception:
-        return None
+    # 3. Không tìm thấy -> trả về None để view báo lỗi "Không tìm thấy đơn đặt sân"
+    return None
 
 
 def lock_and_book_slots(request):
@@ -362,15 +343,6 @@ def upload_payment_proof(request, booking_code):
         return redirect('bookings:checkout', booking_code=booking_code)
 
     proof_file = request.FILES['payment_proof']
-    proof_data_url = ''
-    try:
-        file_bytes = proof_file.read()
-        proof_file.seek(0)
-        mime = getattr(proof_file, 'content_type', 'image/jpeg') or 'image/jpeg'
-        encoded = base64.b64encode(file_bytes).decode('ascii')
-        proof_data_url = f"data:{mime};base64,{encoded}"
-    except Exception:
-        pass
 
     try:
         booking.upload_proof_and_submit(proof_file)
@@ -378,7 +350,8 @@ def upload_payment_proof(request, booking_code):
         booking.status = BookingStatus.WAITING_APPROVAL
         booking.save()
 
-    save_booking_to_session(request, booking, proof_data_url=proof_data_url)
+    # KHÔNG nhúng ảnh base64 vào cookie session (đã sửa) - chỉ lưu đường dẫn trong media
+    save_booking_to_session(request, booking)
     messages.success(request, "Đã tải lên ảnh bill thành công! Đơn đặt đã chuyển sang 'Chờ chủ sân duyệt'.")
     return redirect('bookings:booking_detail', booking_code=booking.booking_code)
 
@@ -425,14 +398,18 @@ def booking_detail(request, booking_code):
                 'price_str': f"{int(Decimal(s.get('price', '150000'))):,} đ".replace(',', '.'),
             })
 
-    # Lấy URL ảnh minh chứng (từ session data url hoặc file url)
+    # Lấy URL ảnh minh chứng (từ media storage hoặc từ session snapshot)
     saved = getattr(request, 'session', {}).get('saved_bookings', {})
-    payment_proof_url = saved.get(booking.booking_code, {}).get('proof_data_url', '')
-    if not payment_proof_url and booking.payment_proof:
+    payment_proof_url = ''
+    if booking.payment_proof:
         try:
             payment_proof_url = booking.payment_proof.url
         except Exception:
-            pass
+            payment_proof_url = ''
+    if not payment_proof_url:
+        proof_path = saved.get(booking.booking_code, {}).get('proof_path', '')
+        if proof_path:
+            payment_proof_url = f"{settings.MEDIA_URL}{proof_path}"
 
     # Kiểm tra xem đơn này đã được khách hàng đánh giá hay chưa
     user_review = None
@@ -557,24 +534,63 @@ def booking_history(request):
 
 def booking_lookup(request):
     """
-    Task 4.1: Tra cứu đơn đặt sân nhanh qua mã đơn (booking_code) & số điện thoại.
+    Tra cứu đơn đặt sân nhanh qua mã đơn (booking_code) & số điện thoại.
+
+    BẢO MẬT (đã sửa):
+    - Tra cứu bằng SỐ ĐIỆN THOẠI giờ yêu cầu đăng nhập (hoặc chỉ chính chủ tài khoản
+      mới được xem chi tiết). Trước đây ai biết SĐT cũng xem được toàn bộ chi tiết đơn.
+    - Tra cứu bằng MÃ ĐƠN vẫn hoạt động cho khách vãng lai (mã đơn là bí mật ngẫu nhiên
+      8 ký tự, không thể dò tuần tự trong thời gian hợp lý).
     """
     from django.db.models import Q
+
     query_code = request.GET.get('code', '').strip()
     booking = None
     searched = False
+    lookup_denied = False
+    lookup_by_phone = False
 
     if query_code:
         searched = True
-        booking = Booking.objects.filter(
-            Q(booking_code__iexact=query_code) | Q(customer_phone=query_code)
-        ).first()
+
+        # Phân biệt mã đơn (tiền tố BK) với số điện thoại
+        is_phone_query = query_code.replace(' ', '').replace('.', '').replace('-', '').isdigit() \
+            and not query_code.upper().startswith('BK')
+
+        if is_phone_query:
+            lookup_by_phone = True
+            # Chỉ chủ tài khoản đã đăng nhập mới được tra cứu bằng SĐT
+            if not request.user.is_authenticated:
+                lookup_denied = True
+            else:
+                booking = Booking.objects.filter(
+                    Q(customer_phone=query_code) & Q(customer=request.user)
+                ).first()
+        else:
+            # Tra cứu bằng mã đơn (không yêu cầu đăng nhập)
+            booking = Booking.objects.filter(booking_code__iexact=query_code).first()
 
     return render(request, 'bookings/booking_lookup.html', {
         'booking': booking,
         'query_code': query_code,
         'searched': searched,
+        'lookup_denied': lookup_denied,
+        'lookup_by_phone': lookup_by_phone,
     })
+
+
+def booking_terms(request):
+    """
+    Trang Điều khoản đặt sân (thay thế link chết "href='#'").
+    """
+    return render(request, 'bookings/booking_terms.html', {'policy_type': 'terms'})
+
+
+def booking_refund_policy(request):
+    """
+    Trang Chính sách hoàn tiền & huỷ lịch (thay thế link chết "href='#'").
+    """
+    return render(request, 'bookings/booking_refund_policy.html', {'policy_type': 'refund'})
 
 
 @login_required

@@ -6,13 +6,15 @@ from .models import User, OwnerProfile, KYCStatus, SubscriptionPlan, Subscriptio
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'phone', 'role', 'is_staff', 'is_active')
-    list_filter = ('role', 'is_staff', 'is_active')
+    list_display = ('username', 'email', 'phone', 'role', 'managed_by', 'is_staff', 'is_active')
+    list_filter = ('role', 'is_staff', 'is_active', 'managed_by')
     fieldsets = BaseUserAdmin.fieldsets + (
         ('Thông tin bổ sung (OOP Extends)', {'fields': ('phone', 'role', 'avatar')}),
+        ('Liên kết quản trị', {'fields': ('managed_by',)}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
         ('Thông tin bổ sung (OOP Extends)', {'fields': ('phone', 'role', 'avatar')}),
+        ('Liên kết quản trị', {'fields': ('managed_by',)}),
     )
     search_fields = ('username', 'phone', 'email', 'first_name', 'last_name')
 

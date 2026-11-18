@@ -1,0 +1,448 @@
+{% extends 'base.html' %}
+
+{% block title %}Bản đồ sân thể thao - SPORTBOOK{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+    .leaflet-container {
+        font-family: 'Nunito', sans-serif;
+        z-index: 1;
+    }
+
+    /* Marker tùy chỉnh theo phong cách Alobo */
+    .custom-marker {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .marker-pin {
+        width: 40px;
+        height: 40px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        background: linear-gradient(135deg, #10b981 0%, #0b6b3a 100%);
+        border: 3px solid #ffffff;
+        box-shadow: 0 4px 12px rgba(11, 107, 58, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+    }
+
+    .marker-pin:hover {
+        transform: rotate(-45deg) scale(1.12);
+    }
+
+    .marker-pin i {
+        transform: rotate(45deg);
+        color: #ffffff;
+        font-size: 15px;
+    }
+
+    .marker-pin.is-active {
+        background: linear-gradient(135deg, #e5b63d 0%, #c2410c 100%);
+        box-shadow: 0 4px 14px rgba(194, 65, 12, 0.5);
+    }
+
+    /* Popup chuẩn phong cách Alobo */
+    .alobo-popup .leaflet-popup-content-wrapper {
+        border-radius: 18px;
+        padding: 0;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22);
+        border: 1px solid #e2e8f0;
+    }
+
+    .alobo-popup .leaflet-popup-content {
+        margin: 0;
+        width: 290px !important;
+    }
+
+    .alobo-popup .leaflet-popup-tip {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+    }
+
+    .alobo-popup .leaflet-popup-close-button {
+        color: #ffffff !important;
+        top: 8px !important;
+        right: 8px !important;
+        font-size: 18px !important;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+    }
+
+    /* Danh sách sân bên trái */
+    .map-sidebar-scroll {
+        scrollbar-width: thin;
+    }
+
+    .map-sidebar-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .map-sidebar-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .map-list-item.active {
+        border-color: #0b6b3a;
+        background: #f0fdf4;
+        box-shadow: 0 0 0 2px rgba(11, 107, 58, 0.12);
+    }
+
+    .leaflet-control-zoom a {
+        color: #0b6b3a !important;
+        font-weight: 900;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="w-full px-4 sm:px-8 lg:px-12 py-5">
+
+    <!-- Header: Tiêu đề + Bộ lọc -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <!-- Tiêu đề -->
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0b6b3a] to-[#032614] text-white flex items-center justify-center text-xl shadow-lg shadow-emerald-900/20 flex-shrink-0">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-xl font-black text-[#04331b] tracking-wide">BẢN ĐỒ SÂN THỂ THAO</h1>
+                    <p class="text-xs text-slate-500 font-semibold mt-0.5">
+                        <i class="fa-solid fa-location-dot text-[#0b6b3a]"></i>
+                        {{ total_facilities_count }} cụm sân đang hoạt động &mdash; bấm vào marker để xem chi tiết
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tìm kiếm + Định vị -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <form method="get" class="relative flex-1 min-w-[220px]">
+                    {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ search_query }}"
+                        placeholder="Tìm tên sân hoặc địa chỉ..."
+                        class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-100 border border-transparent focus:border-emerald-500 focus:bg-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/20 transition">
+                </form>
+
+                <button type="button" id="btn-locate-me" title="Định vị vị trí của tôi"
+                    class="px-4 py-2.5 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white text-xs font-black transition shadow-md flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-location-crosshairs"></i> Vị trí tôi
+                </button>
+            </div>
+        </div>
+
+        <!-- Chips lọc môn thể thao -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 mt-4 text-xs font-black">
+            <a href="{% url 'facilities:facility_map' %}{% if search_query %}?q={{ search_query }}{% endif %}"
+                class="px-4 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shadow-sm {% if not selected_category %} bg-[#0b6b3a] text-white {% else %} bg-slate-100 text-slate-700 hover:bg-slate-200 {% endif %}">
+                <i class="fa-solid fa-border-all"></i> Tất cả
+            </a>
+            {% for cat in categories %}
+            <a href="?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}"
+                class="px-4 py-2 rounded-full transition flex items-center gap-1.5 whitespace-nowrap shadow-sm {% if selected_category == cat.slug %} bg-[#0b6b3a] text-white {% else %} bg-slate-100 text-slate-700 hover:bg-slate-200 {% endif %}">
+                <span>{{ cat.icon_url|default:"🏸" }}</span> {{ cat.name }}
+                <span class="text-[10px] px-1.5 py-0.5 rounded-full {% if selected_category == cat.slug %}bg-white/25 text-white{% else %}bg-slate-200 text-slate-600{% endif %}">{{ cat.count_facilities }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Khu vực chính: Bản đồ + Danh sách -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        <!-- BẢN ĐỒ (Leaflet) -->
+        <div class="lg:col-span-8 xl:col-span-9 order-2 lg:order-1">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div id="facility-map" class="w-full h-[500px] sm:h-[600px] lg:h-[680px] bg-slate-100"></div>
+
+                <!-- Chú thích -->
+                <div class="px-4 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-4 text-[11px] font-bold text-slate-600">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-[#0b6b3a] inline-block"></span> Cụm sân
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-[#c2410c] inline-block"></span> Đang chọn
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> Tích xanh KYC
+                        </span>
+                    </div>
+                    <span class="text-[11px] font-bold text-slate-500">
+                        <i class="fa-solid fa-arrows-up-down-left-right text-slate-400"></i> Có thể kéo để di chuyển
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- DANH SÁCH SÂN (Sidebar) -->
+        <div class="lg:col-span-4 xl:col-span-3 order-1 lg:order-2">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:sticky lg:top-28">
+                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+                    <h2 class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                        <span>Danh sách cụm sân</span>
+                        <span class="px-2 py-0.5 rounded-full bg-[#0b6b3a] text-white text-[10px] font-black">{{ total_facilities_count }}</span>
+                    </h2>
+                </div>
+
+                <div id="map-list" class="map-sidebar-scroll overflow-y-auto max-h-[560px] divide-y divide-slate-100">
+                    {% for fac in facilities %}
+                    <button type="button" class="map-list-item w-full text-left p-3.5 hover:bg-emerald-50/50 transition border-l-4 border-transparent"
+                        data-facility-id="{{ fac.id }}" data-lat="{{ fac.latitude }}" data-lng="{{ fac.longitude }}">
+                        <div class="flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#0b6b3a] font-black text-[10px] flex-shrink-0 uppercase">
+                                {{ fac.name|slice:":2" }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xs font-black text-slate-800 truncate flex items-center gap-1">
+                                    <span class="truncate">{{ fac.name }}</span>
+                                    {% if fac.is_verified %}
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-[10px] flex-shrink-0"></i>
+                                    {% endif %}
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{{ fac.address }}</p>
+                                <div class="flex items-center gap-3 mt-1.5 text-[10px] font-bold text-slate-500">
+                                    <span class="flex items-center gap-1">
+                                        <i class="fa-regular fa-clock text-slate-400"></i>
+                                        {{ fac.open_time|time:"H:i" }}-{{ fac.close_time|time:"H:i" }}
+                                    </span>
+                                    <span class="text-amber-600 flex items-center gap-1">
+                                        <i class="fa-solid fa-star text-[9px]"></i> {{ fac.get_average_rating }}
+                                    </span>
+                                    <span class="text-emerald-700 flex items-center gap-1">
+                                        <i class="fa-solid fa-layer-group text-[9px]"></i> {{ fac.courts.count }} sân
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+                    {% empty %}
+                    <div class="p-8 text-center">
+                        <i class="fa-solid fa-map-location-dot text-slate-300 text-3xl mb-2"></i>
+                        <p class="text-xs font-bold text-slate-500">Không tìm thấy cụm sân nào</p>
+                        <a href="{% url 'facilities:facility_map' %}"
+                            class="inline-block mt-3 px-4 py-2 bg-[#0b6b3a] text-white rounded-xl text-xs font-bold">
+                            Xem tất cả sân
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    const MARKERS = {{ markers_json|safe }};
+    const CENTER_LAT = {{ center_lat }};
+    const CENTER_LNG = {{ center_lng }};
+    // Khởi tạo bản đồ (zoom 14 để các cụm sân trong TP.HCM nằm gần nhau vẫn phân biệt được)
+    const map = L.map('facility-map', {
+        zoomControl: true,
+        scrollWheelZoom: true
+    }).setView([CENTER_LAT, CENTER_LNG], 14);
+
+    // Lớp nền OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    // Marker đang được chọn
+    let activeMarker = null;
+    const markerMap = new Map();
+
+    function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, function (m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+    }
+
+    function buildPopup(m) {
+        const sports = (m.sports || []).map(s =>
+            `<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black">${escapeHtml(s)}</span>`
+        ).join(' ');
+
+        const priceHtml = m.price_from
+            ? `<span class="text-[#c2410c] font-black">${m.price_from.toLocaleString('vi-VN')} đ/h</span>`
+            : `<span class="text-slate-400">Liên hệ sân</span>`;
+
+        return `
+            <div class="alobo-popup-content">
+                <!-- Ảnh bìa -->
+                <div class="relative h-32 bg-slate-200 overflow-hidden">
+                    <img src="${escapeHtml(m.image)}" alt="${escapeHtml(m.name)}"
+                         class="w-full h-full object-cover" loading="lazy">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+
+                    <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                        <span class="px-2 py-0.5 rounded-full bg-white/95 text-slate-800 text-[10px] font-black flex items-center gap-1">
+                            <i class="fa-solid fa-star text-amber-400 text-[9px]"></i> ${m.rating}
+                            <span class="text-slate-400 font-bold">(${m.reviews})</span>
+                        </span>
+                        ${m.is_verified ? '<span class="px-2 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-black"><i class="fa-solid fa-circle-check"></i> Tích xanh</span>' : ''}
+                    </div>
+
+                    <div class="absolute bottom-2 left-2.5 right-2.5">
+                        <h3 class="text-sm font-black text-white leading-tight drop-shadow">
+                            ${escapeHtml(m.name)}
+                        </h3>
+                    </div>
+                </div>
+
+                <!-- Nội dung -->
+                <div class="p-3.5 space-y-2.5">
+                    <p class="text-[11px] text-slate-600 leading-relaxed flex items-start gap-1.5">
+                        <i class="fa-solid fa-map-pin text-[#0b6b3a] mt-0.5 flex-shrink-0"></i>
+                        <span>${escapeHtml(m.address)}</span>
+                    </p>
+
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-regular fa-clock text-slate-400"></i>
+                            ${m.open_time} - ${m.close_time}
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-layer-group text-slate-400"></i>
+                            ${m.courts_count} sân
+                        </span>
+                    </div>
+
+                    ${sports ? `<div class="flex flex-wrap gap-1.5">${sports}</div>` : ''}
+
+                    <div class="flex items-center justify-between pt-2.5 border-t border-slate-100">
+                        <div class="text-[11px]">
+                            <span class="text-slate-400 font-bold block leading-tight">Giá từ</span>
+                            ${priceHtml}
+                        </div>
+                        <a href="${m.url}"
+                           class="px-4 py-2 rounded-xl bg-[#e5b63d] hover:bg-[#d8a834] text-white text-[11px] font-black uppercase tracking-wide transition shadow-md shadow-amber-500/25">
+                            Đặt lịch
+                        </a>
+                    </div>
+
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank"
+                       class="block text-center text-[11px] font-bold text-[#065f46] hover:text-emerald-700 transition">
+                        <i class="fa-solid fa-diamond-turn-right"></i> Chỉ đường đến sân
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    // Thêm các marker lên bản đồ
+    MARKERS.forEach(function (m) {
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div class="marker-pin"><i class="fa-solid fa-volleyball-ball"></i></div>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -38]
+        });
+
+        const marker = L.marker([m.lat, m.lng], { icon: icon, title: m.name }).addTo(map);
+        marker.bindPopup(buildPopup(m), {
+            className: 'alobo-popup',
+            maxWidth: 300,
+            minWidth: 290,
+            autoPanPadding: [20, 20]
+        });
+
+        markerMap.set(m.id, marker);
+
+        marker.on('click', function () {
+            if (activeMarker) {
+                activeMarker.getElement()?.querySelector('.marker-pin')?.classList.remove('is-active');
+            }
+            activeMarker = marker;
+            setTimeout(() => {
+                marker.getElement()?.querySelector('.marker-pin')?.classList.add('is-active');
+            }, 50);
+
+            // Đồng bộ highlight trong danh sách bên trái
+            document.querySelectorAll('.map-list-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.facilityId === m.id);
+            });
+        });
+    });
+
+    // Bấm vào item trong danh sách -> fly tới marker & mở popup
+    document.querySelectorAll('.map-list-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+            const id = item.dataset.facilityId;
+            const marker = markerMap.get(id);
+            if (!marker) return;
+
+            const lat = parseFloat(item.dataset.lat);
+            const lng = parseFloat(item.dataset.lng);
+            map.flyTo([lat, lng], 16, { duration: 0.7 });
+            setTimeout(() => marker.openPopup(), 500);
+
+            document.querySelectorAll('.map-list-item').forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+
+    // Nút định vị vị trí người dùng
+    const locateBtn = document.getElementById('btn-locate-me');
+    if (locateBtn) {
+        locateBtn.addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                alert('Trình duyệt của bạn không hỗ trợ định vị.');
+                return;
+            }
+
+            locateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang dò...';
+            locateBtn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    const { latitude, longitude } = pos.coords;
+                    map.flyTo([latitude, longitude], 15, { duration: 0.8 });
+
+                    // Marker vị trí người dùng
+                    const meIcon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="width:22px;height:22px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.25)"></div>`,
+                        iconSize: [22, 22],
+                        iconAnchor: [11, 11]
+                    });
+                    L.marker([latitude, longitude], { icon: meIcon, zIndexOffset: 1000 })
+                        .addTo(map)
+                        .bindPopup('<b>Vị trí của bạn</b>');
+
+                    locateBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Vị trí tôi';
+                    locateBtn.disabled = false;
+                },
+                function (err) {
+                    alert('Không thể lấy vị trí của bạn. Vui lòng bật quyền truy cập vị trí trên trình duyệt.');
+                    locateBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Vị trí tôi';
+                    locateBtn.disabled = false;
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
+
+    // Vô hiệu hoá tải bản đồ khi cuộn trong sidebar (tránh zoom nhầm)
+    document.getElementById('map-list')?.addEventListener('wheel', function (e) {
+        e.stopPropagation();
+    }, { passive: true });
+</script>
+{% endblock %}

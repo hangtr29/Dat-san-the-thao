@@ -276,10 +276,32 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
 <script>
     let seconds = {{ seconds_remaining }};
     const timerEl = document.getElementById('countdown-timer');
+    // Đánh dấu người dùng đang trong lúc thao tác tải bill lên (tránh bị đuổi khỏi trang)
+    let isUploading = false;
+
+    // Đánh dấu khi người dùng đang chọn/tải ảnh bill
+    const proofInput = document.getElementById('id_payment_proof');
+    if (proofInput) {
+        proofInput.addEventListener('change', function () {
+            isUploading = true;
+        });
+    }
+    // Khi form đang được gửi (submit) -> cũng coi như đang tải bill
+    document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+            isUploading = true;
+        });
+    });
 
     function updateTimer() {
         if (seconds <= 0) {
             timerEl.innerText = "00:00";
+            // Đã sửa: không tự nhảy về trang chủ khi người dùng đang tải bill lên.
+            // Trước đây trang bị đuổi khỏi màn hình thanh toán giữa lúc upload -> mất bill.
+            if (isUploading) {
+                timerEl.innerText = "00:00";
+                return;
+            }
             alert("Đã hết thời gian giữ chỗ tạm thời (10 phút). Đơn đặt đã bị hủy.");
             window.location.href = "{% url 'facilities:facility_list' %}";
             return;

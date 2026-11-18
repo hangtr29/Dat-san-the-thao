@@ -199,17 +199,18 @@ class BookingSlot(models.Model):
         self.save()
 
     def is_locked(self, timeout_minutes=10) -> bool:
-        """Kiểm tra slot có đang trong thời gian giữ chỗ hợp lệ hay không"""
+        """
+        Kiểm tra slot có đang trong thời gian giữ chỗ hợp lệ hay không.
+
+        LƯU Ý (đã sửa): Hàm này thuần khiết (read-only) - KHÔNG tự gỡ khóa.
+        Trước đây hàm tự gọi release_slot() khi quá hạn, khiến việc đọc dữ liệu
+        lại làm thay đổi dữ liệu và âm thầm gỡ slot ra khỏi đơn đang đặt.
+        Việc dọn dẹp khóa hết hạn được giao cho CleanExpiredLocksService.
+        """
         if not self.lock_time:
             return False
-        # Nếu đã quá 10 phút thì xem như hết hạn lock
-        is_active_lock = (timezone.now() - self.lock_time) < timedelta(minutes=timeout_minutes)
-        if not is_active_lock:
-            # Tự dọn dẹp nếu đã quá hạn mà chưa gắn vào đơn thành công
-            if self.booking is None or self.booking.status == BookingStatus.PENDING_BILL:
-                self.release_slot()
-                return False
-        return is_active_lock
+        # Còn hiệu lực nếu chưa quá thời gian giữ chỗ
+        return (timezone.now() - self.lock_time) < timedelta(minutes=timeout_minutes)
 
     def is_past(self) -> bool:
         """Kiểm tra khung giờ đã trôi qua so với thời gian hiện tại thực tế"""

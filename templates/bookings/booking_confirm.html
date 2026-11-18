@@ -231,8 +231,8 @@
                     <!-- Dòng thỏa thuận điều khoản -->
                     <p class="text-[11px] sm:text-xs text-emerald-200 text-center font-semibold px-2">
                         Bằng việc bấm Xác nhận và Thanh toán, bạn xác nhận đã đọc và đồng ý với 
-                        <a href="#" class="underline text-white hover:text-amber-300 font-bold">Điều khoản đặt sân</a> và 
-                        <a href="#" class="underline text-white hover:text-amber-300 font-bold">Chính sách hoàn tiền và huỷ lịch</a>.
+                        <a href="{% url 'bookings:booking_terms' %}" target="_blank" class="underline text-white hover:text-amber-300 font-bold">Điều khoản đặt sân</a> và 
+                        <a href="{% url 'bookings:booking_refund_policy' %}" target="_blank" class="underline text-white hover:text-amber-300 font-bold">Chính sách hoàn tiền và huỷ lịch</a>.
                     </p>
 
                     <!-- NÚT VÀNG MẬT ONG XÁC NHẬN & THANH TOÁN -->

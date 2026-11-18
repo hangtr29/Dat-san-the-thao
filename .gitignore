@@ -35,6 +35,9 @@ venv.bak/
 local_settings.py
 db.sqlite3-journal
 
+# Media upload (bill chuyển khoản, avatar, QR)
+media/
+
 # IDEs
 .idea/
 .vscode/

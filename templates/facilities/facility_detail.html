@@ -25,6 +25,13 @@ select-none{% endblock %}
                 ĐẶT LỊCH THEO SÂN - TRỰC QUAN
             </h1>
 
+            <!-- Nút xem trên bản đồ -->
+            <a href="{% url 'facilities:facility_map' %}?q={{ facility.name }}"
+                title="Xem vị trí trên bản đồ"
+                class="text-white hover:text-emerald-200 transition font-bold text-base sm:text-lg ml-2">
+                <i class="fa-solid fa-map-location-dot"></i>
+            </a>
+
             <!-- Nút chọn ngày dạng Cuốn Lịch để bàn -->
             <div class="relative">
                 <button type="button" id="calendar-trigger-btn" onclick="toggleCalendarWidget()"

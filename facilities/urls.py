@@ -7,6 +7,9 @@ app_name = 'facilities'
 urlpatterns = [
     path('', views.facility_list, name='facility_list'),
     path('api/suggest/', views.search_suggest, name='search_suggest'),
+    path('favorites/', views.favorites_list, name='favorites_list'),
+    path('map/', views.facility_map, name='facility_map'),
+    path('api/favorite/<uuid:facility_id>/', views.toggle_favorite, name='toggle_favorite'),
     
     # Phân hệ Nghiệp vụ Chủ Sân (Owner Subsystem)
     path('owner/facility/manage/', views_owner.FacilityManageView.as_view(), name='owner_facility_manage'),

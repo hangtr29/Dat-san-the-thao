@@ -554,7 +554,7 @@
                 <div class="p-3.5 space-y-2.5">
                     <p class="text-[11px] text-slate-600 leading-relaxed flex items-start gap-1.5">
                         <i class="fa-solid fa-map-pin text-[#0b6b3a] mt-0.5 flex-shrink-0"></i>
-                        <span>${escapeHtml(m.address)}</span>
+                        <span>${m.distance ? `<span class="text-[#c2410c] font-bold mr-1">(${escapeHtml(m.distance)})</span>` : ''}${escapeHtml(m.address)}</span>
                     </p>
 
                     <div class="flex items-center justify-between text-[11px] font-bold text-slate-600">
@@ -581,7 +581,7 @@
                         </a>
                     </div>
 
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank"
+                    <a href="${m.directions_url || ''}" target="_blank" rel="noopener"
                        class="block text-center text-[11px] font-bold text-[#065f46] hover:text-emerald-700 transition">
                         <i class="fa-solid fa-diamond-turn-right"></i> Chỉ đường đến sân
                     </a>

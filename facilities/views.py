@@ -200,6 +200,13 @@ def facility_map(request):
             'image': f.get_cover_image_url(),
             'is_verified': f.is_verified,
             'url': f'/facilities/{f.id}/',
+            # Khoảng cách hiển thị (giống trang danh sách)
+            'distance': f.get_distance_display(),
+            # URL chỉ đường Google Maps (dấu thập phân chuẩn)
+            'directions_url': (
+                'https://www.google.com/maps/dir/?api=1'
+                f'&destination={round(float(f.latitude), 7)},{round(float(f.longitude), 7)}'
+            ),
         })
 
     # Tâm bản đồ: trung bình các marker (nếu không có thì dùng TP.HCM)

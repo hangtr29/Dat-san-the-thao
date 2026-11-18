@@ -119,7 +119,9 @@
                         <span class="text-[11px] uppercase tracking-wider text-emerald-300 font-extrabold block">Hệ
                             Thống Đặt Sân Thể Thao</span>
                         <span class="text-xs font-bold text-white block mt-0.5">
-                            <i class="fa-regular fa-calendar-check mr-1.5 text-amber-300"></i>Thứ Sáu, 30/10/2026
+                            <i class="fa-regular fa-calendar-check mr-1.5 text-amber-300"></i>
+                            <span id="header-live-date"
+                                data-server-timestamp="{{ server_timestamp|default:'' }}">{{ today_label|default:'' }}</span>
                         </span>
                     </div>
                 </a>
@@ -136,18 +138,18 @@
                     </a>
                     {% endif %}
 
-                    <div class="relative group">
-                        <button
+                    <div class="relative" id="account-menu-wrapper">
+                        <button type="button" id="account-menu-btn" aria-haspopup="true" aria-expanded="false"
                             class="flex items-center space-x-2.5 py-2 px-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 transition text-xs font-bold text-white shadow-sm">
                             <span
                                 class="w-7 h-7 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center font-black text-xs shadow-inner">
                                 {{ user.username|slice:":1"|upper }}
                             </span>
                             <span class="hidden sm:inline text-sm font-bold">{{ user.get_full_name|default:user.username }}</span>
-                            <i class="fa-solid fa-chevron-down text-[10px] text-emerald-200 ml-1"></i>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-emerald-200 ml-1 transition-transform" id="account-menu-chevron"></i>
                         </button>
-                        <div
-                            class="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 hidden group-hover:block text-slate-800 z-50">
+                        <div id="account-menu-dropdown"
+                            class="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 hidden text-slate-800 z-50">
                             <div class="px-4 py-2.5 border-b border-slate-100 text-xs text-slate-500">
                                 Vai trò: <strong class="text-emerald-700 font-black">{{ user.get_role_display }}</strong>
                             </div>
@@ -559,6 +561,145 @@
                     dropdown.classList.add('hidden');
                 }
             });
+        });
+    </script>
+
+    <!-- Header: Ngày giờ thực tế + Menu tài khoản (bấm chuột để mở) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            /* -------------------------------------------------------
+             * 1) NGÀY GIỜ THỰC TỄ trong header
+             *    - Dùng đồng hồ của máy người dùng nhưng bù lệch với server
+             *    - Luôn hiển thị theo múi giờ Việt Nam (Asia/Ho_Chi_Minh)
+             * ------------------------------------------------------- */
+            const liveDateEl = document.getElementById('header-live-date');
+
+            if (liveDateEl) {
+                const TZ = 'Asia/Ho_Chi_Minh';
+
+                // Mốc thời gian server (epoch ms) để bù lệch đồng hồ máy client
+                const serverTs = parseInt(liveDateEl.dataset.serverTimestamp || '0', 10);
+                const clockOffset = serverTs ? (Date.now() - serverTs) : 0;
+
+                // Định dạng theo múi giờ Việt Nam (dùng Intl để không phụ thuộc
+                // múi giờ của máy người dùng)
+                let dateFormatter = null;
+                let timeFormatter = null;
+                try {
+                    dateFormatter = new Intl.DateTimeFormat('vi-VN', {
+                        timeZone: TZ,
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                    timeFormatter = new Intl.DateTimeFormat('vi-VN', {
+                        timeZone: TZ,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                } catch (e) {
+                    dateFormatter = null;
+                }
+
+                const VI_WEEKDAYS = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm',
+                    'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+
+                function pad(n) { return String(n).padStart(2, '0'); }
+
+                // Lấy các thành phần ngày giờ theo giờ Việt Nam
+                function vietnamNow() {
+                    const now = new Date(Date.now() - clockOffset);
+                    if (dateFormatter) {
+                        const parts = {};
+                        dateFormatter.formatToParts(now).forEach(function (p) {
+                            if (p.type !== 'literal') parts[p.type] = p.value;
+                        });
+                        const d = parseInt(parts.day, 10);
+                        const m = parseInt(parts.month, 10);
+                        const y = parseInt(parts.year, 10);
+                        // weekday trả về dạng "Thứ Năm" (vi-VN) -> dùng luôn
+                        return {
+                            weekday: parts.weekday || '',
+                            day: d, month: m, year: y,
+                            time: timeFormatter ? timeFormatter.format(now) : ''
+                        };
+                    }
+                    // Dự phòng: dùng giờ máy + múi giờ cố định VN (UTC+7)
+                    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+                    const vn = new Date(utc + 7 * 3600000);
+                    return {
+                        weekday: VI_WEEKDAYS[vn.getDay() === 0 ? 6 : vn.getDay() - 1],
+                        day: vn.getDate(), month: vn.getMonth() + 1, year: vn.getFullYear(),
+                        time: pad(vn.getHours()) + ':' + pad(vn.getMinutes())
+                    };
+                }
+
+                function renderLiveDate() {
+                    const v = vietnamNow();
+                    let text = v.weekday + ', ' + pad(v.day) + '/' + pad(v.month) + '/' + v.year;
+                    if (v.time) text += ' ' + v.time;
+                    liveDateEl.textContent = text;
+                }
+
+                renderLiveDate();
+                // Cập nhật lại mỗi giây, tự đồng bộ lệch khi tab được focus lại
+                setInterval(renderLiveDate, 1000);
+                window.addEventListener('focus', renderLiveDate);
+                document.addEventListener('visibilitychange', function () {
+                    if (!document.hidden) renderLiveDate();
+                });
+            }
+
+            /* -------------------------------------------------------
+             * 2) MENU TÀI KHOẢN: bấm chuột mới hiện (không hover)
+             * ------------------------------------------------------- */
+            const accountBtn = document.getElementById('account-menu-btn');
+            const accountDropdown = document.getElementById('account-menu-dropdown');
+            const accountChevron = document.getElementById('account-menu-chevron');
+
+            if (accountBtn && accountDropdown) {
+
+                function openAccountMenu() {
+                    accountDropdown.classList.remove('hidden');
+                    accountBtn.setAttribute('aria-expanded', 'true');
+                    if (accountChevron) accountChevron.style.transform = 'rotate(180deg)';
+                }
+
+                function closeAccountMenu() {
+                    accountDropdown.classList.add('hidden');
+                    accountBtn.setAttribute('aria-expanded', 'false');
+                    if (accountChevron) accountChevron.style.transform = 'rotate(0deg)';
+                }
+
+                function toggleAccountMenu() {
+                    if (accountDropdown.classList.contains('hidden')) {
+                        openAccountMenu();
+                    } else {
+                        closeAccountMenu();
+                    }
+                }
+
+                // Bấm vào nút tài khoản -> mở/đóng menu
+                accountBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    toggleAccountMenu();
+                });
+
+                // Bấm ra ngoài -> đóng menu
+                document.addEventListener('click', function (e) {
+                    if (!accountDropdown.contains(e.target) && !accountBtn.contains(e.target)) {
+                        closeAccountMenu();
+                    }
+                });
+
+                // Nhấn phím Escape -> đóng menu
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') closeAccountMenu();
+                });
+            }
         });
     </script>
 </body>

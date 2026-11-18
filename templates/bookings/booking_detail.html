@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load facility_extras %}
 
 {% block title %}Phiếu Đặt Sân - Mã đơn: {{ booking_code }} | SportBook{% endblock %}
 
@@ -172,8 +173,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                                 <span class="text-emerald-300 font-semibold">Cụm sân:</span>
                                 <strong class="text-white ml-1 text-sm sm:text-base font-extrabold">{{ facility_name }}</strong>
                             </div>
-                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ facility.latitude }},{{ facility.longitude }}"
-                                target="_blank"
+                            <a href="{% map_directions_url facility %}"
+                                target="_blank" rel="noopener"
                                 class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 text-xs font-bold transition flex items-center gap-1 flex-shrink-0"
                                 title="Mở chỉ đường Google Maps">
                                 <i class="fa-solid fa-diamond-turn-right text-emerald-400"></i> Chỉ đường

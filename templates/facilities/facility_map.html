@@ -199,7 +199,7 @@
                 <div id="map-list" class="map-sidebar-scroll overflow-y-auto max-h-[560px] divide-y divide-slate-100">
                     {% for fac in facilities %}
                     <button type="button" class="map-list-item w-full text-left p-3.5 hover:bg-emerald-50/50 transition border-l-4 border-transparent"
-                        data-facility-id="{{ fac.id }}" data-lat="{{ fac.latitude }}" data-lng="{{ fac.longitude }}">
+                        data-facility-id="{{ fac.id }}">
                         <div class="flex items-start gap-3">
                             <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#0b6b3a] font-black text-[10px] flex-shrink-0 uppercase">
                                 {{ fac.name|slice:":2" }}
@@ -258,11 +258,56 @@
         scrollWheelZoom: true
     }).setView([CENTER_LAT, CENTER_LNG], 14);
 
-    // Lớp nền OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
+    // Lớp nền bản đồ: dùng nhiều nhà cung cấp tile dự phòng.
+    // Nếu nhà cung cấp chính bị chặn (403) hoặc lỗi mạng, tự động chuyển sang nhà cung cấp còn lại.
+    const TILE_PROVIDERS = [
+        {
+            url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        },
+        {
+            url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (DE)'
+        },
+        {
+            url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &middot; &copy; OpenStreetMap'
+        },
+        {
+            url: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &middot; &copy; OpenStreetMap'
+        }
+    ];
+
+    let currentProvider = 0;
+    let tileLayer = null;
+
+    function loadTileLayer(index) {
+        if (tileLayer) {
+            map.removeLayer(tileLayer);
+            tileLayer = null;
+        }
+        const provider = TILE_PROVIDERS[index];
+        tileLayer = L.tileLayer(provider.url, {
+            maxZoom: 19,
+            attribution: provider.attribution,
+            crossOrigin: true
+        });
+
+        let errorCount = 0;
+        tileLayer.on('tileerror', function () {
+            errorCount += 1;
+            // Nếu nhiều tile cùng lỗi -> chuyển sang nhà cung cấp dự phòng
+            if (errorCount >= 3 && currentProvider < TILE_PROVIDERS.length - 1) {
+                currentProvider += 1;
+                loadTileLayer(currentProvider);
+            }
+        });
+
+        tileLayer.addTo(map);
+    }
+
+    loadTileLayer(0);
 
     // Marker đang được chọn
     let activeMarker = null;
@@ -288,7 +333,8 @@
                 <!-- Ảnh bìa -->
                 <div class="relative h-32 bg-slate-200 overflow-hidden">
                     <img src="${escapeHtml(m.image)}" alt="${escapeHtml(m.name)}"
-                         class="w-full h-full object-cover" loading="lazy">
+                         class="w-full h-full object-cover" loading="lazy"
+                         onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&auto=format&fit=crop&q=80';">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
 
                     <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
@@ -361,7 +407,10 @@
             className: 'alobo-popup',
             maxWidth: 300,
             minWidth: 290,
-            autoPanPadding: [20, 20]
+            // Tắt autoPan: Leaflet mặc định gọi map.panTo() khi mở popup, việc này
+            // HUỶ animation của flyTo() khiến bản đồ không zoom tới đúng sân.
+            // Thay vào đó ta tự xử lý bố trí lại khung nhìn ở handler bấm danh sách.
+            autoPan: false
         });
 
         markerMap.set(m.id, marker);
@@ -383,19 +432,42 @@
     });
 
     // Bấm vào item trong danh sách -> fly tới marker & mở popup
+    // LƯU Ý: không đọc toạ độ từ data-lat/data-lng vì Django format số theo locale
+    // biến 10.7769 thành "10,7769" (parseFloat chỉ lấy được 10 -> fly sai chỗ).
+    // Toạ độ lấy trực tiếp từ đối tượng marker đã tạo trên bản đồ.
     document.querySelectorAll('.map-list-item').forEach(function (item) {
         item.addEventListener('click', function () {
             const id = item.dataset.facilityId;
             const marker = markerMap.get(id);
             if (!marker) return;
 
-            const lat = parseFloat(item.dataset.lat);
-            const lng = parseFloat(item.dataset.lng);
-            map.flyTo([lat, lng], 16, { duration: 0.7 });
-            setTimeout(() => marker.openPopup(), 500);
-
+            // Đồng bộ trạng thái active giữa danh sách & marker
             document.querySelectorAll('.map-list-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
+
+            if (activeMarker && activeMarker !== marker) {
+                activeMarker.getElement()?.querySelector('.marker-pin')?.classList.remove('is-active');
+            }
+            activeMarker = marker;
+            marker.getElement()?.querySelector('.marker-pin')?.classList.add('is-active');
+
+            // Bay tới vị trí sân (toạ độ lấy từ marker -> luôn là số thực chuẩn)
+            // Dùng setView để bảo đảm chuyển động diễn ra ổn định (flyTo bị can thiệp
+            // bởi thao tác pan của Leaflet khi mở popup).
+            const target = marker.getLatLng();
+            map.setView(target, 17, { animate: true, duration: 0.6 });
+
+            // Mở popup SAU khi bản đồ đã tới nơi.
+            // Lưu ý: nếu bản đồ ĐÃ ở đúng vị trí thì không có sự kiện 'moveend',
+            // nên cần thêm một lần timeout dự phòng.
+            let popupOpened = false;
+            const openIt = function () {
+                if (popupOpened) return;
+                popupOpened = true;
+                marker.openPopup();
+            };
+            map.once('moveend', openIt);
+            setTimeout(openIt, 800);
         });
     });
 

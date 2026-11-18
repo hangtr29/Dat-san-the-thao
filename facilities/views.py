@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.conf import settings
 from .models import Facility, SportCategory, Court, PricingRule, FacilityStatus, Favorite
 from bookings.models import BookingSlot, BookingStatus
 from bookings.services import SlotGeneratorService, CleanExpiredLocksService
@@ -219,6 +220,9 @@ def facility_map(request):
         'markers_json': json.dumps(markers, ensure_ascii=False),
         'center_lat': repr(float(center_lat)),
         'center_lng': repr(float(center_lng)),
+        # Cấu hình nhà cung cấp bản đồ
+        'google_maps_api_key': getattr(settings, 'GOOGLE_MAPS_API_KEY', ''),
+        'google_maps_keyless': getattr(settings, 'GOOGLE_MAPS_KEYLESS_TILES', True),
     }
     return render(request, 'facilities/facility_map.html', context)
 

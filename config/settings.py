@@ -5,6 +5,30 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _load_dotenv(path):
+    """Đọc file .env đơn giản (KEY=VALUE) và nạp vào os.environ nếu chưa có.
+    Giúp đặt GOOGLE_MAPS_API_KEY (và các biến khác) mà không cần cài thêm thư viện."""
+    if not path.exists():
+        return
+    try:
+        # Đọc với encoding='utf-8-sig' để loại bỏ BOM (PowerShell 5.1 hay thêm BOM khi ghi file)
+        content = path.read_text(encoding='utf-8-sig')
+        for raw_line in content.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            key, _, value = line.partition('=')
+            key = key.strip().lstrip('\ufeff').strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+    except Exception:
+        pass
+
+
+_load_dotenv(BASE_DIR / '.env')
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-&5#l!k^^75ljders%n$e+nm#40)k!3e3hg28$ff2)e$4o8^w&)'
 
@@ -139,6 +163,25 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# ---------------------------------------------------------------------------
+# BẢN ĐỒ (Leaflet) - Cấu hình nhà cung cấp tile
+# ---------------------------------------------------------------------------
+# Google Maps API key (tùy chọn). Để trống => dùng tile Google Maps công khai
+# (mt*.google.com) hoặc OpenStreetMap dự phòng, KHÔNG cần key.
+#   - Tạo key miễn phí: https://console.cloud.google.com/apis/credentials
+#   - Bật API: Maps JavaScript API + Maps Static API + Geocoding API
+#   - Giới hạn theo HTTP referrer để tránh bị lạm dụng
+#   - Nạp qua biến môi trường: GOOGLE_MAPS_API_KEY=xxx  (không hardcode)
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '').strip()
+
+# Cho phép dùng tile Google Maps công khai (không cần key) làm dự phòng.
+# Lưu ý: đây là endpoint nội bộ của Google, không phải API chính thức được
+# hỗ trợ cho sản phẩm thương mại — nên dùng cho demo/môi trường dev.
+# Khi deploy production, hãy đặt GOOGLE_MAPS_API_KEY để dùng API chính thức.
+GOOGLE_MAPS_KEYLESS_TILES = os.environ.get(
+    'GOOGLE_MAPS_KEYLESS_TILES', 'true'
+).lower() in ('true', '1', 'yes')
 
 
 MEDIA_URL = '/media/'

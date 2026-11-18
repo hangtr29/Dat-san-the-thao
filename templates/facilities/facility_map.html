@@ -263,10 +263,19 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% if google_maps_api_key %}
+<!-- Google Maps JavaScript API (chỉ nạp khi có API key) -->
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&v=weekly&language=vi&region=VN"></script>
+{% endif %}
 <script>
     const MARKERS = {{ markers_json|safe }};
     const CENTER_LAT = {{ center_lat }};
     const CENTER_LNG = {{ center_lng }};
+    // Có API key Google Maps chính thức hay không (settings.GOOGLE_MAPS_API_KEY)
+    const GOOGLE_MAPS_API_KEY = '{{ google_maps_api_key|default:""|escapejs }}';
+    // Cho phép dùng tile Google công khai (không key) hay không
+    const GOOGLE_MAPS_KEYLESS = {{ google_maps_keyless|yesno:"true,false" }};
     // Khởi tạo bản đồ (zoom 14 để các cụm sân trong TP.HCM nằm gần nhau vẫn phân biệt được)
     const map = L.map('facility-map', {
         zoomControl: true,
@@ -280,34 +289,52 @@
     // chỉ khi dò thành công mới add lớp tile vào bản đồ.
     const TILE_PROVIDERS = [
         {
-            name: 'OpenStreetMap',
-            url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            name: 'Google Maps',
+            // Dùng API key chính thức nếu có; nếu không dùng tile Google công khai (mt*.google.com)
+            url: GOOGLE_MAPS_API_KEY
+                ? 'https://maps.googleapis.com/maps/api/tile?key=' + GOOGLE_MAPS_API_KEY + '&x={x}&y={y}&z={z}&scale=1&hl=vi'
+                : 'https://mt{s}.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}',
+            // Subdomain riêng: Google dùng mt0..mt3 (không phải a/b/c)
+            subdomains: ['1', '2', '3', '0'],
+            attribution: '&copy; Google Maps',
+            // Chỉ dùng tile Google công khai khi không có API key chính thức
+            enabled: GOOGLE_MAPS_KEYLESS || !!GOOGLE_MAPS_API_KEY
         },
         {
             name: 'Esri Street Map',
             url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-            attribution: '&copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
+            attribution: '&copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
+            enabled: true
+        },
+        {
+            name: 'OpenStreetMap',
+            url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            enabled: true
         },
         {
             name: 'OpenStreetMap DE',
             url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (DE)'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (DE)',
+            enabled: true
         },
         {
             name: 'OpenStreetMap JP',
             url: 'https://tile.openstreetmap.jp/{z}/{x}/{y}.png',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (JP)'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (JP)',
+            enabled: true
         },
         {
             name: 'OpenStreetMap FR',
             url: 'https://tile-a.openstreetmap.fr/hot/{z}/{x}/{y}.png',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (FR/HOT)'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (FR/HOT)',
+            enabled: true
         },
         {
             name: 'CARTO Voyager',
             url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &middot; &copy; OpenStreetMap'
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &middot; &copy; OpenStreetMap',
+            enabled: true
         }
     ];
 
@@ -327,7 +354,9 @@
             const proj = map.project(center, z).divideBy(256).floor();
             const x = proj.x, y = proj.y;
 
-            const subdomains = provider.url.indexOf('{s}') > -1 ? ['a', 'b', 'c'] : [''];
+            const subdomains = provider.subdomains
+                ? provider.subdomains
+                : (provider.url.indexOf('{s}') > -1 ? ['a', 'b', 'c'] : ['']);
             let idx = 0;
 
             function tryNext() {
@@ -365,16 +394,31 @@
             tileLayer = null;
         }
         const provider = TILE_PROVIDERS[index];
-        tileLayer = L.tileLayer(provider.url, {
+        const options = {
             maxZoom: 19,
             attribution: provider.attribution
-        });
+        };
+        // Leaflet mặc định dùng {s} -> a,b,c. Nếu provider có danh sách subdomain riêng
+        // (ví dụ Google dùng mt0..mt3) thì ghi đè.
+        if (provider.subdomains) {
+            options.subdomains = provider.subdomains;
+        }
+        tileLayer = L.tileLayer(provider.url, options);
         tileLayer.addTo(map);
+    }
+
+    // Danh sách provider khả dụng (bỏ qua provider bị vô hiệu hoá qua cờ 'enabled')
+    function enabledProviders() {
+        return TILE_PROVIDERS
+            .map(function (p, i) { return { p: p, i: i }; })
+            .filter(function (x) { return x.p.enabled !== false; });
     }
 
     // Dò lần lượt từng nhà cung cấp cho tới khi tìm được nhà cung cấp hoạt động.
     async function selectProvider() {
-        for (let i = 0; i < TILE_PROVIDERS.length; i++) {
+        const candidates = enabledProviders();
+        for (let k = 0; k < candidates.length; k++) {
+            const i = candidates[k].i;
             const ok = await probeProvider(i);
             if (ok) {
                 if (i !== currentProvider) {
@@ -384,13 +428,13 @@
                 return;
             }
         }
-        // Không nhà cung cấp nào dùng được -> giữ nguyên lớp đầu tiên (Leaflet sẽ tự thử lại)
-        currentProvider = 0;
-        loadTileLayer(0);
+        // Không nhà cung cấp nào dùng được -> giữ lớp hiện tại (Leaflet sẽ tự thử lại)
     }
 
-    // Khởi tạo: dùng nhà cung cấp đầu tiên ngay, sau đó dò & thay thế nếu bị chặn.
-    loadTileLayer(0);
+    // Khởi tạo: dùng provider đầu tiên ngay, sau đó dò & thay thế nếu bị chặn.
+    const firstEnabled = enabledProviders()[0];
+    currentProvider = firstEnabled ? firstEnabled.i : 0;
+    loadTileLayer(currentProvider);
     if (!providerSwitching) {
         providerSwitching = true;
         selectProvider().then(function () {
@@ -420,7 +464,9 @@
             switchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đổi...';
             switchBtn.disabled = true;
 
-            const next = (currentProvider + 1) % TILE_PROVIDERS.length;
+            const candidates = enabledProviders();
+            const curPos = candidates.findIndex(function (x) { return x.i === currentProvider; });
+            const next = candidates[(curPos + 1) % candidates.length].i;
             currentProvider = next;
             loadTileLayer(next);
 

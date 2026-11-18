@@ -166,6 +166,14 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div id="facility-map" class="w-full h-[500px] sm:h-[600px] lg:h-[680px] bg-slate-100"></div>
 
+                <!-- Cảnh báo: không tải được nền bản đồ -->
+                <div id="tile-error-note"
+                    class="hidden px-4 py-2.5 bg-amber-50 border-t border-amber-200 text-[11px] font-bold text-amber-800 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                    <span>Không tải được nền bản đồ (có thể nhà cung cấp tile đang chặn mạng của bạn).
+                        Vị trí các cụm sân vẫn hiển thị đúng — hãy tải lại trang hoặc đổi mạng.</span>
+                </div>
+
                 <!-- Chú thích -->
                 <div class="px-4 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between flex-wrap gap-3">
                     <div class="flex items-center gap-4 text-[11px] font-bold text-slate-600">
@@ -179,7 +187,14 @@
                             <i class="fa-solid fa-circle-check text-emerald-600"></i> Tích xanh KYC
                         </span>
                     </div>
-                    <span class="text-[11px] font-bold text-slate-500">
+                    <span class="text-[11px] font-bold text-slate-500 flex items-center gap-2">
+                        <button type="button" id="btn-switch-tile"
+                            class="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black hover:bg-emerald-100 transition flex items-center gap-1">
+                            <i class="fa-solid fa-repeat"></i> Đổi nền bản đồ
+                        </button>
+                        <span id="tile-provider-badge" class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-black">
+                            OpenStreetMap
+                        </span>
                         <i class="fa-solid fa-arrows-up-down-left-right text-slate-400"></i> Có thể kéo để di chuyển
                     </span>
                 </div>
@@ -259,28 +274,90 @@
     }).setView([CENTER_LAT, CENTER_LNG], 14);
 
     // Lớp nền bản đồ: dùng nhiều nhà cung cấp tile dự phòng.
-    // Nếu nhà cung cấp chính bị chặn (403) hoặc lỗi mạng, tự động chuyển sang nhà cung cấp còn lại.
+    // LƯU Ý: một số nhà cung cấp (đặc biệt OpenStreetMap) có thể chặn IP người dùng
+    // trả về HTTP 403. Sự kiện 'tileerror' của Leaflet KHÔNG luôn bắt được lỗi này,
+    // nên ta chủ động "dò" (probe) 1 tile trước bằng Image.onerror (chắc chắn bắt 403),
+    // chỉ khi dò thành công mới add lớp tile vào bản đồ.
     const TILE_PROVIDERS = [
         {
+            name: 'OpenStreetMap',
             url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         },
         {
+            name: 'Esri Street Map',
+            url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+            attribution: '&copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
+        },
+        {
+            name: 'OpenStreetMap DE',
             url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (DE)'
         },
         {
-            url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &middot; &copy; OpenStreetMap'
+            name: 'OpenStreetMap JP',
+            url: 'https://tile.openstreetmap.jp/{z}/{x}/{y}.png',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (JP)'
         },
         {
-            url: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+            name: 'OpenStreetMap FR',
+            url: 'https://tile-a.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (FR/HOT)'
+        },
+        {
+            name: 'CARTO Voyager',
+            url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
             attribution: '&copy; <a href="https://carto.com/">CARTO</a> &middot; &copy; OpenStreetMap'
         }
     ];
 
     let currentProvider = 0;
     let tileLayer = null;
+    let providerSwitching = false;
+
+    // Dò xem nhà cung cấp tile có dùng được không (bắt lỗi 403 / mạng).
+    // Dùng <img> thay vì fetch() để tránh lỗi CORS và để onerror bắt chắc HTTP 403.
+    // Với nhà cung cấp dùng {s} (a/b/c) sẽ thử lần lượt từng subdomain,
+    // vì có thể chỉ một subdomain bị chặn.
+    function probeProvider(index) {
+        return new Promise(function (resolve) {
+            const provider = TILE_PROVIDERS[index];
+            const z = map.getZoom() || 14;
+            const center = map.getCenter();
+            const proj = map.project(center, z).divideBy(256).floor();
+            const x = proj.x, y = proj.y;
+
+            const subdomains = provider.url.indexOf('{s}') > -1 ? ['a', 'b', 'c'] : [''];
+            let idx = 0;
+
+            function tryNext() {
+                if (idx >= subdomains.length) { resolve(false); return; }
+                const s = subdomains[idx++];
+                const url = provider.url
+                    .replace('{s}', s)
+                    .replace('{z}', z)
+                    .replace('{x}', x)
+                    .replace('{y}', y);
+
+                const img = new Image();
+                let settled = false;
+                const finish = function (ok) {
+                    if (settled) return;
+                    settled = true;
+                    img.onload = null;
+                    img.onerror = null;
+                    if (ok) resolve(true);
+                    else tryNext();
+                };
+                // Timeout 6s: nếu nhà cung cấp treo quá lâu cũng coi như không dùng được
+                const timer = setTimeout(function () { finish(false); }, 6000);
+                img.onload = function () { clearTimeout(timer); finish(true); };
+                img.onerror = function () { clearTimeout(timer); finish(false); };
+                img.src = url;
+            }
+            tryNext();
+        });
+    }
 
     function loadTileLayer(index) {
         if (tileLayer) {
@@ -290,24 +367,99 @@
         const provider = TILE_PROVIDERS[index];
         tileLayer = L.tileLayer(provider.url, {
             maxZoom: 19,
-            attribution: provider.attribution,
-            crossOrigin: true
+            attribution: provider.attribution
         });
-
-        let errorCount = 0;
-        tileLayer.on('tileerror', function () {
-            errorCount += 1;
-            // Nếu nhiều tile cùng lỗi -> chuyển sang nhà cung cấp dự phòng
-            if (errorCount >= 3 && currentProvider < TILE_PROVIDERS.length - 1) {
-                currentProvider += 1;
-                loadTileLayer(currentProvider);
-            }
-        });
-
         tileLayer.addTo(map);
     }
 
+    // Dò lần lượt từng nhà cung cấp cho tới khi tìm được nhà cung cấp hoạt động.
+    async function selectProvider() {
+        for (let i = 0; i < TILE_PROVIDERS.length; i++) {
+            const ok = await probeProvider(i);
+            if (ok) {
+                if (i !== currentProvider) {
+                    currentProvider = i;
+                    loadTileLayer(i);
+                }
+                return;
+            }
+        }
+        // Không nhà cung cấp nào dùng được -> giữ nguyên lớp đầu tiên (Leaflet sẽ tự thử lại)
+        currentProvider = 0;
+        loadTileLayer(0);
+    }
+
+    // Khởi tạo: dùng nhà cung cấp đầu tiên ngay, sau đó dò & thay thế nếu bị chặn.
     loadTileLayer(0);
+    if (!providerSwitching) {
+        providerSwitching = true;
+        selectProvider().then(function () {
+            window.__tileProvider = currentProvider;
+            const badge = document.getElementById('tile-provider-badge');
+            if (badge) {
+                badge.textContent = TILE_PROVIDERS[currentProvider].name;
+            }
+        });
+    }
+
+    // Cảnh báo nếu sau 10s vẫn không có tile nào tải được (bị chặn mạng/IP)
+    setTimeout(function () {
+        const tiles = document.querySelectorAll('.leaflet-tile');
+        let ok = 0;
+        tiles.forEach(function (t) { if (t.complete && t.naturalWidth > 0) ok++; });
+        if (ok === 0) {
+            const note = document.getElementById('tile-error-note');
+            if (note) note.classList.remove('hidden');
+        }
+    }, 10000);
+
+    // Nút đổi nền bản đồ: chuyển sang nhà cung cấp tile kế tiếp (dùng tay khi IP bị chặn)
+    const switchBtn = document.getElementById('btn-switch-tile');
+    if (switchBtn) {
+        switchBtn.addEventListener('click', function () {
+            switchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đổi...';
+            switchBtn.disabled = true;
+
+            const next = (currentProvider + 1) % TILE_PROVIDERS.length;
+            currentProvider = next;
+            loadTileLayer(next);
+
+            const badge = document.getElementById('tile-provider-badge');
+            if (badge) badge.textContent = TILE_PROVIDERS[next].name;
+
+            const note = document.getElementById('tile-error-note');
+            if (note) note.classList.add('hidden');
+
+            setTimeout(function () {
+                switchBtn.innerHTML = '<i class="fa-solid fa-repeat"></i> Đổi nền bản đồ';
+                switchBtn.disabled = false;
+            }, 1200);
+        });
+    }
+
+    // Kiểm tra định kỳ: nếu người dùng kéo bản đồ sang vùng mới mà provider hiện tại
+    // bị chặn (403) thì tự động dò lại và chuyển sang provider dự phòng.
+    let tileCheckTimer = null;
+    map.on('moveend zoomend', function () {
+        clearTimeout(tileCheckTimer);
+        tileCheckTimer = setTimeout(function () {
+            const tiles = document.querySelectorAll('.leaflet-tile');
+            let total = 0, ok = 0;
+            tiles.forEach(function (t) {
+                if (t.complete) { total++; if (t.naturalWidth > 0) ok++; }
+            });
+            // Có tile đã tải xong nhưng tất cả đều lỗi -> provider hiện tại đang bị chặn
+            if (total > 0 && ok === 0 && currentProvider < TILE_PROVIDERS.length - 1) {
+                selectProvider();
+            }
+            // Ẩn/hiện cảnh báo
+            const note = document.getElementById('tile-error-note');
+            if (note) {
+                if (ok === 0 && total > 0) note.classList.remove('hidden');
+                else note.classList.add('hidden');
+            }
+        }, 1200);
+    });
 
     // Marker đang được chọn
     let activeMarker = null;

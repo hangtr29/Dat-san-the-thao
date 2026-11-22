@@ -1,0 +1,310 @@
+{% extends 'base_owner.html' %}
+
+{% block title %}Quản lý Dịch vụ - {{ facility.name }} | SportBook{% endblock %}
+
+{% block owner_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#04331b] flex items-center gap-2.5">
+                <i class="fa-solid fa-basket-shopping text-[#0b6b3a]"></i>
+                Quản lý Dịch vụ Bổ Sung
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">
+                Tự định giá thuê vợt & thức uống riêng cho cụm sân của bạn.
+            </p>
+        </div>
+        <a href="/bookings/dashboard/?tab=settings&facility_id={{ facility.id }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+        </a>
+    </div>
+
+    <!-- Chọn cụm sân -->
+    <form method="get" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6">
+        <label class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-2">Đang cấu hình cho cụm sân</label>
+        <div class="flex flex-wrap items-end gap-3">
+            <select name="facility_id" onchange="this.form.submit()"
+                    class="flex-1 min-w-[220px] px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                {% for f in my_facilities %}
+                <option value="{{ f.id }}" {% if f.id == facility.id %}selected{% endif %}>{{ f.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-4 py-2.5 rounded-xl bg-[#0b6b3a] text-white font-black text-xs uppercase tracking-wide transition">
+                Xem
+            </button>
+        </div>
+    </form>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Danh sách dịch vụ -->
+        <div class="lg:col-span-7 space-y-4">
+            <!-- Thuê dụng cụ -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-emerald-50 border-b border-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-table-tennis-paddle-ball text-[#0b6b3a]"></i>
+                    <h2 class="text-sm font-black text-[#04331b]">Thuê dụng cụ (Vợt &amp; trang bị)</h2>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for svc in services %}
+                    {% if svc.category == 'EQUIPMENT' %}
+                    <div class="px-5 py-3.5 flex items-center justify-between gap-3 {% if not svc.is_active %}opacity-50{% endif %}">
+                        <div class="min-w-0">
+                            <div class="text-sm font-bold text-slate-800">{{ svc.name }}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                {{ svc.description|default:"—" }} ·
+                                <span class="font-black text-[#0b6b3a]">{{ svc.unit_price|floatformat:0 }} đ / {{ svc.get_unit_label }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <a href="?facility_id={{ facility.id }}&edit={{ svc.id }}"
+                               class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition text-xs">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form method="post" action="{% url 'bookings:owner_services' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="service_id" value="{{ svc.id }}">
+                                <button type="submit" title="{{ svc.is_active|yesno:'Tạm ngưng,Đang cung cấp' }}"
+                                        class="w-8 h-8 rounded-lg {% if svc.is_active %}bg-emerald-100 hover:bg-emerald-200 text-emerald-700{% else %}bg-slate-200 hover:bg-slate-300 text-slate-500{% endif %} flex items-center justify-center transition text-xs">
+                                    <i class="fa-solid {% if svc.is_active %}fa-eye{% else %}fa-eye-slash{% endif %}"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'bookings:owner_services' %}" class="inline"
+                                  onsubmit="return confirm('Xóa dịch vụ \'{{ svc.name|escapejs }}\'?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="service_id" value="{{ svc.id }}">
+                                <button type="submit" title="Xóa"
+                                        class="w-8 h-8 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 flex items-center justify-center transition text-xs">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% empty %}
+                    <div class="px-5 py-6 text-center text-xs text-slate-400">
+                        Chưa có dịch vụ thuê dụng cụ nào.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Thức uống -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-sky-50 border-b border-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-mug-hot text-sky-600"></i>
+                    <h2 class="text-sm font-black text-[#04331b]">Thức uống</h2>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for svc in services %}
+                    {% if svc.category == 'DRINK' %}
+                    <div class="px-5 py-3.5 flex items-center justify-between gap-3 {% if not svc.is_active %}opacity-50{% endif %}">
+                        <div class="min-w-0">
+                            <div class="text-sm font-bold text-slate-800">{{ svc.name }}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                {{ svc.description|default:"—" }} ·
+                                <span class="font-black text-[#0b6b3a]">{{ svc.unit_price|floatformat:0 }} đ / {{ svc.get_unit_label }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <a href="?facility_id={{ facility.id }}&edit={{ svc.id }}"
+                               class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition text-xs">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form method="post" action="{% url 'bookings:owner_services' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="service_id" value="{{ svc.id }}">
+                                <button type="submit"
+                                        class="w-8 h-8 rounded-lg {% if svc.is_active %}bg-emerald-100 hover:bg-emerald-200 text-emerald-700{% else %}bg-slate-200 hover:bg-slate-300 text-slate-500{% endif %} flex items-center justify-center transition text-xs">
+                                    <i class="fa-solid {% if svc.is_active %}fa-eye{% else %}fa-eye-slash{% endif %}"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'bookings:owner_services' %}" class="inline"
+                                  onsubmit="return confirm('Xóa dịch vụ \'{{ svc.name|escapejs }}\'?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="service_id" value="{{ svc.id }}">
+                                <button type="submit"
+                                        class="w-8 h-8 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 flex items-center justify-center transition text-xs">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% empty %}
+                    <div class="px-5 py-6 text-center text-xs text-slate-400">
+                        Chưa có dịch vụ thức uống nào.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Khác -->
+            {% if services %}
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-amber-50 border-b border-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-utensils text-amber-600"></i>
+                    <h2 class="text-sm font-black text-[#04331b]">Dịch vụ khác</h2>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for svc in services %}
+                    {% if svc.category == 'FOOD' or svc.category == 'OTHER' %}
+                    <div class="px-5 py-3.5 flex items-center justify-between gap-3 {% if not svc.is_active %}opacity-50{% endif %}">
+                        <div class="min-w-0">
+                            <div class="text-sm font-bold text-slate-800">{{ svc.name }}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                {{ svc.get_category_display }} ·
+                                <span class="font-black text-[#0b6b3a]">{{ svc.unit_price|floatformat:0 }} đ / {{ svc.get_unit_label }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <a href="?facility_id={{ facility.id }}&edit={{ svc.id }}"
+                               class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition text-xs">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form method="post" action="{% url 'bookings:owner_services' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="service_id" value="{{ svc.id }}">
+                                <button type="submit"
+                                        class="w-8 h-8 rounded-lg {% if svc.is_active %}bg-emerald-100 hover:bg-emerald-200 text-emerald-700{% else %}bg-slate-200 hover:bg-slate-300 text-slate-500{% endif %} flex items-center justify-center transition text-xs">
+                                    <i class="fa-solid {% if svc.is_active %}fa-eye{% else %}fa-eye-slash{% endif %}"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'bookings:owner_services' %}" class="inline"
+                                  onsubmit="return confirm('Xóa dịch vụ \'{{ svc.name|escapejs }}\'?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="service_id" value="{{ svc.id }}">
+                                <button type="submit"
+                                        class="w-8 h-8 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 flex items-center justify-center transition text-xs">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Form thêm / sửa -->
+        <div class="lg:col-span-5">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sticky top-24">
+                <h2 class="text-sm font-black text-[#04331b] mb-1 flex items-center gap-2">
+                    <i class="fa-solid {% if edit_service %}fa-pen{% else %}fa-plus{% endif %} text-[#0b6b3a]"></i>
+                    {% if edit_service %}Sửa dịch vụ{% else %}Thêm dịch vụ mới{% endif %}
+                </h2>
+                <p class="text-[11px] text-slate-500 mb-4">Giá sẽ hiển thị ngay khi khách bấm "Thêm dịch vụ" ở trang đặt sân.</p>
+
+                <form method="post" action="{% url 'bookings:owner_services' %}" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                    <input type="hidden" name="action" value="{% if edit_service %}update{% else %}add{% endif %}">
+                    {% if edit_service %}
+                    <input type="hidden" name="service_id" value="{{ edit_service.id }}">
+                    {% endif %}
+
+                    <div>
+                        <label for="name" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Tên dịch vụ <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="name" name="name" required
+                               value="{{ edit_service.name|default:'' }}"
+                               placeholder="VD: Thuê vợt Yonex, Nước suối 500ml..."
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    </div>
+
+                    <div>
+                        <label for="description" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Mô tả ngắn
+                        </label>
+                        <input type="text" id="description" name="description"
+                               value="{{ edit_service.description|default:'' }}"
+                               placeholder="VD: Vợt Yonex Astrox chính hãng, có sẵn 3 dây..."
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="category" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                                Nhóm
+                            </label>
+                            <select id="category" name="category"
+                                    class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                                {% for value, label in category_choices %}
+                                <option value="{{ value }}" {% if edit_service.category == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="unit_type" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                                Đơn vị tính
+                            </label>
+                            <select id="unit_type" name="unit_type"
+                                    class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                                {% for value, label in unit_choices %}
+                                <option value="{{ value }}" {% if edit_service.unit_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="unit_price" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Đơn giá (VNĐ) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" id="unit_price" name="unit_price" min="0" step="1000" required
+                               value="{{ edit_service.unit_price|default:'' }}"
+                               placeholder="50000"
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-black text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    </div>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="is_active" {% if edit_service.is_active or not edit_service %}checked{% endif %}
+                               class="w-4 h-4 rounded border-slate-300 text-[#0b6b3a] focus:ring-[#0b6b3a]">
+                        <span class="text-xs font-bold text-slate-700">Đang cung cấp dịch vụ này</span>
+                    </label>
+
+                    <div class="flex items-center gap-2 pt-2">
+                        <button type="submit"
+                                class="flex-1 py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                            {% if edit_service %}Lưu thay đổi{% else %}Thêm dịch vụ{% endif %}
+                        </button>
+                        {% if edit_service %}
+                        <a href="?facility_id={{ facility.id }}"
+                           class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition">
+                            Hủy
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+
+                <div class="mt-5 pt-4 border-t border-slate-100">
+                    <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">Gợi ý nhanh</div>
+                    <div class="space-y-1.5 text-[11px] text-slate-600">
+                        <div class="flex justify-between"><span>Thuê vợt (đơn vị/buổi)</span><span class="font-black">30.000 - 60.000 đ</span></div>
+                        <div class="flex justify-between"><span>Nước suối 500ml (chai)</span><span class="font-black">10.000 - 15.000 đ</span></div>
+                        <div class="flex justify-between"><span>Cà phê / Trà đá (ly)</span><span class="font-black">15.000 - 30.000 đ</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

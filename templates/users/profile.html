@@ -3,45 +3,244 @@
 {% block title %}Hồ sơ cá nhân - SPORTBOOK{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto my-10 px-4">
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-6 text-white">
-            <h2 class="text-xl font-bold">Hồ Sơ Tài Khoản</h2>
-            <p class="text-xs text-emerald-100 mt-1">Thông tin định danh và phân quyền hệ thống</p>
-        </div>
-        <div class="p-8 space-y-6">
-            <div class="flex items-center space-x-4">
-                <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 text-2xl font-bold flex items-center justify-center border-2 border-emerald-300">
+<div class="max-w-5xl mx-auto my-8 px-4 sm:px-6">
+
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 sm:px-8 py-6 text-white flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-white/15 text-white text-2xl font-black flex items-center justify-center border-2 border-white/30 overflow-hidden">
+                    {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="Ảnh đại diện" class="w-full h-full object-cover">
+                    {% else %}
                     {{ user.username|slice:":1"|upper }}
+                    {% endif %}
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800">{{ user.get_full_name|default:user.username }}</h3>
-                    <span class="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200 mt-1">
-                        {{ user.get_role_display }}
-                    </span>
+                    <h2 class="text-xl font-black">{{ user.get_full_name|default:user.username }}</h2>
+                    <div class="flex items-center gap-2 mt-1.5">
+                        <span class="inline-block px-3 py-0.5 bg-white/20 text-white text-[11px] font-black rounded-full border border-white/25">
+                            {{ user.get_role_display }}
+                        </span>
+                        <span class="text-[11px] text-emerald-100 font-bold">@{{ user.username }}</span>
+                    </div>
                 </div>
             </div>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'bookings:notification_list' %}"
+                   class="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition">
+                    <i class="fa-solid fa-bell mr-1"></i>Thông báo
+                </a>
+                <a href="{% url 'bookings:booking_history' %}"
+                   class="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition">
+                    <i class="fa-solid fa-calendar-check mr-1"></i>Đơn của tôi
+                </a>
+            </div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100 text-sm">
-                <div class="p-4 bg-slate-50 rounded-xl">
-                    <span class="text-xs text-slate-400 block uppercase font-bold">Tên đăng nhập</span>
-                    <span class="font-semibold text-slate-700">{{ user.username }}</span>
+        <!-- Thống kê -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-100">
+            <div class="p-4 text-center">
+                <div class="text-2xl font-black text-slate-800">{{ stats.total }}</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mt-0.5">Tổng đơn</div>
+            </div>
+            <div class="p-4 text-center">
+                <div class="text-2xl font-black text-emerald-600">{{ stats.confirmed }}</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mt-0.5">Đã xác nhận</div>
+            </div>
+            <div class="p-4 text-center">
+                <div class="text-2xl font-black text-amber-600">{{ stats.spent|floatformat:0 }} đ</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mt-0.5">Tổng chi tiêu</div>
+            </div>
+            <div class="p-4 text-center">
+                <div class="text-2xl font-black text-rose-500">{{ stats.favorites }}</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mt-0.5">Sân yêu thích</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- SỬA THÔNG TIN CÁ NHÂN -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-sm font-black text-slate-800 flex items-center gap-2 mb-1">
+                <i class="fa-solid fa-user-pen text-emerald-600"></i>
+                Sửa thông tin cá nhân
+            </h3>
+            <p class="text-[11px] text-slate-500 mb-5">Cập nhật tên, email, số điện thoại và ảnh đại diện của bạn.</p>
+
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_profile">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="{{ profile_form.first_name.id_for_label }}" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Họ / Tên đệm
+                        </label>
+                        {{ profile_form.first_name }}
+                        {% for e in profile_form.first_name.errors %}
+                        <div class="text-[11px] text-rose-600 font-bold mt-1">{{ e }}</div>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label for="{{ profile_form.last_name.id_for_label }}" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Tên
+                        </label>
+                        {{ profile_form.last_name }}
+                    </div>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-xl">
-                    <span class="text-xs text-slate-400 block uppercase font-bold">Số điện thoại / Zalo</span>
-                    <span class="font-semibold text-slate-700">{{ user.phone|default:"Chưa cập nhật" }}</span>
+
+                <div>
+                    <label for="{{ profile_form.phone.id_for_label }}" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                        Số điện thoại / Zalo
+                    </label>
+                    {{ profile_form.phone }}
+                    {% for e in profile_form.phone.errors %}
+                    <div class="text-[11px] text-rose-600 font-bold mt-1">{{ e }}</div>
+                    {% endfor %}
                 </div>
-                <div class="p-4 bg-slate-50 rounded-xl">
-                    <span class="text-xs text-slate-400 block uppercase font-bold">Email</span>
-                    <span class="font-semibold text-slate-700">{{ user.email|default:"Chưa cập nhật" }}</span>
+
+                <div>
+                    <label for="{{ profile_form.email.id_for_label }}" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                        Email
+                    </label>
+                    {{ profile_form.email }}
+                    {% for e in profile_form.email.errors %}
+                    <div class="text-[11px] text-rose-600 font-bold mt-1">{{ e }}</div>
+                    {% endfor %}
                 </div>
-                <div class="p-4 bg-slate-50 rounded-xl">
-                    <span class="text-xs text-slate-400 block uppercase font-bold">Mã định danh (UUID)</span>
-                    <span class="font-mono text-xs text-slate-600 truncate block">{{ user.id }}</span>
+
+                <div>
+                    <label for="{{ profile_form.avatar.id_for_label }}" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                        Ảnh đại diện
+                    </label>
+                    {{ profile_form.avatar }}
+                    {% if user.avatar %}
+                    <button type="submit" name="action" value="delete_avatar"
+                            onclick="return confirm('Xóa ảnh đại diện?');"
+                            class="mt-2 text-[11px] font-bold text-rose-500 hover:underline">
+                        <i class="fa-solid fa-trash mr-1"></i>Xóa ảnh hiện tại
+                    </button>
+                    {% endif %}
                 </div>
+
+                <button type="submit"
+                        class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i>Lưu thay đổi
+                </button>
+            </form>
+        </div>
+
+        <!-- ĐỔI MẬT KHẨU -->
+        <div class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 class="text-sm font-black text-slate-800 flex items-center gap-2 mb-1">
+                    <i class="fa-solid fa-key text-emerald-600"></i>
+                    Đổi mật khẩu
+                </h3>
+                <p class="text-[11px] text-slate-500 mb-5">Mật khẩu mới cần có ít nhất 8 ký tự và không quá thông dụng.</p>
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_password">
+
+                    <div>
+                        <label for="{{ password_form.old_password.id_for_label }}" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Mật khẩu hiện tại
+                        </label>
+                        {{ password_form.old_password }}
+                        {% for e in password_form.old_password.errors %}
+                        <div class="text-[11px] text-rose-600 font-bold mt-1">{{ e }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label for="{{ password_form.new_password1.id_for_label }}" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Mật khẩu mới
+                        </label>
+                        {{ password_form.new_password1 }}
+                        {% for e in password_form.new_password1.errors %}
+                        <div class="text-[11px] text-rose-600 font-bold mt-1">{{ e }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label for="{{ password_form.new_password2.id_for_label }}" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Xác nhận mật khẩu mới
+                        </label>
+                        {{ password_form.new_password2 }}
+                        {% for e in password_form.new_password2.errors %}
+                        <div class="text-[11px] text-rose-600 font-bold mt-1">{{ e }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit"
+                            class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                        <i class="fa-solid fa-lock mr-1"></i>Đổi mật khẩu
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quên mật khẩu + Đơn gần đây -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 class="text-sm font-black text-slate-800 flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-circle-question text-emerald-600"></i>
+                    Trợ giúp tài khoản
+                </h3>
+                <a href="{% url 'users:password_reset_request' %}"
+                   class="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition mb-4">
+                    <span class="text-xs font-bold text-slate-700">
+                        <i class="fa-solid fa-circle-question mr-1 text-emerald-600"></i>Quên mật khẩu?
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+                </a>
+
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">Đơn đặt gần đây</div>
+                <div class="space-y-1.5">
+                    {% for b in recent_bookings %}
+                    <a href="{% url 'bookings:booking_detail' b.booking_code %}"
+                       class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition">
+                        <div class="min-w-0">
+                            <div class="text-xs font-black text-slate-700">{{ b.booking_code }}</div>
+                            <div class="text-[10px] text-slate-400 font-bold">{{ b.created_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-lg text-[10px] font-black whitespace-nowrap
+                                     {% if b.status == 'CONFIRMED' %}bg-emerald-100 text-emerald-700
+                                     {% elif b.status == 'WAITING_APPROVAL' %}bg-blue-100 text-blue-700
+                                     {% elif b.status == 'NEEDS_REUPLOAD' %}bg-orange-100 text-orange-700
+                                     {% else %}bg-slate-100 text-slate-600{% endif %}">
+                            {{ b.get_status_display }}
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="text-xs text-slate-400 py-2">Chưa có đơn đặt sân nào.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông tin hệ thống -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mt-6">
+        <h3 class="text-sm font-black text-slate-800 flex items-center gap-2 mb-4">
+            <i class="fa-solid fa-circle-info text-emerald-600"></i>
+            Thông tin hệ thống
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-4 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 block uppercase font-bold text-[10px] mb-1">Tên đăng nhập</span>
+                <span class="font-semibold text-slate-700">{{ user.username }}</span>
+            </div>
+            <div class="p-4 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 block uppercase font-bold text-[10px] mb-1">Mã định danh (UUID)</span>
+                <span class="font-mono text-slate-600 truncate block">{{ user.id }}</span>
+            </div>
+            <div class="p-4 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 block uppercase font-bold text-[10px] mb-1">Ngày tham gia</span>
+                <span class="font-semibold text-slate-700">{{ user.date_joined|date:"d/m/Y" }}</span>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-

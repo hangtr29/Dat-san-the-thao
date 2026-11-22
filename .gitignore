@@ -57,3 +57,8 @@ Thumbs.db
 
 # Database (khong push du lieu nghiep vu len GitHub)
 db.sqlite3
+db.sqlite3.bak_*
+
+# Log server & file tam
+_server*.err
+_server*.log

@@ -1,0 +1,237 @@
+{% extends 'base_owner.html' %}
+
+{% block title %}Xác thực & Gói Dịch vụ | SportBook{% endblock %}
+
+{% block owner_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#04331b] flex items-center gap-2.5">
+                <i class="fa-solid fa-id-card-clip text-[#0b6b3a]"></i>
+                Hồ sơ Xác thực & Gói Dịch vụ
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">Gửi hồ sơ KYC và mua/gia hạn gói duy trì nền tảng ngay trên giao diện.</p>
+        </div>
+        <a href="/bookings/dashboard/"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- KYC -->
+        <div class="lg:col-span-7 space-y-5">
+            <form method="post" action="{% url 'bookings:owner_kyc' %}" enctype="multipart/form-data"
+                  class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="submit_kyc">
+
+                <div class="flex items-start justify-between gap-3 mb-5">
+                    <div>
+                        <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2">
+                            <i class="fa-solid fa-user-shield text-[#0b6b3a]"></i>
+                            Hồ sơ xác thực danh tính (KYC)
+                        </h2>
+                        <p class="text-[11px] text-slate-500 mt-1">
+                            Hồ sơ sẽ được Ban quản trị kiểm tra và duyệt (không tự duyệt sẵn).
+                        </p>
+                    </div>
+                    <span class="px-3 py-1 rounded-lg text-[11px] font-black whitespace-nowrap
+                                {% if kyc_status == 'KYC_VERIFIED' %}bg-emerald-100 text-emerald-700
+                                {% elif kyc_status == 'KYC_REJECTED' %}bg-rose-100 text-rose-700
+                                {% else %}bg-amber-100 text-amber-700{% endif %}">
+                        {{ kyc_status_display }}
+                    </span>
+                </div>
+
+                {% if profile.kyc_rejection_reason %}
+                <div class="mb-4 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-bold">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i>Lý do bị từ chối: {{ profile.kyc_rejection_reason }}
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="id_card_number" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Số CCCD / Hộ chiếu
+                        </label>
+                        <input type="text" id="id_card_number" name="id_card_number"
+                               value="{{ profile.id_card_number }}"
+                               placeholder="VD: 001203012345"
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    </div>
+                    <div>
+                        <label for="bank_name" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Ngân hàng
+                        </label>
+                        <input type="text" id="bank_name" name="bank_name"
+                               value="{{ profile.bank_name }}"
+                               placeholder="VD: MBBank"
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    </div>
+                    <div>
+                        <label for="bank_account_number" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Số tài khoản ngân hàng
+                        </label>
+                        <input type="text" id="bank_account_number" name="bank_account_number"
+                               value="{{ profile.bank_account_number }}"
+                               placeholder="VD: 0988112233"
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    </div>
+                    <div>
+                        <label for="bank_account_holder" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            Chủ tài khoản
+                        </label>
+                        <input type="text" id="bank_account_holder" name="bank_account_holder"
+                               value="{{ profile.bank_account_holder }}"
+                               placeholder="VD: NGUYEN VAN A"
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <label class="block border-2 border-dashed border-slate-300 hover:border-[#0b6b3a] rounded-xl p-4 cursor-pointer transition">
+                        <input type="file" name="id_card_front" accept="image/*" class="hidden">
+                        <div class="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">Ảnh CCCD mặt trước</div>
+                        {% if profile.id_card_front %}
+                        <img src="{{ profile.id_card_front.url }}" alt="CCCD mặt trước" class="w-full h-24 object-cover rounded-lg">
+                        {% else %}
+                        <div class="text-[11px] text-slate-400 font-bold">Nhấn để chọn ảnh</div>
+                        {% endif %}
+                    </label>
+                    <label class="block border-2 border-dashed border-slate-300 hover:border-[#0b6b3a] rounded-xl p-4 cursor-pointer transition">
+                        <input type="file" name="id_card_back" accept="image/*" class="hidden">
+                        <div class="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">Ảnh CCCD mặt sau</div>
+                        {% if profile.id_card_back %}
+                        <img src="{{ profile.id_card_back.url }}" alt="CCCD mặt sau" class="w-full h-24 object-cover rounded-lg">
+                        {% else %}
+                        <div class="text-[11px] text-slate-400 font-bold">Nhấn để chọn ảnh</div>
+                        {% endif %}
+                    </label>
+                    <label class="block border-2 border-dashed border-slate-300 hover:border-[#0b6b3a] rounded-xl p-4 cursor-pointer transition">
+                        <input type="file" name="business_license" accept="image/*" class="hidden">
+                        <div class="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">Giấy phép KD / HĐ thuê mặt bằng</div>
+                        {% if profile.business_license %}
+                        <img src="{{ profile.business_license.url }}" alt="Giấy phép" class="w-full h-24 object-cover rounded-lg">
+                        {% else %}
+                        <div class="text-[11px] text-slate-400 font-bold">Nhấn để chọn ảnh</div>
+                        {% endif %}
+                    </label>
+                    <label class="block border-2 border-dashed border-slate-300 hover:border-[#0b6b3a] rounded-xl p-4 cursor-pointer transition">
+                        <input type="file" name="bank_qr_image" accept="image/*" class="hidden">
+                        <div class="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">Ảnh mã QR ngân hàng</div>
+                        {% if profile.bank_qr_image %}
+                        <img src="{{ profile.bank_qr_image.url }}" alt="QR ngân hàng" class="w-full h-24 object-cover rounded-lg">
+                        {% else %}
+                        <div class="text-[11px] text-slate-400 font-bold">Nhấn để chọn ảnh</div>
+                        {% endif %}
+                    </label>
+                </div>
+
+                <button type="submit"
+                        class="w-full mt-5 py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                    <i class="fa-solid fa-paper-plane mr-1"></i>Gửi hồ sơ xác thực
+                </button>
+            </form>
+        </div>
+
+        <!-- GÓI DỊCH VỤ -->
+        <div class="lg:col-span-5 space-y-5">
+
+            <!-- Trạng thái gói hiện tại -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-crown text-amber-500"></i>
+                    Gói dịch vụ hiện tại
+                </h2>
+                <div class="flex items-center justify-between px-4 py-3 rounded-xl {% if is_subscription_active %}bg-emerald-50 border border-emerald-200{% else %}bg-rose-50 border border-rose-200{% endif %}">
+                    <div>
+                        <div class="text-xs font-black {% if is_subscription_active %}text-emerald-700{% else %}text-rose-700{% endif %}">
+                            {% if is_subscription_active %}ĐANG HOẠT ĐỘNG{% else %}ĐÃ HẾT HẠN / CHƯA ĐĂNG KÝ{% endif %}
+                        </div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">
+                            {% if subscription_expires_at %}Hết hạn: {{ subscription_expires_at|date:"d/m/Y" }}{% else %}Chưa có gói nào{% endif %}
+                        </div>
+                    </div>
+                    <i class="fa-solid {% if is_subscription_active %}fa-circle-check text-emerald-500{% else %}fa-circle-xmark text-rose-400{% endif %} text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Danh sách gói -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2 mb-1">
+                    <i class="fa-solid fa-layer-group text-[#0b6b3a]"></i>
+                    Mua / Gia hạn gói
+                </h2>
+                <p class="text-[11px] text-slate-500 mb-4">Chuyển khoản theo QR ngân hàng của Admin, rồi tải biên lai lên đây.</p>
+
+                <div class="space-y-3">
+                    {% for plan in plans %}
+                    <form method="post" action="{% url 'bookings:owner_kyc' %}" enctype="multipart/form-data"
+                          class="border border-slate-200 rounded-xl p-4 hover:border-[#0b6b3a] transition">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="buy_plan">
+                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+
+                        <div class="flex items-start justify-between gap-3 mb-2">
+                            <div>
+                                <div class="text-sm font-black text-[#04331b]">{{ plan.name }}</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">{{ plan.description|default:"Thời hạn " }}{{ plan.duration_days }} ngày</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-base font-black text-[#0b6b3a]">{{ plan.price|floatformat:0 }} đ</div>
+                                <div class="text-[10px] text-slate-400 font-bold">/ {{ plan.duration_days }} ngày</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-3">
+                            <input type="file" name="payment_proof" accept="image/*"
+                                   class="flex-1 text-[10px] font-bold text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-600 file:text-[10px] file:font-black">
+                            <button type="submit"
+                                    class="px-4 py-2 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white font-black text-[10px] uppercase tracking-wide transition whitespace-nowrap">
+                                Mua gói
+                            </button>
+                        </div>
+                    </form>
+                    {% empty %}
+                    <div class="py-6 text-center text-xs text-slate-400">
+                        Hiện chưa có gói dịch vụ nào được mở bán.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Lịch sử đơn gói -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200">
+                    <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-[#0b6b3a]"></i>
+                        Lịch sử đăng ký gói
+                    </h2>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for order in my_orders %}
+                    <div class="px-5 py-3 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="text-xs font-black text-slate-800">{{ order.plan.name }}</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">{{ order.order_code }} · {{ order.created_at|date:"d/m/Y" }}</div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap
+                                     {% if order.status == 'APPROVED' %}bg-emerald-100 text-emerald-700
+                                     {% elif order.status == 'REJECTED' %}bg-rose-100 text-rose-700
+                                     {% else %}bg-amber-100 text-amber-700{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <div class="px-5 py-8 text-center text-xs text-slate-400">
+                        Chưa có đơn đăng ký gói nào.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -15,6 +15,33 @@
 {% block owner_content %}
 <div class="space-y-6">
 
+    <!-- ============ CẢNH BÁO HỒ SƠ CHỜ DUYỆT (Admin -> Owner) ============ -->
+    {% for fac in my_facilities %}
+    {% if fac.status == 'PENDING_REVIEW' %}
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-5 sm:p-6 shadow-lg shadow-amber-900/20">
+        <div class="absolute -top-10 -right-6 w-40 h-40 rounded-full bg-white/10 blur-2xl"></div>
+        <div class="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-xl text-white shrink-0">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-white">Hồ sơ "{{ fac.name }}" đang chờ Ban quản trị duyệt</h3>
+                    <p class="text-xs text-amber-50/90 mt-1 leading-relaxed max-w-2xl">
+                        Cụm sân chưa hiển thị công khai cho khách hàng cho đến khi được duyệt & cấp tích xanh KYC.
+                        Bạn vẫn có thể cấu hình sân thi đấu, biểu giá và dịch vụ phụ trong lúc chờ.
+                    </p>
+                </div>
+            </div>
+            <a href="{% url 'facilities:owner_facility_register' %}"
+                class="shrink-0 px-5 py-3 rounded-xl bg-white text-amber-700 font-black text-xs uppercase tracking-wide hover:bg-amber-50 transition shadow-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-list-check"></i> Theo dõi hồ sơ
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
     <!-- TIÊU ĐỀ GỌN GÀNG & NÚT XUẤT BÁO CÁO -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{% if active_tab == 'settings' %}Thông Tin Cơ Sở & VietQR{% elif active_tab == 'reviews' %}Đánh Giá & Phản Hồi{% else %}Tổng Quan Doanh Thu{% endif %}</h1>
@@ -122,6 +149,21 @@
         <div class="font-black text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
             <i class="fa-solid fa-filter text-emerald-600"></i> Bộ Lọc Đơn Hàng
         </div>
+        <!-- Ô TÌM KIẾM NHANH THEO MÃ ĐƠN / SỐ ĐIỆN THOẠI -->
+        <div class="flex flex-col sm:flex-row gap-2">
+            <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" name="q" value="{{ search_query }}"
+                    placeholder="Tìm theo mã đơn (VD: BKE9THHWO3) hoặc số điện thoại khách hàng..."
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            {% if search_query %}
+            <a href="?tab=orders&status={{ status_filter }}"
+                class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition flex items-center gap-1.5">
+                <i class="fa-solid fa-xmark"></i> Xóa tìm kiếm
+            </a>
+            {% endif %}
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
                 <label class="block text-[11px] font-bold text-slate-500 mb-1">Cụm Sân:</label>
@@ -139,7 +181,9 @@
                 <select name="status"
                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="WAITING_APPROVAL" {% if status_filter == 'WAITING_APPROVAL' %}selected{% endif %}>Chờ duyệt bill ({{ pending_count }})</option>
+                    <option value="NEEDS_REUPLOAD" {% if status_filter == 'NEEDS_REUPLOAD' %}selected{% endif %}>Khách cần tải lại bill</option>
                     <option value="CONFIRMED" {% if status_filter == 'CONFIRMED' %}selected{% endif %}>Đã duyệt thành công ({{ confirmed_count }})</option>
+                    <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>Đã từ chối</option>
                     <option value="ALL" {% if status_filter == 'ALL' %}selected{% endif %}>Tất cả trạng thái</option>
                 </select>
             </div>
@@ -180,9 +224,31 @@
                     Danh Sách Đơn Đặt Sân & Đối Soát Biên Lai
                 </h3>
                 <span class="text-xs text-slate-500 font-semibold">
-                    Đang hiển thị {{ bookings|length }} đơn • Doanh thu theo lọc: <strong class="text-emerald-700">{{
-                        revenue_filtered_str }}</strong>
+                    {% if search_query %}
+                    Tìm "{{ search_query }}" — {{ paginator.count }} đơn • Doanh thu theo lọc: <strong class="text-emerald-700">{{ revenue_filtered_str }}</strong>
+                    {% else %}
+                    Đang hiển thị {{ bookings|length }} / {{ paginator.count }} đơn • Doanh thu theo lọc: <strong class="text-emerald-700">{{ revenue_filtered_str }}</strong>
+                    {% endif %}
                 </span>
+            </div>
+            <!-- LIÊN KẾT NHANH TỚI CÁC CHỨC NĂNG QUẢN LÝ -->
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{% url 'bookings:owner_calendar' %}"
+                    class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-calendar-days text-emerald-600"></i> Lịch sân
+                </a>
+                <a href="{% url 'bookings:owner_services' %}"
+                    class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-basket-shopping text-emerald-600"></i> Giá dịch vụ
+                </a>
+                <a href="{% url 'bookings:owner_gallery' %}"
+                    class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-images text-emerald-600"></i> Ảnh & Mô tả
+                </a>
+                <a href="{% url 'bookings:owner_kyc' %}"
+                    class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-id-badge text-emerald-600"></i> Xác thực & Gói
+                </a>
             </div>
         </div>
 
@@ -206,8 +272,7 @@
                     <tr class="hover:bg-slate-50/70 transition">
                         <td class="py-4 px-4 font-mono font-bold text-slate-800">
                             {{ b.booking_code }}
-                            <span class="block text-[10px] font-normal text-slate-400 mt-0.5">{{
-                                b.created_at|date:"d/m/Y H:i" }}</span>
+                            <span class="block text-[10px] font-normal text-slate-400 mt-0.5">{{ b.created_at|date:"d/m/Y H:i" }}</span>
                         </td>
                         <td class="py-4 px-4">
                             <div class="font-bold text-slate-800">{{ b.display_customer_name }}</div>
@@ -219,6 +284,12 @@
                             <a href="{{ b.student_card_image.url }}" target="_blank"
                                 class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline mt-0.5">
                                 <i class="fa-solid fa-id-card"></i> Xem Thẻ HSSV
+                            </a>
+                            {% endif %}
+                            {% if b.display_customer_phone != "Chưa có SĐT" %}
+                            <a href="tel:{{ b.display_customer_phone }}"
+                                class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-black hover:bg-emerald-100 transition">
+                                <i class="fa-solid fa-phone text-[9px]"></i> Gọi khách
                             </a>
                             {% endif %}
                         </td>
@@ -299,6 +370,48 @@
             <h3 class="text-base font-bold text-slate-800">Không có đơn đặt nào phù hợp bộ lọc</h3>
             <p class="text-xs text-slate-500 mt-1">Khi khách hàng đặt sân và chuyển khoản, danh sách đơn sẽ tự động hiển
                 thị tại đây.</p>
+        </div>
+        {% endif %}
+
+        <!-- PHÂN TRANG ĐƠN HÀNG -->
+        {% if page_obj and paginator.num_pages > 1 %}
+        <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span class="text-[11px] font-bold text-slate-500">
+                Trang <strong class="text-emerald-700">{{ page_obj.number }}</strong> / {{ paginator.num_pages }}
+                — Hiển thị {{ page_obj.start_index }}–{{ page_obj.end_index }} trên {{ paginator.count }} đơn
+            </span>
+            <div class="flex items-center gap-1.5">
+                {% if page_obj.has_previous %}
+                <a href="?tab=orders&status={{ status_filter }}&facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}&q={{ search_query }}&page={{ page_obj.previous_page_number }}"
+                    class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-[11px] hover:bg-slate-100 transition">
+                    <i class="fa-solid fa-chevron-left"></i> Trước
+                </a>
+                {% else %}
+                <span class="px-3 py-2 rounded-xl bg-slate-100 text-slate-300 font-bold text-[11px] cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-left"></i> Trước
+                </span>
+                {% endif %}
+
+                {% for num in paginator.page_range %}
+                {% if num == page_obj.number %}
+                <span class="px-3 py-2 rounded-xl bg-emerald-600 text-white font-black text-[11px] shadow-sm">{{ num }}</span>
+                {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                <a href="?tab=orders&status={{ status_filter }}&facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}&q={{ search_query }}&page={{ num }}"
+                    class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-[11px] hover:bg-slate-100 transition">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?tab=orders&status={{ status_filter }}&facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}&q={{ search_query }}&page={{ page_obj.next_page_number }}"
+                    class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-[11px] hover:bg-slate-100 transition">
+                    Sau <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                {% else %}
+                <span class="px-3 py-2 rounded-xl bg-slate-100 text-slate-300 font-bold text-[11px] cursor-not-allowed">
+                    Sau <i class="fa-solid fa-chevron-right"></i>
+                </span>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
     </div>
@@ -490,8 +603,7 @@
                             <span class="font-extrabold text-slate-900 text-sm block">{{ r.reviewer_name }}</span>
                             <span class="text-[10px] text-slate-400 font-semibold">
                                 Cụm sân: <strong class="text-slate-700">{{ r.facility.name }}</strong>
-                                {% if r.booking %} • Mã đơn: <strong class="text-emerald-700">{{ r.booking.booking_code
-                                    }}</strong>{% endif %}
+                                {% if r.booking %} • Mã đơn: <strong class="text-emerald-700">{{ r.booking.booking_code }}</strong>{% endif %}
                             </span>
                         </div>
                     </div>
@@ -499,8 +611,7 @@
                         <div class="text-[#facc15] font-black text-sm">
                             {% for i in "12345"|make_list %}
                             {% if forloop.counter <= r.rating %}★{% else %}☆{% endif %} {% endfor %} </div>
-                                <span class="text-[10px] text-slate-400 block">{{ r.created_at|date:"d/m/Y H:i"
-                                    }}</span>
+                                <span class="text-[10px] text-slate-400 block">{{ r.created_at|date:"d/m/Y H:i" }}</span>
                         </div>
                     </div>
 
@@ -518,8 +629,7 @@
                                 <label class="text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
                                     <i class="fa-solid fa-reply"></i> Phản hồi của Chủ Sân:
                                     {% if r.owner_reply_at %}
-                                    <span class="text-[10px] text-emerald-600 font-normal">({{
-                                        r.owner_reply_at|date:"d/m/Y H:i" }})</span>
+                                    <span class="text-[10px] text-emerald-600 font-normal">({{ r.owner_reply_at|date:"d/m/Y H:i" }})</span>
                                     {% endif %}
                                 </label>
                                 {% if r.owner_reply %}

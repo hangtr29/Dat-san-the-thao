@@ -61,6 +61,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                 bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/50
             {% elif status_code == 'REJECTED' %}
                 bg-gradient-to-r from-rose-700 to-red-600 border-rose-400/50
+            {% elif status_code == 'NEEDS_REUPLOAD' %}
+                bg-gradient-to-r from-orange-600 to-amber-500 border-amber-400/50
             {% else %}
                 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 border-amber-400/50
             {% endif %}">
@@ -73,6 +75,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         <i class="fa-solid fa-circle-check text-emerald-200"></i>
                         {% elif status_code == 'REJECTED' %}
                         <i class="fa-solid fa-circle-xmark text-rose-200"></i>
+                        {% elif status_code == 'NEEDS_REUPLOAD' %}
+                        <i class="fa-solid fa-file-arrow-up text-amber-100"></i>
                         {% else %}
                         <i class="fa-solid fa-hourglass-half text-amber-200 animate-spin"></i>
                         {% endif %}
@@ -90,6 +94,8 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         <p id="status-desc" class="text-xs sm:text-sm text-white/90 font-semibold mt-1">
                             {% if status_code == 'CONFIRMED' %}
                             Chủ sân đã xác nhận nhận đủ tiền. Lịch thi đấu đã được chốt chính thức!
+                            {% elif status_code == 'NEEDS_REUPLOAD' %}
+                            Bill bị từ chối: {{ reject_reason|default:"Bill chuyển khoản không hợp lệ" }}. Bạn có thể tải lại bill bên dưới mà không cần đặt lại từ đầu.
                             {% elif status_code == 'REJECTED' %}
                             Đơn đặt đã bị từ chối: {{ reject_reason|default:"Bill chuyển khoản không hợp lệ hoặc chưa nhận được tiền." }}
                             {% else %}
@@ -204,6 +210,31 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         {% endfor %}
                     </div>
 
+                    <!-- Dịch vụ phụ đã chọn -->
+                    {% if addons_list %}
+                    <div class="space-y-2 text-xs">
+                        <span class="text-emerald-300 font-bold block flex items-center gap-1.5">
+                            <i class="fa-solid fa-concierge-bell text-[10px]"></i> Dịch vụ phụ đã chọn:
+                        </span>
+                        {% for ad in addons_list %}
+                        <div
+                            class="flex justify-between items-center p-3 rounded-xl bg-[#023319] border border-emerald-800/60">
+                            <div>
+                                <span class="font-extrabold text-white text-xs sm:text-sm">{{ ad.name }}</span>
+                                <span class="text-emerald-300 block text-[11px] mt-0.5">
+                                    {{ ad.category_label }} · {{ ad.unit_label }} · x{{ ad.quantity }} × {{ ad.unit_price }}
+                                </span>
+                            </div>
+                            <span class="font-black text-[#facc15] text-sm sm:text-base">{{ ad.line_total }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-[11px] font-bold text-emerald-300">Tổng dịch vụ phụ:</span>
+                            <span class="text-sm font-black text-[#facc15]">{{ addon_total_formatted }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Thông tin người đặt & Tổng thanh toán -->
                     <div class="pt-3 border-t border-emerald-800/50 space-y-2 text-xs">
                         <div class="flex justify-between items-center">
@@ -225,7 +256,52 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                             <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted }}</span>
                         </div>
                     </div>
+
+                    <!-- Nút In / Lưu phiếu đặt sân -->
+                    <div class="pt-3 border-t border-emerald-800/50">
+                        <a href="{% url 'bookings:booking_print' booking_code %}" target="_blank"
+                           class="w-full py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-600/40 text-emerald-100 hover:text-white font-black text-xs uppercase tracking-wide transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-print"></i> In / Lưu phiếu đặt sân
+                        </a>
+                    </div>
                 </div>
+
+                <!-- KHỐI TẢI LẠI BILL KHI BỊ TỪ CHỐI (KHÔNG PHẢI ĐẶT LẠI TỪ ĐẦU) -->
+                {% if status_code == 'NEEDS_REUPLOAD' or status_code == 'REJECTED' %}
+                <div class="bg-rose-900/40 rounded-2xl p-5 sm:p-6 border border-rose-500/50 shadow-xl space-y-4">
+                    <div class="flex items-center gap-2 text-rose-200 font-black text-sm sm:text-base">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                        <span>Tải Lại Bill Thanh Toán</span>
+                    </div>
+                    <p class="text-xs text-rose-100 font-semibold leading-relaxed">
+                        Bill của bạn đã bị chủ sân từ chối. Bạn chỉ cần tải lại bill đúng số tiền
+                        <strong class="text-white">{{ total_amount_formatted }}</strong> — khung giờ đã đặt vẫn được giữ nguyên, không phải đặt lại từ đầu.
+                    </p>
+                    {% if reject_reason %}
+                    <div class="px-4 py-3 rounded-xl bg-black/25 text-xs text-rose-100 font-bold">
+                        <i class="fa-solid fa-circle-info mr-1"></i>Lý do: {{ reject_reason }}
+                    </div>
+                    {% endif %}
+                    <form method="post" action="{% url 'bookings:reupload_proof' booking_code %}" enctype="multipart/form-data" class="space-y-3">
+                        {% csrf_token %}
+                        <label for="payment_proof_retry"
+                               class="block w-full border-2 border-dashed border-rose-400/70 hover:bg-rose-900/30 rounded-2xl p-5 text-center cursor-pointer transition">
+                            <input type="file" id="payment_proof_retry" name="payment_proof" accept="image/*" required
+                                   class="hidden" onchange="previewRetryBill(this)">
+                            <i class="fa-solid fa-cloud-arrow-up text-rose-300 text-3xl mb-2"></i>
+                            <div class="font-black text-xs sm:text-sm text-rose-100">Chọn ảnh bill mới</div>
+                            <div class="text-[11px] text-rose-300/80 font-semibold">JPG / PNG (tối đa 5MB)</div>
+                        </label>
+                        <div id="retry-preview-wrap" class="hidden">
+                            <img id="retry-preview-img" src="" alt="Preview bill" class="max-h-48 mx-auto rounded-xl border border-rose-400/50">
+                        </div>
+                        <button type="submit"
+                                class="w-full py-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 font-black text-xs uppercase tracking-wide text-white shadow-md transition">
+                            <i class="fa-solid fa-upload mr-1"></i> Tải lại bill & Gửi duyệt lại
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
 
                 <!-- KHỐI ĐÁNH GIÁ CHẤT LƯỢNG SÂN (CHỈ DÀNH CHO ĐƠN ĐÃ ĐƯỢC DUYỆT THÀNH CÔNG - CHỐNG SPAM) -->
                 {% if status_code == 'CONFIRMED' %}
@@ -311,6 +387,57 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                             </button>
                         </form>
                     {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- NÚT HỦY ĐƠN (KHÁCH HÀNG) -->
+                {% if status_code == 'PENDING_BILL' or status_code == 'WAITING_APPROVAL' or status_code == 'NEEDS_REUPLOAD' %}
+                <div class="bg-white rounded-2xl border border-rose-200 shadow-sm overflow-hidden" id="cancelBookingBox">
+                    <button type="button" onclick="toggleCancelForm()"
+                        class="w-full px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-rose-50/60 transition text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                            </span>
+                            <div>
+                                <h3 class="text-sm font-black text-slate-800">Hủy đơn đặt sân này</h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Khung giờ sẽ được giải phóng ngay & chủ sân được thông báo</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0" id="cancelToggleIcon"></i>
+                    </button>
+
+                    <div id="cancelFormWrap" class="hidden px-5 pb-5">
+                        <form method="post" action="{% url 'bookings:customer_cancel' booking_code %}" class="space-y-3">
+                            {% csrf_token %}
+                            <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2.5">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 shrink-0"></i>
+                                <p class="text-[11px] text-amber-800 leading-relaxed">
+                                    Sau khi hủy, khung giờ sẽ được mở lại cho khách khác đặt.
+                                    Nếu đã chuyển khoản tiền, vui lòng liên hệ hotline của cụm sân để được hoàn.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1.5">Lý do hủy (không bắt buộc)</label>
+                                <textarea name="cancel_reason" rows="2"
+                                    placeholder="VD: Có việc đột xuất, không thể đến sân..."
+                                    class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/25 focus:border-rose-500 transition resize-none"></textarea>
+                            </div>
+
+                            <div class="flex items-center gap-3 pt-1">
+                                <button type="button" onclick="toggleCancelForm()"
+                                    class="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-[11px] font-black uppercase tracking-wide hover:bg-slate-50 transition">
+                                    Giữ lại đơn
+                                </button>
+                                <button type="submit"
+                                    onclick="return confirm('Xác nhận hủy đơn đặt sân này?')"
+                                    class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black uppercase tracking-wide shadow-md shadow-rose-500/20 transition active:scale-95 flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-trash-can text-[10px]"></i> Xác nhận hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 {% endif %}
 
@@ -432,6 +559,19 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
 </div>
 
 <script>
+    // Toggling form hủy đơn của khách hàng
+    function toggleCancelForm() {
+        const wrap = document.getElementById('cancelFormWrap');
+        const icon = document.getElementById('cancelToggleIcon');
+        if (!wrap) return;
+        const isHidden = wrap.classList.contains('hidden');
+        wrap.classList.toggle('hidden');
+        if (icon) {
+            icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            icon.style.transition = 'transform .2s ease';
+        }
+    }
+
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text);
         alert('Đã sao chép mã đơn: ' + text);
@@ -459,6 +599,10 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                     // Chủ sân đã duyệt thành công -> Cập nhật giao diện sang màu xanh Emerald rực rỡ
                     updateUIConfirmed(data);
                     if (checkInterval) clearInterval(checkInterval);
+                } else if (data.status === 'NEEDS_REUPLOAD') {
+                    // Chủ sân yêu cầu tải lại bill
+                    updateUINeedsReupload(data);
+                    if (checkInterval) clearInterval(checkInterval);
                 } else if (data.status === 'REJECTED') {
                     // Chủ sân từ chối
                     updateUIRejected(data);
@@ -470,6 +614,36 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                 console.error("Lỗi kiểm tra trạng thái đơn:", err);
                 if (callback) callback();
             });
+    }
+
+    function updateUINeedsReupload(data) {
+        const banner = document.getElementById('status-banner');
+        const iconBox = document.getElementById('status-icon-box');
+        const title = document.getElementById('status-title');
+        const desc = document.getElementById('status-desc');
+        const step3Circle = document.getElementById('step-3-circle');
+
+        banner.className = "rounded-2xl p-5 sm:p-6 shadow-xl border transition-all duration-300 bg-gradient-to-r from-orange-600 to-amber-500 border-amber-400/50";
+        iconBox.innerHTML = '<i class="fa-solid fa-file-arrow-up text-amber-100"></i>';
+        title.innerText = "Cần tải lại bill thanh toán";
+        desc.innerText = "Lý do: " + (data.reject_reason || "Bill chưa hợp lệ.") +
+            " — Khung giờ vẫn còn, bạn chỉ cần tải lại bill mà không phải đặt lại từ đầu.";
+
+        if (step3Circle) {
+            step3Circle.className = "w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-md bg-orange-500 text-white";
+            step3Circle.innerHTML = '<i class="fa-solid fa-file-arrow-up"></i>';
+        }
+    }
+
+    function previewRetryBill(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('retry-preview-img').src = e.target.result;
+                document.getElementById('retry-preview-wrap').classList.remove('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
     }
 
     function updateUIConfirmed(data) {

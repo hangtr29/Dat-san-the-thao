@@ -1,0 +1,205 @@
+{% extends 'base_owner.html' %}
+
+{% block title %}Chi tiết đơn {{ booking_code }} | SportBook{% endblock %}
+
+{% block owner_content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#04331b] flex items-center gap-2.5">
+                <i class="fa-solid fa-file-invoice text-[#0b6b3a]"></i>
+                Đơn {{ booking_code }}
+            </h1>
+            <div class="flex items-center gap-2 mt-2">
+                <span class="px-3 py-1 rounded-lg text-[11px] font-black
+                             {% if status_display == 'Đã xác nhận đặt sân thành công' %}bg-emerald-100 text-emerald-700
+                             {% elif status_display == 'Chờ chủ sân duyệt' %}bg-amber-100 text-amber-700
+                             {% elif status_display == 'Cần tải lại bill thanh toán' %}bg-rose-100 text-rose-700
+                             {% else %}bg-slate-100 text-slate-600{% endif %}">
+                    {{ status_display }}
+                </span>
+                <span class="text-[11px] text-slate-500 font-bold">{{ created_at_str }}</span>
+            </div>
+        </div>
+        <a href="/bookings/dashboard/?tab=orders"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Cột trái: chi tiết -->
+        <div class="lg:col-span-8 space-y-5">
+
+            <!-- Khách hàng -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-user text-[#0b6b3a]"></i> Thông tin khách hàng
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-xs">
+                    <div class="flex justify-between gap-4 border-b border-slate-100 pb-2">
+                        <span class="font-bold text-slate-500">Họ tên</span>
+                        <span class="font-black text-slate-800 text-right">{{ customer_name }}</span>
+                    </div>
+                    <div class="flex justify-between gap-4 border-b border-slate-100 pb-2">
+                        <span class="font-bold text-slate-500">Số điện thoại</span>
+                        <a href="tel:{{ customer_phone }}" class="font-black text-[#0b6b3a] text-right">{{ customer_phone }}</a>
+                    </div>
+                    <div class="flex justify-between gap-4 border-b border-slate-100 pb-2 sm:col-span-2">
+                        <span class="font-bold text-slate-500">Ghi chú cho chủ sân</span>
+                        <span class="font-bold text-slate-700 text-right">{{ customer_note|default:"—" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lịch thi đấu -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200">
+                    <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2">
+                        <i class="fa-solid fa-table-tennis text-[#0b6b3a]"></i> Lịch thi đấu
+                    </h2>
+                </div>
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-white text-slate-500 border-b border-slate-100">
+                            <th class="px-5 py-2.5 text-left font-black uppercase text-[10px]">Sân</th>
+                            <th class="px-5 py-2.5 text-left font-black uppercase text-[10px]">Môn</th>
+                            <th class="px-5 py-2.5 text-left font-black uppercase text-[10px]">Ngày</th>
+                            <th class="px-5 py-2.5 text-left font-black uppercase text-[10px]">Khung giờ</th>
+                            <th class="px-5 py-2.5 text-right font-black uppercase text-[10px]">Giá</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in slots_list %}
+                        <tr class="border-t border-slate-100">
+                            <td class="px-5 py-3 font-black text-slate-800">{{ s.court_name }}</td>
+                            <td class="px-5 py-3 text-slate-600">{{ s.category_name }}</td>
+                            <td class="px-5 py-3 text-slate-600">{{ s.date_str }}</td>
+                            <td class="px-5 py-3 font-bold text-slate-800">{{ s.time_range }}</td>
+                            <td class="px-5 py-3 text-right font-black text-slate-800">{{ s.price_str }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Dịch vụ bổ sung -->
+            {% if addons_list %}
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200">
+                    <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2">
+                        <i class="fa-solid fa-basket-shopping text-[#0b6b3a]"></i> Dịch vụ bổ sung
+                    </h2>
+                </div>
+                <table class="w-full text-xs">
+                    <tbody>
+                        {% for a in addons_list %}
+                        <tr class="border-t border-slate-100 first:border-t-0">
+                            <td class="px-5 py-3 font-bold text-slate-800">{{ a.name }}</td>
+                            <td class="px-5 py-3 text-center text-slate-600">x{{ a.qty }}</td>
+                            <td class="px-5 py-3 text-right font-black text-slate-800">{{ a.subtotal_str }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Cột phải: tiền + bill + hành động -->
+        <div class="lg:col-span-4 space-y-5">
+
+            <!-- Tổng tiền -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-receipt text-[#0b6b3a]"></i> Tổng tiền
+                </h2>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-slate-500">Tiền sân:</span>
+                        <span class="font-black text-slate-700">{{ court_amount_str }}</span>
+                    </div>
+                    {% if addons_list %}
+                    <div class="flex justify-between">
+                        <span class="font-bold text-slate-500">Tiền dịch vụ:</span>
+                        <span class="font-black text-slate-700">{{ addon_amount_str }}</span>
+                    </div>
+                    {% endif %}
+                    {% if booking.discount_amount %}
+                    <div class="flex justify-between">
+                        <span class="font-bold text-slate-500">Giảm giá{% if booking.coupon_code %} ({{ booking.coupon_code }}){% endif %}:</span>
+                        <span class="font-black text-rose-600">-{{ discount_amount_str }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-center pt-3 mt-2 border-t-2 border-slate-800">
+                        <span class="font-black text-slate-700 uppercase text-sm">Tổng thanh toán</span>
+                        <span class="font-black text-xl text-[#0b6b3a]">{{ total_amount_str }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ảnh bill -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-receipt text-[#0b6b3a]"></i> Ảnh bill chuyển khoản
+                </h2>
+                {% if proof_url %}
+                <a href="{{ proof_url }}" target="_blank" rel="noopener">
+                    <img src="{{ proof_url }}" alt="Ảnh bill chuyển khoản"
+                         class="w-full rounded-xl border border-slate-200 cursor-pointer hover:opacity-90 transition">
+                </a>
+                <a href="{{ proof_url }}" target="_blank" rel="noopener"
+                   class="block mt-2 text-center text-[11px] font-black text-[#0b6b3a] hover:underline">
+                    <i class="fa-solid fa-expand mr-1"></i>Xem ảnh gốc
+                </a>
+                {% else %}
+                <div class="py-8 text-center text-xs text-slate-400">
+                    <i class="fa-regular fa-image text-slate-300 text-3xl mb-2 block"></i>
+                    Khách chưa tải ảnh bill.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Hành động -->
+            {% if status_display == 'Chờ chủ sân duyệt' %}
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+                <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2">
+                    <i class="fa-solid fa-gavel text-[#0b6b3a]"></i> Xử lý đơn
+                </h2>
+
+                <form method="post" action="{% url 'bookings:owner_approve' booking_code %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="/bookings/owner/booking/{{ booking_code }}/">
+                    <button type="submit"
+                            class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                        <i class="fa-solid fa-check mr-1"></i>Duyệt & Xác nhận
+                    </button>
+                </form>
+
+                <form method="post" action="{% url 'bookings:owner_reject' booking_code %}" class="space-y-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="/bookings/owner/booking/{{ booking_code }}/">
+                    <textarea name="reject_reason" rows="2"
+                              placeholder="Lý do: Bill sai số tiền, ảnh không rõ..."
+                              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-400/30 focus:border-rose-400"></textarea>
+                    <label class="flex items-center gap-2 cursor-pointer bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                        <input type="checkbox" name="allow_reupload" value="1" checked
+                               class="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500">
+                        <span class="text-[11px] font-black text-amber-800">Cho khách tải lại bill (giữ khung giờ)</span>
+                    </label>
+                    <button type="submit"
+                            class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                        <i class="fa-solid fa-xmark mr-1"></i>Từ chối đơn
+                    </button>
+                    <div class="text-[10px] text-slate-400 font-bold text-center">
+                        Bỏ chọn ô trên để từ chối hẳn & giải phóng khung giờ.
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

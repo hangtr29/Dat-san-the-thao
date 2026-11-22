@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Phiếu Đặt Sân - {{ booking_code }} | SportBook{% endblock %}
+
+{% block body_class %}bg-slate-100 text-slate-800 min-h-screen{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-6 print:px-0 print:py-0">
+
+    <!-- Thanh công cụ (không in) -->
+    <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-4">
+        <a href="{% url 'bookings:booking_detail' booking_code %}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại chi tiết đơn
+        </a>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="window.print()"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                <i class="fa-solid fa-print"></i> In phiếu
+            </button>
+            <button type="button" onclick="saveAsPDF()"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#e5b63d] hover:bg-[#d8a834] text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                <i class="fa-solid fa-file-pdf"></i> Lưu PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- PHIẾU ĐẶT SÂN (khổ A4) -->
+    <div id="booking-slip" class="bg-white rounded-2xl shadow-xl p-8 sm:p-12 print:shadow-none print:rounded-none print:p-0">
+
+        <!-- Header -->
+        <div class="flex items-start justify-between gap-6 border-b-2 border-slate-800 pb-5">
+            <div>
+                <div class="flex items-center gap-2.5 mb-2">
+                    <span class="w-10 h-10 rounded-xl bg-[#0b6b3a] text-white flex items-center justify-center">
+                        <i class="fa-solid fa-futbol"></i>
+                    </span>
+                    <div>
+                        <div class="text-xl font-black text-[#04331b] tracking-tight">SPORTBOOK</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nền tảng đặt sân thể thao</div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-[11px] font-black uppercase tracking-widest text-slate-400">PHIẾU ĐẶT SÂN</div>
+                <div class="text-2xl font-black text-[#04331b] mt-0.5">{{ booking_code }}</div>
+                <div class="mt-2 inline-block px-3 py-1 rounded-lg text-[11px] font-black
+                            {% if status_display == 'Đã xác nhận đặt sân thành công' %}bg-emerald-100 text-emerald-700
+                            {% elif status_display == 'Chờ chủ sân duyệt' %}bg-amber-100 text-amber-700
+                            {% elif status_display == 'Cần tải lại bill thanh toán' %}bg-rose-100 text-rose-700
+                            {% else %}bg-slate-100 text-slate-600{% endif %}">
+                    {{ status_display }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin khách & sân -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 py-6">
+            <div>
+                <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">KHÁCH HÀNG</div>
+                <table class="w-full text-xs">
+                    <tr class="align-top">
+                        <td class="py-1 w-28 font-bold text-slate-500">Họ tên</td>
+                        <td class="py-1 font-black text-slate-800">{{ customer_name }}</td>
+                    </tr>
+                    <tr class="align-top">
+                        <td class="py-1 font-bold text-slate-500">Số điện thoại</td>
+                        <td class="py-1 font-black text-slate-800">{{ customer_phone }}</td>
+                    </tr>
+                    <tr class="align-top">
+                        <td class="py-1 font-bold text-slate-500">Thời gian tạo</td>
+                        <td class="py-1 font-bold text-slate-700">{{ created_at_str }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">CỤM SÂN</div>
+                <table class="w-full text-xs">
+                    <tr class="align-top">
+                        <td class="py-1 w-28 font-bold text-slate-500">Tên CLB</td>
+                        <td class="py-1 font-black text-slate-800">{{ facility.name|default:"—" }}</td>
+                    </tr>
+                    <tr class="align-top">
+                        <td class="py-1 font-bold text-slate-500">Địa chỉ</td>
+                        <td class="py-1 font-bold text-slate-700">{{ facility.address|default:"—" }}</td>
+                    </tr>
+                    <tr class="align-top">
+                        <td class="py-1 font-bold text-slate-500">Hotline</td>
+                        <td class="py-1 font-black text-[#0b6b3a]">{{ facility.get_display_hotline|default:"—" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bảng khung giờ -->
+        <div class="mb-5">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">LỊCH THI ĐẤU</div>
+            <table class="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600">
+                        <th class="px-3 py-2.5 text-left font-black uppercase text-[10px] tracking-wide">Sân thi đấu</th>
+                        <th class="px-3 py-2.5 text-left font-black uppercase text-[10px] tracking-wide">Môn</th>
+                        <th class="px-3 py-2.5 text-left font-black uppercase text-[10px] tracking-wide">Ngày</th>
+                        <th class="px-3 py-2.5 text-left font-black uppercase text-[10px] tracking-wide">Khung giờ</th>
+                        <th class="px-3 py-2.5 text-right font-black uppercase text-[10px] tracking-wide">Giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in slots_list %}
+                    <tr class="border-t border-slate-100">
+                        <td class="px-3 py-2.5 font-bold text-slate-800">{{ s.court_name }}</td>
+                        <td class="px-3 py-2.5 text-slate-600">{{ s.category_name }}</td>
+                        <td class="px-3 py-2.5 text-slate-600">{{ s.date_str }}</td>
+                        <td class="px-3 py-2.5 font-bold text-slate-800">{{ s.time_range }}</td>
+                        <td class="px-3 py-2.5 text-right font-black text-slate-800">{{ s.price_str }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Dịch vụ bổ sung -->
+        {% if addons_list %}
+        <div class="mb-5">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">DỊCH VỤ BỔ SUNG</div>
+            <table class="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600">
+                        <th class="px-3 py-2.5 text-left font-black uppercase text-[10px] tracking-wide">Dịch vụ</th>
+                        <th class="px-3 py-2.5 text-center font-black uppercase text-[10px] tracking-wide">SL</th>
+                        <th class="px-3 py-2.5 text-right font-black uppercase text-[10px] tracking-wide">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in addons_list %}
+                    <tr class="border-t border-slate-100">
+                        <td class="px-3 py-2.5 font-bold text-slate-800">{{ a.name }}</td>
+                        <td class="px-3 py-2.5 text-center text-slate-600">x{{ a.qty }}</td>
+                        <td class="px-3 py-2.5 text-right font-black text-slate-800">{{ a.subtotal_str }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Tổng tiền -->
+        <div class="flex justify-end">
+            <div class="w-full sm:w-80 space-y-1.5 text-xs">
+                <div class="flex justify-between">
+                    <span class="font-bold text-slate-500">Tiền sân:</span>
+                    <span class="font-black text-slate-700">{{ court_amount_str }}</span>
+                </div>
+                {% if addons_list %}
+                <div class="flex justify-between">
+                    <span class="font-bold text-slate-500">Tiền dịch vụ bổ sung:</span>
+                    <span class="font-black text-slate-700">{{ addon_amount_str }}</span>
+                </div>
+                {% endif %}
+                {% if booking.discount_amount %}
+                <div class="flex justify-between">
+                    <span class="font-bold text-slate-500">Giảm giá
+                        {% if booking.coupon_code %}({{ booking.coupon_code }}){% endif %}:</span>
+                    <span class="font-black text-rose-600">-{{ discount_amount_str }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between items-center pt-3 mt-2 border-t-2 border-slate-800">
+                    <span class="font-black text-slate-700 text-sm uppercase">Tổng thanh toán</span>
+                    <span class="font-black text-xl text-[#0b6b3a]">{{ total_amount_str }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chữ ký -->
+        <div class="grid grid-cols-2 gap-10 mt-10 pt-6 border-t border-dashed border-slate-300 text-center">
+            <div>
+                <div class="h-16"></div>
+                <div class="text-[11px] font-black uppercase tracking-wide text-slate-500">Người đặt</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">(Ký và ghi rõ họ tên)</div>
+            </div>
+            <div>
+                <div class="h-16"></div>
+                <div class="text-[11px] font-black uppercase tracking-wide text-slate-500">Đại diện cụm sân</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">(Ký và đóng dấu)</div>
+            </div>
+        </div>
+
+        <div class="mt-6 pt-3 border-t border-slate-100 text-center text-[10px] text-slate-400">
+            Phiếu được in lúc {{ print_time }} · Hệ thống SportBook · Vui lòng mang theo phiếu khi đến sân
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function saveAsPDF() {
+        // Hướng dẫn người dùng chọn "Lưu dưới dạng PDF" trong hộp thoại In
+        window.print();
+    }
+</script>
+{% endblock %}

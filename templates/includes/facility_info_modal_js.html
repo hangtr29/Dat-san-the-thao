@@ -1,0 +1,478 @@
+{% comment %}
+Script + Style cho MODAL bảng thông tin cụm sân kiểu Alobo.
+Được include trong template facilities/facility_list.html
+{% endcomment %}
+<style>
+    /* Modal bảng thông tin cụm sân - cuộn mượt, bo góc mềm mại */
+    #facility-info-modal .fim-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #facility-info-modal .fim-scrollbar::-webkit-scrollbar-track {
+        background: #e2e8f0;
+        border-radius: 4px;
+    }
+
+    #facility-info-modal .fim-scrollbar::-webkit-scrollbar-thumb {
+        background: #0b6b3a;
+        border-radius: 4px;
+    }
+
+    #fim-tab-content .fim-line {
+        border-bottom: 1px dashed #e2e8f0;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #fim-tab-content .fim-line:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .fim-tab-btn.is-active {
+        background: #e5b63d !important;
+        color: #fff !important;
+        transform: scale(1.02);
+    }
+
+    /* Hiệu ứng mở modal */
+    @keyframes fimFadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fimPopIn {
+        from {
+            opacity: 0;
+            transform: translateY(14px) scale(0.97);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    #facility-info-modal.fim-open {
+        animation: fimFadeIn 0.18s ease-out;
+    }
+
+    #facility-info-modal.fim-open #facility-info-panel {
+        animation: fimPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+</style>
+
+<script>
+    /* =============================================================
+       MODAL BẢNG THÔNG TIN CỤM SÂN (chuẩn Alobo)
+       Dùng chung cho trang danh sách /facilities/
+       ============================================================= */
+    const FIM = {
+        cache: {},
+        currentId: null,
+        activeTab: 'service',
+        data: null,
+    };
+
+    const FIM_SPORT_ICONS = {
+        'Cầu lông': '🏸',
+        'Pickleball': '🏓',
+        'Bóng bàn': '🏓',
+    };
+
+    function fimEsc(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function fimNum(value) {
+        return new Intl.NumberFormat('vi-VN').format(value || 0);
+    }
+
+    function getCookie(name) {
+        const v = `; ${document.cookie}`;
+        const parts = v.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    /* ---------- Mở modal: gọi API lấy dữ liệu rồi render ---------- */
+    async function openFacilityInfoModal(facilityId) {
+        const modal = document.getElementById('facility-info-modal');
+        const content = document.getElementById('fim-tab-content');
+
+        if (!modal) return;
+
+        FIM.currentId = facilityId;
+        FIM.activeTab = 'service';
+
+        // Hiển thị ngay với nội dung đang tải
+        content.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                <i class="fa-solid fa-spinner fa-spin text-2xl mb-3 text-emerald-600"></i>
+                <p class="text-xs font-bold">Đang tải thông tin cụm sân...</p>
+            </div>`;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('fim-open');
+        document.body.style.overflow = 'hidden';
+
+        try {
+            let data = FIM.cache[facilityId];
+            if (!data) {
+                const res = await fetch(`/facilities/api/info/${facilityId}/`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                data = await res.json();
+                FIM.cache[facilityId] = data;
+            }
+            FIM.data = data;
+            renderFacilityInfo(data);
+        } catch (err) {
+            if (window.console) console.error('[FIM] Lỗi tải thông tin cụm sân:', err);
+            content.innerHTML = `
+                <div class="py-12 text-center text-slate-400">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl mb-2 text-amber-500 block"></i>
+                    <p class="text-xs font-bold text-slate-600">Không tải được thông tin cụm sân.</p>
+                    <p class="text-[11px] mt-1">Vui lòng thử lại sau.</p>
+                </div>`;
+        }
+    }
+
+    /* ---------- Đóng modal ---------- */
+    function closeFacilityInfoModal() {
+        const modal = document.getElementById('facility-info-modal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('fim-open');
+        document.body.style.overflow = '';
+        FIM.currentId = null;
+    }
+
+    /* ---------- Render toàn bộ dữ liệu lên modal ---------- */
+    function renderFacilityInfo(data) {
+        // Ảnh bìa
+        document.getElementById('fim-cover').src = data.cover_image;
+
+        // Tên & địa chỉ
+        document.getElementById('fim-name').textContent = data.name;
+        document.getElementById('fim-address').textContent = data.address;
+        document.getElementById('fim-distance').textContent = data.distance;
+        document.getElementById('fim-hours').textContent = `${data.open_time} - ${data.close_time}`;
+        document.getElementById('fim-price').textContent = fimNum(data.min_price) + ' đ';
+        document.getElementById('fim-courts').textContent = data.courts_count;
+        document.getElementById('fim-rating').textContent = data.rating;
+        document.getElementById('fim-reviews').textContent = data.reviews_count;
+
+        // Badge tích xanh
+        document.getElementById('fim-verified').classList.toggle('hidden', !data.is_verified);
+
+        // Môn thể thao (chips)
+        const sportsEl = document.getElementById('fim-sports');
+        sportsEl.innerHTML = (data.sports || []).map(s => `
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">
+                ${FIM_SPORT_ICONS[s] || '🏅'} ${fimEsc(s)}
+            </span>`).join('');
+
+        // Thumbnail môn thể thao (dùng ảnh gallery làm thumbnail)
+        const thumbsEl = document.getElementById('fim-thumbs');
+        const galleryList = data.gallery || [];
+        thumbsEl.innerHTML = galleryList.slice(0, 6).map((g, i) => `
+            <button type="button" onclick="fimShowImage(${i})"
+                class="w-14 h-14 rounded-xl overflow-hidden border-2 ${i === 0 ? 'border-[#e5b63d]' : 'border-transparent'} hover:border-[#e5b63d] transition flex-shrink-0 bg-slate-100"
+                title="${fimEsc(g.caption)}">
+                <img src="${g.url}" alt="${fimEsc(g.caption)}" class="w-full h-full object-cover">
+            </button>`).join('');
+
+        // Hotline & link đặt lịch
+        const hotlineEl = document.getElementById('fim-hotline');
+        hotlineEl.href = `tel:${data.hotline}`;
+        hotlineEl.innerHTML = `<i class="fa-solid fa-headset text-[11px]"></i> Liên hệ ${fimEsc(data.hotline)}`;
+
+        // Nút Chat với sân -> gọi hotline/Zalo
+        const chatEl = document.getElementById('fim-chat');
+        if (chatEl) {
+            chatEl.onclick = function () {
+                window.open(`https://zalo.me/${String(data.hotline || '').replace(/^0/, '84')}`,
+                    '_blank', 'noopener');
+            };
+        }
+
+        document.getElementById('fim-booking').href = data.booking_url;
+        const ctaEl = document.getElementById('fim-booking-cta');
+        if (ctaEl) ctaEl.href = data.booking_url;
+
+        document.getElementById('fim-map').href = data.map_url;
+        document.getElementById('fim-online-link').href = data.facility_detail_url;
+        document.getElementById('fim-online-link').textContent =
+            window.location.origin + data.facility_detail_url;
+
+        // Active tab
+        document.querySelectorAll('.fim-tab-btn').forEach(btn => {
+            btn.classList.toggle('is-active', btn.dataset.fimTab === 'service');
+        });
+
+        renderFimTab('service');
+    }
+
+    /* ---------- Hiện ảnh phóng to khi bấm thumbnail ---------- */
+    function fimShowImage(index) {
+        const gallery = (FIM.data && FIM.data.gallery) || [];
+        const item = gallery[index];
+        if (!item) return;
+
+        document.querySelectorAll('#fim-thumbs button').forEach((b, i) => {
+            b.classList.toggle('border-[#e5b63d]', i === index);
+            b.classList.toggle('border-transparent', i !== index);
+        });
+
+        document.getElementById('fim-cover').src = item.url;
+    }
+
+    /* ---------- Render nội dung theo tab ---------- */
+    function renderFimTab(tab) {
+        FIM.activeTab = tab;
+        const content = document.getElementById('fim-tab-content');
+        const data = FIM.data;
+        if (!data) return;
+
+        document.querySelectorAll('.fim-tab-btn').forEach(btn => {
+            btn.classList.toggle('is-active', btn.dataset.fimTab === tab);
+        });
+
+        if (tab === 'service') {
+            const addons = data.addon_services || [];
+            content.innerHTML = `
+                <div class="space-y-2.5">
+                    <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                        Dịch vụ phụ tại ${fimEsc(data.name)}
+                    </p>
+
+                    ${addons.length ? `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            ${addons.map(a => `
+                                <div class="p-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 transition">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <p class="font-black text-slate-700 text-xs truncate">${fimEsc(a.name)}</p>
+                                            <p class="text-[10px] font-bold text-slate-400 mt-0.5">
+                                                ${fimEsc(a.category_label)} · ${fimEsc(a.unit_label)}
+                                            </p>
+                                        </div>
+                                        <span class="text-[#006d38] font-black text-xs whitespace-nowrap">
+                                            ${fimNum(a.price)} đ
+                                        </span>
+                                    </div>
+                                    ${a.description ? `<p class="text-[10px] text-slate-500 mt-1.5 leading-relaxed">${fimEsc(a.description)}</p>` : ''}
+                                </div>`).join('')}
+                        </div>` : `
+                        <p class="text-xs text-slate-400 text-center py-6 font-bold">
+                            Cụm sân hiện chưa cung cấp dịch vụ phụ nào.
+                        </p>`}
+
+                    <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100 flex items-start gap-2.5">
+                        <i class="fa-solid fa-qrcode text-emerald-600 mt-0.5"></i>
+                        <div>
+                            <p class="font-black text-[#006d38]">Thanh toán VietQR trực tiếp</p>
+                            <p class="text-slate-600 mt-0.5 leading-relaxed">
+                                Tiền được chuyển thẳng từ tài khoản của bạn đến tài khoản ngân hàng của chủ sân.
+                                Hệ thống không giữ tiền trung gian.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-2.5">
+                        <i class="fa-solid fa-shield-halved text-emerald-600 mt-0.5"></i>
+                        <div>
+                            <p class="font-black text-slate-700">Sân đã xác minh thực địa</p>
+                            <p class="text-slate-600 mt-0.5 leading-relaxed">
+                                Cụm sân đã vượt qua bước kiểm tra KYC và được đánh dấu tích xanh trên hệ thống.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-2.5">
+                        <i class="fa-solid fa-headset text-emerald-600 mt-0.5"></i>
+                        <div>
+                            <p class="font-black text-slate-700">Hỗ trợ sau khi đặt</p>
+                            <p class="text-slate-600 mt-0.5 leading-relaxed">
+                                Liên hệ trực tiếp hotline/Zalo của chủ sân ${fimEsc(data.hotline)} để được hỗ trợ.
+                            </p>
+                        </div>
+                    </div>
+                </div>`;
+        } else if (tab === 'gallery') {
+            const gallery = data.gallery || [];
+            content.innerHTML = gallery.length ? `
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    ${gallery.map((g, i) => `
+                        <button type="button" onclick="fimShowImage(${i})"
+                            class="rounded-xl overflow-hidden border border-slate-200 hover:border-[#e5b63d] transition text-left group">
+                            <img src="${g.url}" alt="${fimEsc(g.caption)}"
+                                class="w-full h-24 object-cover group-hover:scale-105 transition duration-300">
+                            <span class="block px-2 py-1.5 text-[10px] font-bold text-slate-600 truncate">${fimEsc(g.caption)}</span>
+                        </button>`).join('')}
+                </div>` : `
+                <p class="text-xs text-slate-400 text-center py-8 font-bold">Chưa có ảnh nào cho cụm sân này.</p>`;
+        } else if (tab === 'pricing') {
+            const rules = data.pricing_rules || [];
+            const byDay = {};
+            rules.forEach(r => {
+                (byDay[r.day_label] = byDay[r.day_label] || []).push(r);
+            });
+            const dayBlocks = Object.keys(byDay).map(day => `
+                <div class="mb-2.5 last:mb-0">
+                    <p class="text-[10px] font-black uppercase text-[#006d38] tracking-wider mb-1">${fimEsc(day)}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        ${byDay[day].map(r => `
+                            <div class="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100">
+                                <span class="text-[11px] font-bold text-slate-600">${fimEsc(r.start_time)} - ${fimEsc(r.end_time)}</span>
+                                <span class="text-[11px] font-black text-[#006d38] whitespace-nowrap">${fimNum(r.price)} đ</span>
+                            </div>`).join('')}
+                    </div>
+                </div>`).join('');
+
+            content.innerHTML = `
+                <div class="space-y-1.5 text-xs text-slate-600">
+                    <div class="fim-line flex justify-between gap-3">
+                        <span class="font-bold text-slate-700 shrink-0">Giá thấp nhất:</span>
+                        <span class="text-right font-black text-[#006d38]">${fimNum(data.min_price)} đ/giờ</span>
+                    </div>
+                    <div class="fim-line flex justify-between gap-3">
+                        <span class="font-bold text-slate-700 shrink-0">Giá cao nhất:</span>
+                        <span class="text-right font-black text-[#006d38]">${fimNum(data.max_price)} đ/giờ</span>
+                    </div>
+                    <div class="fim-line flex justify-between gap-3">
+                        <span class="font-bold text-slate-700 shrink-0">Số sân thi đấu:</span>
+                        <span class="text-right font-semibold">${data.courts_count} sân</span>
+                    </div>
+                    <div class="fim-line flex justify-between gap-3">
+                        <span class="font-bold text-slate-700 shrink-0">Giờ hoạt động:</span>
+                        <span class="text-right font-semibold">${data.open_time} - ${data.close_time}</span>
+                    </div>
+                    <div class="fim-line flex justify-between gap-3">
+                        <span class="font-bold text-slate-700 shrink-0">Chất liệu mặt sân:</span>
+                        <span class="text-right font-semibold">${fimEsc((data.surfaces || []).join(', ')) || '—'}</span>
+                    </div>
+                    <div class="fim-line flex justify-between gap-3">
+                        <span class="font-bold text-slate-700 shrink-0">Hotline / Zalo:</span>
+                        <a href="tel:${data.hotline}" class="text-right font-black text-[#006d38]">${fimEsc(data.hotline)}</a>
+                    </div>
+                </div>
+
+                ${rules.length ? `
+                    <div class="mt-3.5">
+                        <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">
+                            Bảng giá theo khung giờ
+                        </p>
+                        ${dayBlocks}
+                    </div>` : `
+                    <div class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100">
+                        <p class="text-[11px] text-amber-800 font-bold">
+                            Cụm sân chưa thiết lập bảng giá theo khung giờ chi tiết.
+                        </p>
+                    </div>`}
+
+                <a href="${data.facility_detail_url}"
+                    class="mt-2.5 block w-full py-2.5 rounded-xl bg-[#006d38] hover:bg-[#064e2a] text-white text-xs font-black uppercase tracking-wider transition text-center">
+                    Xem bảng giá đầy đủ
+                </a>`;
+        } else if (tab === 'reviews') {
+            content.innerHTML = `
+                <div class="p-4 rounded-2xl bg-amber-50 border border-amber-100 text-center">
+                    <div class="text-3xl font-black text-amber-500">${data.rating}<span class="text-base">/5</span></div>
+                    <div class="text-amber-400 tracking-widest my-1.5">★★★★★</div>
+                    <p class="text-xs font-bold text-slate-600">${data.reviews_count} lượt đánh giá từ khách đã chơi</p>
+                    <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                        Chỉ khách hàng có đơn đặt sân đã được xác nhận mới được đánh giá,
+                        giúp đảm bảo tính minh bạch của dữ liệu.
+                    </p>
+                </div>
+                <a href="${data.facility_detail_url}"
+                    class="mt-3 block w-full py-2.5 rounded-xl bg-[#006d38] hover:bg-[#064e2a] text-white text-xs font-black uppercase tracking-wider transition">
+                    Xem tất cả đánh giá
+                </a>`;
+        } else if (tab === 'terms') {
+            content.innerHTML = `
+                <div class="space-y-2 text-xs text-slate-600 leading-relaxed">
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <p class="font-black text-slate-700 mb-1">1. Khung giờ &amp; giá</p>
+                        <p>Mỗi khung giờ tối thiểu 1 giờ. Giá áp dụng theo quy tắc của từng cụm sân, hiển thị rõ trên ma trận đặt lịch.</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <p class="font-black text-slate-700 mb-1">2. Giữ chỗ &amp; thanh toán</p>
+                        <p>Khung giờ được giữ tạm 10 phút khi bấm "Đặt lịch". Quá hạn, hệ thống tự giải phóng khung giờ.</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <p class="font-black text-slate-700 mb-1">3. Đối soát bill</p>
+                        <p>Khách chụp màn hình chuyển khoản và tải lên. Chủ sân duyệt hoặc từ chối ngay trên bảng điều khiển.</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <p class="font-black text-slate-700 mb-1">4. Huỷ &amp; hoàn tiền</p>
+                        <p>Vui lòng xem chính sách hoàn tiền &amp; huỷ lịch để biết điều kiện áp dụng cho từng trường hợp.</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <p class="font-black text-slate-700 mb-1">5. Yêu cầu chung</p>
+                        <p>Vui lòng mang giày thể thao chống trượt, giữ gìn vệ sinh khu vực thi đấu và tôn trọng người cùng chơi.</p>
+                    </div>
+                    <a href="/bookings/terms/"
+                        class="block w-full py-2.5 rounded-xl bg-[#006d38] hover:bg-[#064e2a] text-white text-xs font-black uppercase tracking-wider transition text-center">
+                        Đọc đầy đủ điều khoản đặt sân
+                    </a>
+                </div>`;
+        }
+    }
+
+    /* ---------- Gắn sự kiện khi DOM sẵn sàng ---------- */
+    document.addEventListener('DOMContentLoaded', function () {
+        // Bấm nút "Xem thông tin" trên ảnh bìa => mở modal
+        document.querySelectorAll('[data-info-btn]').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openFacilityInfoModal(this.dataset.facilityId);
+            });
+        });
+
+        // Bấm vào thẻ sân (không phải nút yêu thích / nút đặt lịch) => mở modal
+        document.querySelectorAll('.facility-card').forEach(card => {
+            card.addEventListener('click', function (e) {
+                // Bỏ qua khi bấm nút yêu thích, nút Đặt lịch hoặc link chỉ đường
+                if (e.target.closest('[data-fav-btn]')) return;
+                if (e.target.closest('[data-info-btn]')) return;
+                if (e.target.closest('a')) return;
+
+                const id = card.dataset.id;
+                if (id) openFacilityInfoModal(id);
+            });
+
+            // Con trỏ + viền highlight để gợi ý "bấm được"
+            card.classList.add('cursor-pointer');
+        });
+
+        // Tab trong modal
+        document.querySelectorAll('.fim-tab-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                renderFimTab(this.dataset.fimTab);
+            });
+        });
+
+        // Đóng modal khi bấm ra ngoài hoặc nhấn ESC
+        const modal = document.getElementById('facility-info-modal');
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) closeFacilityInfoModal();
+            });
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeFacilityInfoModal();
+        });
+    });
+</script>

@@ -117,9 +117,14 @@
 
                         <!-- Nút Thêm dịch vụ -->
                         <button type="button" 
-                                onclick="alert('Tính năng gọi thêm nước uống và thuê vợt sẽ sớm ra mắt!')"
+                                id="btn-open-addons"
+                                onclick="openAddonModal()"
                                 class="w-full mt-2 py-3 rounded-xl border border-emerald-500/70 hover:bg-emerald-800/40 text-emerald-200 hover:text-white font-bold text-xs sm:text-sm transition text-center cursor-pointer shadow-sm">
+                            <i class="fa-solid fa-plus-circle mr-1"></i>
                             Thêm dịch vụ
+                            {% if booking.addons.exists %}
+                            <span id="addon-badge" class="ml-1 px-2 py-0.5 rounded-full bg-[#facc15] text-slate-900 text-[10px] font-black">{{ booking.addons.count }}</span>
+                            {% endif %}
                         </button>
                     </div>
 
@@ -174,6 +179,26 @@
                                    value="{{ booking.customer_note }}"
                                    placeholder="Nhập ghi chú"
                                    class="w-full bg-white text-slate-800 rounded-xl px-4 py-3 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#facc15] shadow-inner placeholder-slate-400">
+                        </div>
+
+                        <!-- Field: MÃ GIẢM GIÁ / KHUYẾN MÃI -->
+                        <div>
+                            <label for="id_coupon_code" class="block text-xs sm:text-sm font-black uppercase tracking-wider text-white mb-1.5">
+                                MÃ GIẢM GIÁ / KHUYẾN MÃI
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="id_coupon_code" name="coupon_code"
+                                       value="{{ booking.coupon_code }}"
+                                       placeholder="Nhập mã (VD: SPORT10)"
+                                       class="flex-1 bg-white text-slate-800 rounded-xl px-4 py-3 text-xs sm:text-sm font-bold uppercase focus:outline-none focus:ring-2 focus:ring-[#facc15] shadow-inner placeholder-slate-400">
+                                <button type="button" onclick="applyCoupon()"
+                                        class="flex-shrink-0 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm transition cursor-pointer shadow-sm">
+                                    <i class="fa-solid fa-ticket mr-1"></i>Áp dụng
+                                </button>
+                            </div>
+                            <div id="coupon-msg" class="mt-1.5 text-xs font-bold {% if booking.coupon_code %}text-emerald-300{% else %}text-amber-300{% endif %}">
+                                {% if booking.coupon_code %}Đang áp dụng mã {{ booking.coupon_code }}{% else %}Nhấn "Áp dụng" để kiểm tra mã giảm giá{% endif %}
+                            </div>
                         </div>
 
                         <!-- Field: THẺ HSSV -->
@@ -244,7 +269,164 @@
                 </div>
 
             </div>
-        </form>
+
+        <!-- ================= MODAL THÊM DỊCH VỤ (THUÊ VỢT / THỨC UỐNG) ================= -->
+        <div id="addon-modal"
+             class="fixed inset-0 z-[999] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+            <div class="w-full max-w-2xl bg-[#034424] rounded-2xl border border-emerald-700/50 shadow-2xl my-8">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-emerald-800/50">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-full bg-[#facc15] text-[#713f12] flex items-center justify-center shadow">
+                            <i class="fa-solid fa-basket-shopping"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-black text-white text-sm sm:text-base uppercase tracking-wide">Thêm Dịch Vụ</h3>
+                            <p class="text-[11px] text-emerald-300 font-semibold">{{ facility.name }}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeAddonModal()" 
+                            class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="px-5 sm:px-6 py-4 space-y-4 max-h-[65vh] overflow-y-auto">
+                    {% if addon_groups_flat %}
+                        <!-- Thuê dụng cụ (vợt) -->
+                        {% if addon_groups.equipment %}
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 text-[#facc15] font-black text-xs sm:text-sm uppercase tracking-wide">
+                                <i class="fa-solid fa-table-tennis-paddle-ball"></i>
+                                <span>Thuê dụng cụ (Vợt &amp; trang bị)</span>
+                            </div>
+                            {% for svc in addon_groups.equipment %}
+                            <div class="flex items-center justify-between gap-3 bg-[#023e1f]/70 border border-emerald-800/40 rounded-xl px-4 py-3">
+                                <div class="min-w-0">
+                                    <div class="text-white font-bold text-xs sm:text-sm truncate">{{ svc.name }}</div>
+                                    {% if svc.description %}
+                                        <div class="text-emerald-300 text-[11px] font-semibold truncate">{{ svc.description }}</div>
+                                    {% endif %}
+                                    <div class="text-[#facc15] font-black text-xs mt-0.5">
+                                        {{ svc.unit_price|floatformat:0 }} đ / {{ svc.get_unit_label }}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <button type="button" onclick="changeAddonQty('{{ svc.id }}', -1)" 
+                                            class="w-8 h-8 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-black">−</button>
+                                    <input type="number" min="0" max="20" value="0"
+                                           name="addon_{{ svc.id }}" data-price="{{ svc.unit_price }}"
+                                           onchange="updateAddonTotal()"
+                                           class="addon-qty w-14 bg-white text-slate-800 rounded-lg px-2 py-2 text-center text-sm font-black focus:outline-none focus:ring-2 focus:ring-[#facc15]">
+                                    <button type="button" onclick="changeAddonQty('{{ svc.id }}', 1)" 
+                                            class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black">+</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Thức uống -->
+                        {% if addon_groups.drink %}
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 text-[#facc15] font-black text-xs sm:text-sm uppercase tracking-wide">
+                                <i class="fa-solid fa-mug-hot"></i>
+                                <span>Thức uống</span>
+                            </div>
+                            {% for svc in addon_groups.drink %}
+                            <div class="flex items-center justify-between gap-3 bg-[#023e1f]/70 border border-emerald-800/40 rounded-xl px-4 py-3">
+                                <div class="min-w-0">
+                                    <div class="text-white font-bold text-xs sm:text-sm truncate">{{ svc.name }}</div>
+                                    {% if svc.description %}
+                                        <div class="text-emerald-300 text-[11px] font-semibold truncate">{{ svc.description }}</div>
+                                    {% endif %}
+                                    <div class="text-[#facc15] font-black text-xs mt-0.5">
+                                        {{ svc.unit_price|floatformat:0 }} đ / {{ svc.get_unit_label }}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <button type="button" onclick="changeAddonQty('{{ svc.id }}', -1)" 
+                                            class="w-8 h-8 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-black">−</button>
+                                    <input type="number" min="0" max="20" value="0"
+                                           name="addon_{{ svc.id }}" data-price="{{ svc.unit_price }}"
+                                           onchange="updateAddonTotal()"
+                                           class="addon-qty w-14 bg-white text-slate-800 rounded-lg px-2 py-2 text-center text-sm font-black focus:outline-none focus:ring-2 focus:ring-[#facc15]">
+                                    <button type="button" onclick="changeAddonQty('{{ svc.id }}', 1)" 
+                                            class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black">+</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Đồ ăn & Khác -->
+                        {% if addon_groups.food or addon_groups.other %}
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 text-[#facc15] font-black text-xs sm:text-sm uppercase tracking-wide">
+                                <i class="fa-solid fa-utensils"></i>
+                                <span>Dịch vụ khác</span>
+                            </div>
+                            {% for svc in addon_groups.food %}
+                            <div class="flex items-center justify-between gap-3 bg-[#023e1f]/70 border border-emerald-800/40 rounded-xl px-4 py-3">
+                                <div class="min-w-0">
+                                    <div class="text-white font-bold text-xs sm:text-sm truncate">{{ svc.name }}</div>
+                                    <div class="text-[#facc15] font-black text-xs mt-0.5">{{ svc.unit_price|floatformat:0 }} đ / {{ svc.get_unit_label }}</div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <button type="button" onclick="changeAddonQty('{{ svc.id }}', -1)" class="w-8 h-8 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-black">−</button>
+                                    <input type="number" min="0" max="20" value="0" name="addon_{{ svc.id }}" data-price="{{ svc.unit_price }}"
+                                           onchange="updateAddonTotal()"
+                                           class="addon-qty w-14 bg-white text-slate-800 rounded-lg px-2 py-2 text-center text-sm font-black focus:outline-none focus:ring-2 focus:ring-[#facc15]">
+                                    <button type="button" onclick="changeAddonQty('{{ svc.id }}', 1)" class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black">+</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% for svc in addon_groups.other %}
+                            <div class="flex items-center justify-between gap-3 bg-[#023e1f]/70 border border-emerald-800/40 rounded-xl px-4 py-3">
+                                <div class="min-w-0">
+                                    <div class="text-white font-bold text-xs sm:text-sm truncate">{{ svc.name }}</div>
+                                    <div class="text-[#facc15] font-black text-xs mt-0.5">{{ svc.unit_price|floatformat:0 }} đ / {{ svc.get_unit_label }}</div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <button type="button" onclick="changeAddonQty('{{ svc.id }}', -1)" class="w-8 h-8 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-black">−</button>
+                                    <input type="number" min="0" max="20" value="0" name="addon_{{ svc.id }}" data-price="{{ svc.unit_price }}"
+                                           onchange="updateAddonTotal()"
+                                           class="addon-qty w-14 bg-white text-slate-800 rounded-lg px-2 py-2 text-center text-sm font-black focus:outline-none focus:ring-2 focus:ring-[#facc15]">
+                                    <button type="button" onclick="changeAddonQty('{{ svc.id }}', 1)" class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black">+</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="py-10 text-center">
+                            <i class="fa-solid fa-box-open text-emerald-600 text-4xl mb-3"></i>
+                            <p class="text-emerald-200 font-bold text-sm">Cụm sân này hiện chưa cung cấp dịch vụ bổ sung.</p>
+                            <p class="text-emerald-300/70 text-xs mt-1">Bạn vẫn có thể đặt sân bình thường.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Footer -->
+                <div class="px-5 sm:px-6 py-4 border-t border-emerald-800/50 flex items-center justify-between gap-3">
+                    <div class="text-xs sm:text-sm">
+                        <span class="text-emerald-200 font-bold">Tổng dịch vụ:</span>
+                        <span id="addon-total" class="text-[#facc15] font-black text-base ml-1">0 đ</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeAddonModal()" 
+                                class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition">
+                            Đóng
+                        </button>
+                        <button type="button" onclick="closeAddonModal()" 
+                                class="px-4 py-2.5 rounded-xl bg-[#e5b63d] hover:bg-[#d8a834] text-white font-black text-xs sm:text-sm transition shadow">
+                            Áp dụng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </main>
 
@@ -262,5 +444,114 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    /* ============ MODAL THÊM DỊCH VỤ ============ */
+    function openAddonModal() {
+        const modal = document.getElementById('addon-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+        updateAddonTotal();
+    }
+
+    function closeAddonModal() {
+        const modal = document.getElementById('addon-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+        updateAddonBadge();
+    }
+
+    function changeAddonQty(serviceId, delta) {
+        const input = document.querySelector(`input[name="addon_${serviceId}"]`);
+        if (!input) return;
+        let val = parseInt(input.value || '0', 10) + delta;
+        if (val < 0) val = 0;
+        if (val > 20) val = 20;
+        input.value = val;
+        updateAddonTotal();
+    }
+
+    function formatVND(n) {
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' đ';
+    }
+
+    function updateAddonTotal() {
+        let total = 0;
+        let count = 0;
+        document.querySelectorAll('.addon-qty').forEach(function(input) {
+            const qty = parseInt(input.value || '0', 10);
+            if (qty > 0) {
+                const price = parseFloat(input.dataset.price || '0');
+                total += qty * price;
+                count += qty;
+            }
+        });
+        const el = document.getElementById('addon-total');
+        if (el) el.textContent = formatVND(total);
+
+        // Cập nhật con số trên nút "Thêm dịch vụ"
+        const badge = document.getElementById('addon-badge');
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+    }
+
+    function updateAddonBadge() {
+        const badge = document.getElementById('addon-badge');
+        if (!badge) return;
+        let count = 0;
+        document.querySelectorAll('.addon-qty').forEach(function(input) {
+            count += parseInt(input.value || '0', 10);
+        });
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    /* ============ MÃ GIẢM GIÁ ============ */
+    function applyCoupon() {
+        const input = document.getElementById('id_coupon_code');
+        const msg = document.getElementById('coupon-msg');
+        const code = (input.value || '').trim();
+        if (!code) {
+            msg.textContent = 'Vui lòng nhập mã giảm giá.';
+            msg.className = 'mt-1.5 text-xs font-bold text-amber-300';
+            return;
+        }
+        msg.textContent = 'Đang kiểm tra mã...';
+        msg.className = 'mt-1.5 text-xs font-bold text-emerald-300';
+
+        fetch(`/bookings/api/coupon/?code=${encodeURIComponent(code)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.valid) {
+                    msg.textContent = data.message;
+                    msg.className = 'mt-1.5 text-xs font-bold text-emerald-300';
+                } else {
+                    msg.textContent = data.message || 'Mã giảm giá không hợp lệ.';
+                    msg.className = 'mt-1.5 text-xs font-bold text-rose-300';
+                    input.value = '';
+                }
+            })
+            .catch(() => {
+                msg.textContent = 'Không kiểm tra được mã. Vui lòng thử lại.';
+                msg.className = 'mt-1.5 text-xs font-bold text-rose-300';
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateAddonTotal();
+        // Đóng modal khi bấm ra ngoài
+        const modal = document.getElementById('addon-modal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeAddonModal();
+            });
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAddonModal();
+        });
+    });
 </script>
 {% endblock %}

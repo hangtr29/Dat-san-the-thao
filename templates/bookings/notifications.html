@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load facility_extras %}
+
+{% block title %}Thông báo | SportBook{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Header kiểu Gmail -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#04331b] flex items-center gap-2.5">
+                <i class="fa-solid fa-bell text-[#0b6b3a]"></i>
+                Thông báo
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">
+                {% if unread_count %}
+                    <strong class="text-[#0b6b3a]">{{ unread_count }}</strong> thông báo chưa đọc trong tổng số {{ total_count }} thông báo
+                {% else %}
+                    Bạn đã đọc hết {{ total_count }} thông báo
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            {% if unread_count %}
+            <button type="button" id="btn-mark-all-read"
+                class="px-4 py-2.5 rounded-xl bg-[#0b6b3a] hover:bg-[#075a2c] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-check-double text-[10px]"></i>
+                Đánh dấu đã đọc tất cả
+            </button>
+            {% endif %}
+            <a href="{% url 'bookings:notification_list' %}"
+                class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition">
+                <i class="fa-solid fa-rotate-right text-[10px] mr-1"></i> Làm mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs kiểu Gmail: Tất cả / Chưa đọc / Đã đọc -->
+    <div class="flex items-center gap-1 border-b border-slate-200 mb-4 overflow-x-auto">
+        <a href="?tab=all"
+            class="px-4 py-2.5 text-xs font-black whitespace-nowrap border-b-2 transition
+            {% if tab == 'all' %}border-[#0b6b3a] text-[#0b6b3a]{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %}">
+            <i class="fa-solid fa-inbox mr-1.5 text-[10px]"></i> Tất cả
+            {% if total_count %}<span class="ml-1 text-[10px] text-slate-400 font-bold">({{ total_count }})</span>{% endif %}
+        </a>
+        <a href="?tab=unread"
+            class="px-4 py-2.5 text-xs font-black whitespace-nowrap border-b-2 transition
+            {% if tab == 'unread' %}border-[#0b6b3a] text-[#0b6b3a]{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %}">
+            <i class="fa-solid fa-envelope text-[10px] mr-1.5"></i> Chưa đọc
+            {% if unread_count %}<span class="ml-1 text-[10px] text-rose-600 font-bold">({{ unread_count }})</span>{% endif %}
+        </a>
+        <a href="?tab=read"
+            class="px-4 py-2.5 text-xs font-black whitespace-nowrap border-b-2 transition
+            {% if tab == 'read' %}border-[#0b6b3a] text-[#0b6b3a]{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %}">
+            <i class="fa-solid fa-envelope-open text-[10px] mr-1.5"></i> Đã đọc
+            {% if read_count %}<span class="ml-1 text-[10px] text-slate-400 font-bold">({{ read_count }})</span>{% endif %}
+        </a>
+    </div>
+
+    <!-- Danh sách nhóm theo ngày (giống Gmail: HÔM NAY / HÔM QUA / CŨ HƠN) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {% if notifications %}
+
+            {% for group_key, group_label in grouped_labels %}
+                {% if groups|get_item:group_key %}
+                <div class="px-5 py-2.5 bg-slate-50 border-b border-slate-200 sticky top-0 z-10 backdrop-blur">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        {{ group_label }}
+                        <span class="text-slate-400">({{ groups|get_item:group_key|length }})</span>
+                    </span>
+                </div>
+
+                {% for n in groups|get_item:group_key %}
+                <div class="group relative flex items-start gap-3 px-5 py-3.5 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition
+                            {% if not n.is_read %}bg-emerald-50/40{% else %}bg-white{% endif %}">
+
+                    <!-- Chấm tròn bật/tắt đã đọc (giống Gmail) -->
+                    <button type="button" class="notif-toggle-read flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition mt-0.5
+                                   {% if n.is_read %}text-slate-300 hover:text-[#0b6b3a]{% else %}text-[#0b6b3a]{% endif %}"
+                            data-id="{{ n.id }}" title="{% if n.is_read %}Đánh dấu chưa đọc{% else %}Đánh dấu đã đọc{% endif %}">
+                        <i class="fa-solid {% if n.is_read %}fa-circle{% else %}fa-circle-fill{% endif %} text-[10px]"></i>
+                    </button>
+
+                    <!-- Icon loại thông báo -->
+                    <span class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
+                                 {% if n.notification_type == 'BOOKING_APPROVED' %}bg-emerald-100 text-emerald-600
+                                 {% elif n.notification_type == 'BOOKING_REJECTED' or n.notification_type == 'BOOKING_NEEDS_REUPLOAD' %}bg-rose-100 text-rose-600
+                                 {% elif n.notification_type == 'BOOKING_NEW' %}bg-amber-100 text-amber-600
+                                 {% elif n.notification_type == 'BOOKING_CANCELLED' %}bg-slate-200 text-slate-600
+                                 {% else %}bg-slate-100 text-slate-500{% endif %}">
+                        <i class="fa-solid {% if n.notification_type == 'BOOKING_APPROVED' %}fa-circle-check
+                                  {% elif n.notification_type == 'BOOKING_REJECTED' %}fa-circle-xmark
+                                  {% elif n.notification_type == 'BOOKING_NEEDS_REUPLOAD' %}fa-file-arrow-up
+                                  {% elif n.notification_type == 'BOOKING_NEW' %}fa-bell
+                                  {% elif n.notification_type == 'BOOKING_CANCELLED' %}fa-ban
+                                  {% else %}fa-info{% endif %} text-xs"></i>
+                    </span>
+
+                    <!-- Nội dung (click để mở link) -->
+                    <div class="min-w-0 flex-1">
+                        <a href="{{ n.link|default:'#' }}" class="block">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="text-xs sm:text-sm truncate {% if not n.is_read %}font-black text-slate-900{% else %}font-bold text-slate-600{% endif %}">
+                                    {{ n.title }}
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-bold whitespace-nowrap">
+                                    {{ n.created_at|date:"d/m H:i" }}
+                                </div>
+                            </div>
+                            {% if n.message %}
+                            <div class="text-xs text-slate-600 mt-1 leading-relaxed">{{ n.message }}</div>
+                            {% endif %}
+                        </a>
+                    </div>
+
+                    <!-- Badge trạng thái -->
+                    {% if not n.is_read %}
+                    <span class="flex-shrink-0 mt-1.5 px-2 py-0.5 rounded-full bg-[#0b6b3a] text-white text-[9px] font-black uppercase tracking-wide">
+                        Mới
+                    </span>
+                    {% else %}
+                    <span class="flex-shrink-0 mt-1.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-wide">
+                        Đã đọc
+                    </span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% endif %}
+            {% endfor %}
+
+        {% else %}
+        <div class="px-5 py-16 text-center">
+            <i class="fa-regular fa-bell-slash text-slate-200 text-5xl mb-4"></i>
+            <p class="text-sm font-bold text-slate-600">
+                {% if tab == 'unread' %}Không có thông báo chưa đọc
+                {% elif tab == 'read' %}Chưa có thông báo nào đã đọc
+                {% else %}Chưa có thông báo nào{% endif %}
+            </p>
+            <p class="text-xs text-slate-400 mt-1">Bạn sẽ nhận thông báo khi chủ sân duyệt hoặc từ chối đơn đặt.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Toast nhỏ khi thao tác -->
+    <div id="notif-toast"
+        class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] hidden px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-2xl">
+        <i class="fa-solid fa-check mr-1.5 text-emerald-400"></i>
+        <span id="notif-toast-text">Đã cập nhật</span>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const CSRF = "{{ csrf_token }}";
+
+        function showToast(msg) {
+            const t = document.getElementById('notif-toast');
+            const txt = document.getElementById('notif-toast-text');
+            if (!t || !txt) return;
+            txt.textContent = msg;
+            t.classList.remove('hidden');
+            clearTimeout(window.__notifToastTimer);
+            window.__notifToastTimer = setTimeout(() => t.classList.add('hidden'), 2200);
+        }
+
+        // Bật/tắt trạng thái đã đọc của 1 thông báo (không tải lại trang)
+        document.querySelectorAll('.notif-toggle-read').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                fetch("{% url 'bookings:notification_toggle_read' notification_id='00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', id), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data || data.ok !== true) return;
+                        const isRead = data.is_read;
+                        // Cập nhật giao diện ngay
+                        const row = btn.closest('.group');
+                        if (row) {
+                            row.classList.toggle('bg-emerald-50/40', !isRead);
+                            row.classList.toggle('bg-white', isRead);
+                            const title = row.querySelector('a > div > div');
+                            if (title) {
+                                title.classList.toggle('font-black', !isRead);
+                                title.classList.toggle('text-slate-900', !isRead);
+                                title.classList.toggle('font-bold', isRead);
+                                title.classList.toggle('text-slate-600', isRead);
+                            }
+                            const badge = row.querySelector('span.flex-shrink-0.mt-1\\.5');
+                            if (badge) {
+                                if (isRead) {
+                                    badge.className = 'flex-shrink-0 mt-1.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-wide';
+                                    badge.textContent = 'Đã đọc';
+                                } else {
+                                    badge.className = 'flex-shrink-0 mt-1.5 px-2 py-0.5 rounded-full bg-[#0b6b3a] text-white text-[9px] font-black uppercase tracking-wide';
+                                    badge.textContent = 'Mới';
+                                }
+                            }
+                        }
+                        btn.classList.toggle('text-slate-300', isRead);
+                        btn.classList.toggle('hover:text-[#0b6b3a]', isRead);
+                        btn.classList.toggle('text-[#0b6b3a]', !isRead);
+                        btn.innerHTML = '<i class="fa-solid ' + (isRead ? 'fa-circle' : 'fa-circle-fill') + ' text-[10px]"></i>';
+                        btn.title = isRead ? 'Đánh dấu chưa đọc' : 'Đánh dấu đã đọc';
+                        showToast(isRead ? 'Đã đánh dấu là đã đọc' : 'Đã đánh dấu là chưa đọc');
+                    })
+                    .catch(() => { });
+            });
+        });
+
+        // Đánh dấu đã đọc tất cả
+        const allBtn = document.getElementById('btn-mark-all-read');
+        if (allBtn) {
+            allBtn.addEventListener('click', function () {
+                allBtn.disabled = true;
+                allBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[10px]"></i> Đang xử lý...';
+                fetch("{% url 'bookings:notification_mark_all_read' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': CSRF,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data || data.ok !== true) return;
+                        showToast('Đã đánh dấu ' + (data.updated || 0) + ' thông báo là đã đọc');
+                        setTimeout(() => window.location.reload(), 700);
+                    })
+                    .catch(() => {
+                        allBtn.disabled = false;
+                        allBtn.innerHTML = '<i class="fa-solid fa-check-double text-[10px]"></i> Đánh dấu đã đọc tất cả';
+                    });
+            });
+        }
+    })();
+</script>
+{% endblock %}

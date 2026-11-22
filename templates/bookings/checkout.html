@@ -206,6 +206,32 @@ selection:bg-amber-400 selection:text-slate-900 font-['Nunito',sans-serif]{% end
                         {% endfor %}
                     </div>
 
+                    <!-- Dịch vụ phụ đã chọn -->
+                    {% if addons_list %}
+                    <div class="space-y-1.5 text-xs">
+                        <div class="text-emerald-300 font-bold mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-concierge-bell text-[10px]"></i>
+                            Dịch vụ phụ đã chọn:
+                        </div>
+                        {% for ad in addons_list %}
+                        <div
+                            class="flex justify-between items-center p-2.5 rounded-xl bg-[#023319] border border-emerald-800/60">
+                            <div>
+                                <span class="font-extrabold text-white">{{ ad.name }}</span>
+                                <span class="text-emerald-300 block text-[11px] mt-0.5">
+                                    {{ ad.category_label }} · {{ ad.unit_label }} · x{{ ad.quantity }} × {{ ad.unit_price }}
+                                </span>
+                            </div>
+                            <span class="font-black text-[#facc15] text-sm">{{ ad.line_total }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-[11px] font-bold text-emerald-300">Tổng dịch vụ phụ:</span>
+                            <span class="text-sm font-black text-[#facc15]">{{ addon_total_formatted }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="pt-3 border-t border-emerald-800/50 flex justify-between items-center">
                         <span class="text-sm font-bold text-emerald-200">Tổng thanh toán:</span>
                         <span class="text-xl sm:text-2xl font-black text-[#facc15]">{{ total_amount_formatted }}</span>

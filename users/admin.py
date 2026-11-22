@@ -95,12 +95,64 @@ class OwnerProfileAdmin(admin.ModelAdmin):
 
     @admin.action(description="✓ Phê duyệt KYC (Cấp tích xanh xác minh)")
     def approve_kyc_selected(self, request, queryset):
-        count = queryset.update(kyc_status=KYCStatus.KYC_VERIFIED, kyc_rejection_reason='')
-        self.message_user(request, f"Đã duyệt KYC thành công cho {count} hồ sơ chủ sân!")
+        # Gửi thông báo cho từng chủ sân biết hồ sơ đã được duyệt
+        from bookings.services_extras import NotificationService
+        from facilities.models import Facility, FacilityStatus
+        count = 0
+        auto_activated = 0
+        for profile in queryset:
+            profile.kyc_status = KYCStatus.KYC_VERIFIED
+            profile.kyc_rejection_reason = ''
+            profile.save(update_fields=['kyc_status', 'kyc_rejection_reason', 'updated_at'])
+            NotificationService.notify(
+                profile.user, 'SYSTEM',
+                "Hồ sơ xác thực KYC của bạn đã được duyệt",
+                f"Bạn đã được cấp tích xanh xác minh. Hồ sơ của bạn đã được Ban quản trị chấp thuận.",
+                "/bookings/owner/kyc/",
+            )
+            count += 1
+
+            # Đồng bộ: hồ sơ KYC của chủ sân đã xác minh -> các cụm sân của họ
+            # đang chờ duyệt cũng được kích hoạt luôn (tránh phải duyệt 2 lần).
+            pending_facilities = Facility.objects.filter(
+                owner=profile.user,
+                status=FacilityStatus.PENDING_REVIEW,
+            )
+            for facility in pending_facilities:
+                facility.is_verified = True
+                facility.status = FacilityStatus.ACTIVE
+                facility.active_status = True
+                facility.save(update_fields=['is_verified', 'status', 'active_status', 'updated_at'])
+                NotificationService.notify(
+                    profile.user, 'SYSTEM',
+                    f"Cụm sân '{facility.name}' đã được duyệt",
+                    "Cụm sân của bạn đã được Ban quản trị phê duyệt và cấp tích xanh KYC. "
+                    "Cụm sân hiện đã hiển thị công khai cho khách hàng đặt sân.",
+                    "/bookings/dashboard/",
+                )
+                auto_activated += 1
+
+        msg = f"Đã duyệt KYC thành công cho {count} hồ sơ chủ sân!"
+        if auto_activated:
+            msg += f" Đồng thời kích hoạt {auto_activated} cụm sân đang chờ duyệt."
+        self.message_user(request, msg)
 
     @admin.action(description="✕ Từ chối KYC các hồ sơ đã chọn")
     def reject_kyc_selected(self, request, queryset):
-        count = queryset.update(kyc_status=KYCStatus.KYC_REJECTED)
+        from bookings.services_extras import NotificationService
+        reason = "Hồ sơ không đủ điều kiện xác minh. Vui lòng kiểm tra lại CCCD, giấy phép KD và thông tin ngân hàng."
+        count = 0
+        for profile in queryset:
+            profile.kyc_status = KYCStatus.KYC_REJECTED
+            profile.kyc_rejection_reason = reason
+            profile.save(update_fields=['kyc_status', 'kyc_rejection_reason', 'updated_at'])
+            NotificationService.notify(
+                profile.user, 'SYSTEM',
+                "Hồ sơ xác thực KYC của bạn bị từ chối",
+                f"Lý do: {reason}",
+                "/bookings/owner/kyc/",
+            )
+            count += 1
         self.message_user(request, f"Đã từ chối {count} hồ sơ KYC.")
 
     @admin.action(description="+ Gia hạn thêm 30 ngày dịch vụ duy trì")
@@ -170,15 +222,31 @@ class SubscriptionOrderAdmin(admin.ModelAdmin):
 
     @admin.action(description="✓ Duyệt đơn đóng tiền & Tự động cộng ngày duy trì")
     def approve_orders_action(self, request, queryset):
+        from bookings.services_extras import NotificationService
         success_count = 0
         for order in queryset:
             if order.approve_order(request.user):
                 success_count += 1
+                NotificationService.notify(
+                    order.owner, 'SYSTEM',
+                    f"Đơn đăng ký gói '{order.plan.name}' đã được duyệt",
+                    f"Thời hạn duy trì của bạn đã được cộng thêm {order.plan.duration_days} ngày. "
+                    f"Cụm sân của bạn có thể tiếp tục hoạt động bình thường.",
+                    "/bookings/owner/kyc/",
+                )
         self.message_user(request, f"Đã duyệt thành công {success_count} đơn và tự động cộng ngày duy trì cho Chủ sân!")
 
     @admin.action(description="✕ Từ chối đơn nộp tiền")
     def reject_orders_action(self, request, queryset):
+        from bookings.services_extras import NotificationService
+        reason = "Biên lai không hợp lệ hoặc chưa nhận được tiền."
         for order in queryset:
-            order.reject_order("Biên lai không hợp lệ hoặc chưa nhận được tiền.")
+            order.reject_order(reason)
+            NotificationService.notify(
+                order.owner, 'SYSTEM',
+                f"Đơn đăng ký gói '{order.plan.name}' bị từ chối",
+                f"Lý do: {reason}",
+                "/bookings/owner/kyc/",
+            )
         self.message_user(request, f"Đã từ chối {queryset.count()} đơn nộp phí.")
 

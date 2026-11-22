@@ -88,3 +88,17 @@ def map_directions_url(facility):
     if not lat or not lng:
         return "#"
     return f"https://www.google.com/maps/dir/?api=1&destination={lat},{lng}"
+
+
+@register.filter
+def get_item(mapping, key):
+    """
+    Lấy giá trị theo key từ dict (dùng cho template: {{ my_dict|get_item:'key' }}).
+    Trả về list rỗng nếu key không tồn tại -> an toàn cho vòng lặp trong template.
+    """
+    if not mapping:
+        return []
+    try:
+        return mapping.get(key, [])
+    except AttributeError:
+        return []

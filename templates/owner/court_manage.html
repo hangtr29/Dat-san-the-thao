@@ -31,7 +31,7 @@
                 class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs uppercase hover:bg-slate-50 transition shadow-2xs">
                 <i class="fa-solid fa-gear text-emerald-600 mr-1.5"></i> Cài Đặt Cơ Sở
             </a>
-            <a href="{% url 'facilities:owner_booking_approval' %}?facility_id={{ facility.id }}"
+            <a href="{% url 'bookings:owner_dashboard' %}?tab=orders&status=WAITING_APPROVAL&facility_id={{ facility.id }}"
                 class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs uppercase hover:bg-emerald-700 transition shadow-md">
                 <i class="fa-solid fa-receipt mr-1.5"></i> Duyệt Đơn Đặt
             </a>

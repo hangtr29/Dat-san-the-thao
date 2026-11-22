@@ -26,15 +26,24 @@ class SportCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Facility)
 class FacilityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'status_badge', 'verified_badge', 'hotline_display', 'reputation_score', 'average_rating_display', 'active_status')
+    list_display = ('name', 'owner', 'status_badge', 'verified_badge', 'hotline_display', 'court_count_display', 'reputation_score', 'average_rating_display', 'active_status')
     list_filter = ('status', 'is_verified', 'active_status', 'bank_name')
     search_fields = ('name', 'address', 'phone_contact', 'hotline', 'bank_account_no', 'bank_account_name')
+    list_editable = ('active_status',)
+    list_per_page = 25
+    ordering = ('-created_at',)
     inlines = [CourtInline, PricingRuleInline, FacilityReviewInline]
-    actions = ['verify_facility_action', 'suspend_facility_action']
+    actions = ['verify_facility_action', 'suspend_facility_action', 'reactivate_facility_action']
 
     fieldsets = (
         ("Thông tin chung & Xác thực kiểm duyệt", {
-            'fields': ('name', 'owner', 'status', 'is_verified', 'reputation_score', 'address', 'phone_contact', 'hotline', 'image', 'active_status')
+            'fields': ('name', 'owner', 'status', 'is_verified', 'reputation_score', 'address', 'phone_contact', 'hotline', 'image', 'active_status'),
+            'description': (
+                "<b>Quy trình duyệt cụm sân:</b> Chủ sân đăng ký tại <code>/facilities/owner/facility/register/</code> "
+                "→ hồ sơ ở trạng thái <i>Chờ duyệt hồ sơ</i> → chọn hồ sơ và bấm "
+                "<b>\"Cấp tích xanh KYC & Kích hoạt cụm sân\"</b> để duyệt. "
+                "Cụm sân chỉ hiển thị công khai cho khách hàng khi <b>Trạng thái = Đang hoạt động</b> và <b>Tích xanh = Có</b>."
+            )
         }),
         ("Cấu hình Ngân hàng & Mã QR Thanh toán (VietQR)", {
             'fields': ('bank_name', 'bank_account_no', 'bank_account_name', 'custom_qr_image'),
@@ -43,7 +52,40 @@ class FacilityAdmin(admin.ModelAdmin):
         ("Khung giờ mở cửa & Tọa độ GPS", {
             'fields': ('open_time', 'close_time', 'latitude', 'longitude')
         }),
+        ("Mô tả & Điểm nổi bật", {
+            'fields': ('description', 'highlights'),
+            'classes': ('collapse',)
+        }),
     )
+
+    def get_queryset(self, request):
+        """Sắp xếp ưu tiên hồ sơ CHỜ DUYỆT lên đầu để admin xử lý nhanh"""
+        return super().get_queryset(request).select_related('owner')
+
+    def save_model(self, request, obj, form, change):
+        """
+        Chống trạng thái mâu thuẫn khi Admin sửa trực tiếp trong form:
+        - Bật `active_status` (Đang hoạt động) mà `status` vẫn chưa ACTIVE
+          -> tự nâng lên ACTIVE (vì admin đang chủ động bật công khai).
+        - Tắt `active_status` -> tự chuyển `status` sang SUSPENDED
+          (sân bị ẩn khỏi khách hàng nhưng vẫn giữ lịch sử chờ duyệt).
+        """
+        if obj.active_status and obj.status != FacilityStatus.ACTIVE:
+            obj.status = FacilityStatus.ACTIVE
+            if not obj.is_verified:
+                # Admin chủ động bật công khai -> cấp luôn tích xanh KYC
+                obj.is_verified = True
+        elif not obj.active_status and obj.status == FacilityStatus.ACTIVE:
+            obj.status = FacilityStatus.SUSPENDED
+
+        super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+
+    def court_count_display(self, obj):
+        return f"{obj.courts.count()} sân"
+    court_count_display.short_description = "Số sân"
 
     def status_badge(self, obj):
         if obj.status == FacilityStatus.ACTIVE:
@@ -67,15 +109,59 @@ class FacilityAdmin(admin.ModelAdmin):
         return f"{obj.get_average_rating()} ★ ({obj.get_total_reviews()})"
     average_rating_display.short_description = "Đánh giá"
 
+    @admin.action(description="✅ Cấp tích xanh KYC & Kích hoạt cụm sân (Duyệt hồ sơ)")
     def verify_facility_action(self, request, queryset):
-        updated = queryset.update(is_verified=True, status=FacilityStatus.ACTIVE, active_status=True)
+        from bookings.services_extras import NotificationService
+        updated = 0
+        for facility in queryset:
+            facility.is_verified = True
+            facility.status = FacilityStatus.ACTIVE
+            facility.active_status = True
+            facility.save(update_fields=['is_verified', 'status', 'active_status', 'updated_at'])
+            # Thông báo cho chủ sân biết cụm sân đã được duyệt & mở bán
+            NotificationService.notify(
+                facility.owner, 'SYSTEM',
+                f"Cụm sân '{facility.name}' đã được duyệt",
+                "Hồ sơ cụm sân của bạn đã được Ban quản trị phê duyệt và cấp tích xanh KYC. "
+                "Cụm sân hiện đã hiển thị công khai cho khách hàng đặt sân.",
+                "/bookings/dashboard/",
+            )
+            updated += 1
         self.message_user(request, f"Đã cấp tích xanh và kích hoạt {updated} cụm sân thành công.")
-    verify_facility_action.short_description = "Cấp tích xanh KYC & Kích hoạt cụm sân"
 
+    @admin.action(description="⏸️ Tạm ngưng hoạt động cụm sân")
     def suspend_facility_action(self, request, queryset):
-        updated = queryset.update(status=FacilityStatus.SUSPENDED)
+        from bookings.services_extras import NotificationService
+        updated = 0
+        for facility in queryset:
+            facility.status = FacilityStatus.SUSPENDED
+            facility.save(update_fields=['status', 'updated_at'])
+            NotificationService.notify(
+                facility.owner, 'SYSTEM',
+                f"Cụm sân '{facility.name}' đã bị tạm ngưng",
+                "Cụm sân của bạn đã tạm ngưng hoạt động và không hiển thị với khách hàng. "
+                "Vui lòng liên hệ Ban quản trị để được hỗ trợ.",
+                "/bookings/dashboard/",
+            )
+            updated += 1
         self.message_user(request, f"Đã chuyển {updated} cụm sân sang trạng thái tạm ngưng.")
-    suspend_facility_action.short_description = "Tạm ngưng hoạt động cụm sân"
+
+    @admin.action(description="↩️ Kích hoạt lại cụm sân đã tạm ngưng")
+    def reactivate_facility_action(self, request, queryset):
+        from bookings.services_extras import NotificationService
+        updated = 0
+        for facility in queryset:
+            facility.status = FacilityStatus.ACTIVE
+            facility.active_status = True
+            facility.save(update_fields=['status', 'active_status', 'updated_at'])
+            NotificationService.notify(
+                facility.owner, 'SYSTEM',
+                f"Cụm sân '{facility.name}' đã được kích hoạt lại",
+                "Cụm sân của bạn đã hoạt động trở lại và hiển thị công khai cho khách hàng.",
+                "/bookings/dashboard/",
+            )
+            updated += 1
+        self.message_user(request, f"Đã kích hoạt lại {updated} cụm sân.")
 
 @admin.register(Court)
 class CourtAdmin(admin.ModelAdmin):

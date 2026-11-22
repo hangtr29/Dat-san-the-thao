@@ -146,6 +146,19 @@ select-none{% endblock %}
                 </div>
 
                 <div class="flex items-center gap-4 flex-wrap">
+                    <!-- CHỌN MỐC GIỜ: 30 phút / 1 giờ -->
+                    <div class="flex items-center gap-1 bg-black/25 hover:bg-black/40 px-1 py-1 rounded-full border border-white/15">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-emerald-200 px-1.5">Mốc giờ:</span>
+                        <a href="?date={{ target_date|date:'Y-m-d' }}&step=30"
+                            class="px-2.5 py-0.5 rounded-full text-[11px] font-black transition {% if step_minutes == 30 %}bg-[#e5b63d] text-white shadow-sm{% else %}text-white/80 hover:bg-white/15{% endif %}">
+                            30 phút
+                        </a>
+                        <a href="?date={{ target_date|date:'Y-m-d' }}&step=60"
+                            class="px-2.5 py-0.5 rounded-full text-[11px] font-black transition {% if step_minutes == 60 %}bg-[#e5b63d] text-white shadow-sm{% else %}text-white/80 hover:bg-white/15{% endif %}">
+                            1 giờ
+                        </a>
+                    </div>
+
                     <!-- Đánh giá sao & nhận xét thực tế -->
                     <button type="button" onclick="document.getElementById('reviews-modal').classList.remove('hidden')"
                         class="text-amber-300 hover:text-white transition text-xs sm:text-[13px] font-extrabold flex items-center gap-1.5 bg-black/25 hover:bg-black/40 px-3 py-1 rounded-full border border-amber-400/40 cursor-pointer shadow-xs">
@@ -247,7 +260,7 @@ select-none{% endblock %}
 
                                 <!-- Các ô slot giờ phẳng liền mạch -->
                                 {% for cell in row.cells %}
-                                {% with slot=cell.slot is_past=cell.is_past %}
+                                {% with slot=cell.slot is_past=cell.is_past parts=cell.parts %}
                                 <td
                                     class="p-0 border-r border-[#c4e3d5] min-w-[42px] sm:min-w-[48px] h-11 sm:h-12 relative">
                                     {% if slot %}
@@ -274,10 +287,12 @@ select-none{% endblock %}
                                     <!-- TRỐNG KHẢ DỤNG (KHỐI TRẮNG TINH - CLICK ĐỂ CHỌN) -->
                                     <label
                                         class="slot-cell block w-full h-full bg-white hover:bg-emerald-100 cursor-pointer transition relative group flex items-center justify-center"
-                                        title="{{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }} | Giá: {{ slot.price|floatformat:0 }} đ (Bấm để chọn)">
-                                        <input type="checkbox" name="slot_ids" value="{{ slot.id }}"
-                                            data-price="{{ slot.price }}" data-duration="60"
+                                        title="{{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }} | Giá: {{ cell.total_price|floatformat:0 }} đ (Bấm để chọn)">
+                                        {% for p in parts %}
+                                        <input type="checkbox" name="slot_ids" value="{{ p.id }}"
+                                            data-price="{{ p.price }}" data-duration="30"
                                             onchange="handleSlotSelection()" class="hidden slot-check">
+                                        {% endfor %}
                                         <span class="check-mark hidden text-white text-xs font-black">
                                             <i class="fa-solid fa-check"></i>
                                         </span>
@@ -336,39 +351,181 @@ select-none{% endblock %}
 
 </div>
 
-<!-- Modal Bảng Giá Cụm Sân -->
+<!-- Modal Bảng Giá & Thông Tin Cụm Sân (đồng bộ với modal ở trang danh sách /facilities/) -->
 <div id="pricing-modal"
-    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden font-['Nunito',sans-serif]">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
-        <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-            <h3 class="font-extrabold text-slate-800 text-sm uppercase">BẢNG GIÁ & QUY ĐỊNH SÂN</h3>
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden font-['Nunito',sans-serif]">
+    <div
+        class="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+
+        <!-- Header -->
+        <div class="flex-none flex items-center justify-between gap-3 px-5 sm:px-7 py-3.5 bg-[#006d38] text-white">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <i class="fa-solid fa-circle-info text-[#ffec88] text-sm sm:text-base"></i>
+                <h3 class="font-black uppercase tracking-wide text-xs sm:text-sm truncate">Bảng giá & thông tin cụm sân</h3>
+            </div>
             <button onclick="document.getElementById('pricing-modal').classList.add('hidden')"
-                class="text-slate-400 hover:text-slate-700 text-lg">
+                class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition flex-shrink-0">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div class="space-y-3 text-xs text-slate-600 mb-5">
-            <div class="p-3 bg-emerald-50 rounded-xl text-[#006d38] font-bold">
-                🏸 Giờ hoạt động: <strong>{{ facility.open_time|time:"H:i" }} - {{ facility.close_time|time:"H:i"
-                    }}</strong>
-            </div>
-            <div class="space-y-1.5">
-                <span class="font-bold text-slate-700 block">Quy tắc định giá:</span>
-                {% for rule in facility.pricing_rules.all %}
-                <div class="flex justify-between py-1.5 border-b border-slate-100">
-                    <span>{{ rule.get_day_of_week_display }} ({{ rule.start_time|time:"H:i" }}-{{
-                        rule.end_time|time:"H:i" }}):</span>
-                    <strong class="text-[#006d38] font-extrabold">{{ rule.price_per_hour|floatformat:0 }} đ/h</strong>
+
+        <!-- Nội dung 2 cột -->
+        <div class="flex-1 min-h-0 overflow-y-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+
+                <!-- Cột trái: ảnh bìa + thông tin cơ bản -->
+                <div class="p-4 sm:p-5 bg-[#f2fbf6] border-b lg:border-b-0 lg:border-r border-emerald-100">
+
+                    <!-- Ảnh bìa + badge đánh giá + nút chat -->
+                    <div class="rounded-2xl overflow-hidden bg-slate-100 aspect-[4/3] shadow-sm relative group">
+                        <img src="{{ facility.get_cover_image_url }}" alt="{{ facility.name }}"
+                            class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        <div
+                            class="absolute top-2.5 left-2.5 flex items-center gap-1 bg-white/95 rounded-full px-2.5 py-1 shadow-md text-[10px] font-black text-slate-800">
+                            <i class="fa-solid fa-star text-amber-400 text-[10px]"></i>
+                            <span>{{ facility.get_average_rating }}</span>
+                            <span class="text-slate-400 font-bold">({{ facility.get_total_reviews }})</span>
+                        </div>
+                        <a href="https://zalo.me/{{ facility.phone_contact|slice:'1:' }}"
+                            target="_blank" rel="noopener"
+                            class="absolute top-2.5 right-2.5 flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#006d38] hover:text-emerald-800 shadow-md rounded-full px-3 py-1.5 text-[10px] font-black transition">
+                            <i class="fa-solid fa-comment-dots text-[11px]"></i>
+                            <span>Chat với sân</span>
+                        </a>
+                        {% if facility.is_verified %}
+                        <div
+                            class="absolute bottom-2.5 left-2.5 flex items-center gap-1 bg-emerald-600/95 text-white rounded-full px-2.5 py-1 shadow-md text-[10px] font-black">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i> Tích xanh
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <h4 class="mt-3.5 text-sm sm:text-base font-black text-[#04331b] leading-snug uppercase tracking-wide">
+                        {{ facility.name }}
+                    </h4>
+
+                    <p class="mt-2 text-xs text-slate-600 leading-relaxed flex items-start gap-1.5">
+                        <i class="fa-solid fa-location-dot text-[#c2410c] mt-0.5 text-[11px] flex-shrink-0"></i>
+                        <span>{{ facility.address }}</span>
+                    </p>
+
+                    <!-- Ô giờ mở cửa -->
+                    <div
+                        class="mt-3 flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <i class="fa-regular fa-clock text-[#006d38] text-xs flex-shrink-0"></i>
+                            <span
+                                class="text-[11px] font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap">Giờ mở cửa</span>
+                        </div>
+                        <span class="text-[11px] font-black text-slate-800 whitespace-nowrap">
+                            {{ facility.open_time|time:"H:i" }} - {{ facility.close_time|time:"H:i" }}
+                        </span>
+                    </div>
+
+                    <a href="tel:{{ facility.phone_contact }}"
+                        class="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white text-xs font-black uppercase tracking-wider transition shadow-sm">
+                        <i class="fa-solid fa-headset text-[11px]"></i> Liên hệ {{ facility.phone_contact }}
+                    </a>
                 </div>
-                {% empty %}
-                <p class="text-slate-400">Đang cập nhật bảng giá chi tiết.</p>
-                {% endfor %}
+
+                <!-- Cột phải: tab + nội dung -->
+                <div class="p-4 sm:p-5">
+
+                    <!-- Thumbnail ảnh -->
+                    {% if facility.get_gallery_images %}
+                    <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-4">
+                        {% for g in facility.get_gallery_images %}
+                        <div class="w-14 h-14 rounded-xl overflow-hidden border-2 {% if forloop.first %}border-[#e5b63d]{% else %}border-transparent{% endif %} bg-slate-100 flex-shrink-0">
+                            <img src="{{ g.url }}" alt="{{ g.caption }}" class="w-full h-full object-cover">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Nội dung tab: bảng giá (mặc định) -->
+                    <div id="pricing-tab-content">
+                        <div class="space-y-1.5 text-xs text-slate-600">
+                            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                <span class="font-bold text-slate-700">Số sân thi đấu:</span>
+                                <strong>{{ facility.courts.count }} sân</strong>
+                            </div>
+                            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                <span class="font-bold text-slate-700">Chất liệu mặt sân:</span>
+                                <strong>{{ facility.get_surface_types|join:", " }}</strong>
+                            </div>
+                            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                <span class="font-bold text-slate-700">Môn thể thao:</span>
+                                <strong>{{ facility.get_sport_names|join:", " }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 space-y-1.5">
+                            <span class="font-bold text-slate-700 block text-xs">Quy tắc định giá:</span>
+                            {% for rule in facility.pricing_rules.all %}
+                            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                <span class="text-[11px]">{{ rule.get_day_of_week_display }} ({{ rule.start_time|time:"H:i" }}-{{ rule.end_time|time:"H:i" }}):</span>
+                                <strong class="text-[#006d38] font-extrabold text-[11px]">
+                                    {{ rule.price_per_hour|floatformat:0 }} đ/h</strong>
+                            </div>
+                            {% empty %}
+                            <p class="text-slate-400 text-xs">Đang cập nhật bảng giá chi tiết.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Dịch vụ phụ của riêng cụm sân này -->
+                    {% if facility.addon_services.all %}
+                    <div class="mt-4">
+                        <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">
+                            Dịch vụ phụ tại {{ facility.name }}
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {% for addon in facility.addon_services.all %}
+                            <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
+                                <div class="flex items-start justify-between gap-2">
+                                    <p class="font-black text-slate-700 text-[11px] truncate">{{ addon.name }}</p>
+                                    <span class="text-[#006d38] font-black text-[11px] whitespace-nowrap">
+                                        {{ addon.unit_price|floatformat:0 }} đ</span>
+                                </div>
+                                <p class="text-[10px] font-bold text-slate-400 mt-0.5">
+                                    {{ addon.get_category_display }} · {{ addon.get_unit_label }}
+                                </p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Mô tả & điểm nổi bật -->
+                    {% if facility.description %}
+                    <div class="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Giới thiệu</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">{{ facility.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if facility.get_highlight_list %}
+                    <div class="mt-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                        <p class="text-[10px] font-black uppercase text-[#006d38] tracking-wider mb-1">Điểm nổi bật</p>
+                        <ul class="space-y-1">
+                            {% for h in facility.get_highlight_list %}
+                            <li class="text-[11px] text-slate-700 flex items-start gap-1.5">
+                                <i class="fa-solid fa-check text-emerald-600 text-[9px] mt-1"></i>{{ h }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
-        <button onclick="document.getElementById('pricing-modal').classList.add('hidden')"
-            class="w-full py-2.5 rounded-xl font-bold bg-[#006d38] hover:bg-[#005028] text-white text-xs transition">
-            Đóng
-        </button>
+
+        <div class="flex-none px-5 sm:px-7 py-3 bg-slate-50 border-t border-slate-100">
+            <button onclick="document.getElementById('pricing-modal').classList.add('hidden')"
+                class="w-full py-2.5 rounded-xl font-bold bg-[#006d38] hover:bg-[#005028] text-white text-xs uppercase tracking-wider transition">
+                Đóng
+            </button>
+        </div>
     </div>
 </div>
 
@@ -462,21 +619,23 @@ select-none{% endblock %}
 
             checkedBoxes.forEach(cb => {
                 totalMoney += parseFloat(cb.dataset.price || 0);
-                totalMinutes += parseInt(cb.dataset.duration || 60);
-
-                const cell = cb.closest('.slot-cell');
-                cell.classList.add('!bg-[#27ae60]');
-                cell.classList.remove('bg-white');
-                const check = cell.querySelector('.check-mark');
-                if (check) check.classList.remove('hidden');
+                totalMinutes += parseInt(cb.dataset.duration || 30);
             });
 
-            document.querySelectorAll('.slot-check:not(:checked)').forEach(cb => {
-                const cell = cb.closest('.slot-cell');
-                cell.classList.remove('!bg-[#27ae60]');
-                cell.classList.add('bg-white');
+            // Đồng bộ giao diện từng ô (1 ô 30 phút có 1 checkbox, 1 ô 1 giờ có 2 checkbox)
+            document.querySelectorAll('.slot-cell').forEach(cell => {
+                const boxes = cell.querySelectorAll('.slot-check');
+                const anyChecked = Array.from(boxes).some(b => b.checked);
                 const check = cell.querySelector('.check-mark');
-                if (check) check.classList.add('hidden');
+                if (anyChecked) {
+                    cell.classList.add('!bg-[#27ae60]');
+                    cell.classList.remove('bg-white');
+                    if (check) check.classList.remove('hidden');
+                } else {
+                    cell.classList.remove('!bg-[#27ae60]');
+                    cell.classList.add('bg-white');
+                    if (check) check.classList.add('hidden');
+                }
             });
 
             const hours = Math.floor(totalMinutes / 60);

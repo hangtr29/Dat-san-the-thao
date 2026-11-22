@@ -1,0 +1,379 @@
+{% extends 'base_owner.html' %}
+{% load static %}
+
+{% block title %}Đăng Ký Cụm Sân Mới | SportBook Manager{% endblock %}
+
+{% block breadcrumb_current %}
+<i class="fa-solid fa-chevron-right text-[10px] text-slate-300 shrink-0"></i>
+<span class="text-emerald-700 font-extrabold truncate shrink-0">Đăng ký cụm sân mới</span>
+{% endblock %}
+
+{% block owner_content %}
+
+<!-- ============ HERO HEADER ============ -->
+<div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 p-6 sm:p-8 shadow-xl shadow-emerald-900/20">
+    <div class="absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-2xl"></div>
+    <div class="absolute -bottom-20 -left-8 w-56 h-56 rounded-full bg-black/10 blur-2xl"></div>
+
+    <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+        <div class="max-w-2xl">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white text-[11px] font-black uppercase tracking-wider backdrop-blur">
+                <i class="fa-solid fa-building-circle-check"></i> Hồ sơ cụm sân
+            </span>
+            <h1 class="mt-3 text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+                Đăng ký cụm sân mới
+            </h1>
+            <p class="mt-2 text-sm text-emerald-50/90 leading-relaxed">
+                Điền hồ sơ thông tin cơ sở của bạn. Hệ thống sẽ chuyển hồ sơ tới
+                <span class="font-bold text-white">Ban quản trị</span> để kiểm tra thực địa & cấp tích xanh KYC.
+                Chỉ sau khi được duyệt, cụm sân mới hiển thị công khai cho khách hàng đặt sân.
+            </p>
+        </div>
+
+        <!-- Thống kê nhanh -->
+        <div class="flex gap-3 shrink-0">
+            <div class="px-5 py-4 rounded-2xl bg-white/15 backdrop-blur border border-white/20 text-center">
+                <div class="text-2xl font-black text-white leading-none">{{ pending_count }}</div>
+                <div class="text-[10px] font-bold text-emerald-50/80 uppercase tracking-wide mt-1.5">Đang chờ duyệt</div>
+            </div>
+            <div class="px-5 py-4 rounded-2xl bg-white/15 backdrop-blur border border-white/20 text-center">
+                <div class="text-2xl font-black text-white leading-none">{{ active_count }}</div>
+                <div class="text-[10px] font-bold text-emerald-50/80 uppercase tracking-wide mt-1.5">Đang hoạt động</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ 3 BƯỚC QUY TRÌNH ============ -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Bước 1 -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+        <div class="flex items-start gap-3.5">
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0 ring-1 ring-emerald-100">
+                <i class="fa-solid fa-file-pen"></i>
+            </div>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Bước 1</span>
+                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span class="text-[10px] font-black text-emerald-600 uppercase tracking-wider">Điền hồ sơ cơ sở</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">Nhập tên, địa chỉ, GPS và tài khoản ngân hàng nhận tiền.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bước 2 -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+        <div class="flex items-start gap-3.5">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg shrink-0 ring-1 ring-amber-100">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+            </div>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Bước 2</span>
+                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span class="text-[10px] font-black text-amber-600 uppercase tracking-wider">Ban quản trị kiểm tra</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">Đối chiếu CCCD, giấy phép KD và ảnh thực địa.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bước 3 -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+        <div class="flex items-start gap-3.5">
+            <div class="w-11 h-11 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg shrink-0 ring-1 ring-sky-100">
+                <i class="fa-solid fa-badge-check"></i>
+            </div>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Bước 3</span>
+                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span class="text-[10px] font-black text-sky-600 uppercase tracking-wider">Cấp tích xanh & mở bán</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">Cụm sân hiển thị công khai, khách đặt sân ngay.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ FORM ĐĂNG KÝ ============ -->
+<form method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- CARD 1: THÔNG TIN CƠ SỞ -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+        <div class="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-location-dot"></i>
+            </div>
+            <div>
+                <h2 class="text-sm font-black text-slate-800">Thông tin cơ sở</h2>
+                <p class="text-[11px] text-slate-500">Tên cụm sân, địa chỉ và vị trí thực tế</p>
+            </div>
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-5">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">
+                        Tên cụm sân <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" name="name" required minlength="3" placeholder="VD: CLB Cầu Lông Nguyễn Văn Cừ"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">
+                        Hotline / Zalo <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="tel" name="phone_contact" required placeholder="VD: 0901234567"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-slate-700 mb-2">
+                    Địa chỉ cụ thể <span class="text-rose-500">*</span>
+                </label>
+                <textarea name="address" required rows="2" minlength="10"
+                    placeholder="VD: Số 12 Đường D2, Phường 25, Quận Bình Thạnh, TP.HCM"
+                    class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition resize-none"></textarea>
+                <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-info text-[9px]"></i> Ghi rõ số nhà, đường, phường/quận để khách tìm kiếm dễ dàng.
+                </p>
+            </div>
+
+            <!-- GPS + Giờ -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+                <div class="lg:col-span-2">
+                    <label class="block text-xs font-black text-slate-700 mb-2">
+                        Tọa độ GPS (Vĩ độ, Kinh độ) <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="number" name="latitude" step="any" value="10.7769" placeholder="10.7769"
+                            class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                        <input type="number" name="longitude" step="any" value="106.7009" placeholder="106.7009"
+                            class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                        <i class="fa-solid fa-crosshairs text-[9px]"></i> Mở Google Maps → nhấp vào vị trí sân → sao chép 2 số này.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Giờ mở cửa</label>
+                    <input type="time" name="open_time" value="06:00"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Giờ đóng cửa</label>
+                    <input type="time" name="close_time" value="22:00"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 2: CẤU HÌNH SÂN & GIÁ -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+        <div class="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div>
+                <h2 class="text-sm font-black text-slate-800">Cấu hình sân thi đấu & biểu giá</h2>
+                <p class="text-[11px] text-slate-500">Số lượng sân con và giá theo khung giờ</p>
+            </div>
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-5">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Môn thể thao chính</label>
+                    <select name="category_id"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Số lượng sân</label>
+                    <input type="number" name="court_count" value="2" min="1" max="20"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Giá giờ thường (VNĐ)</label>
+                    <input type="number" name="off_peak_price" value="120000" step="10000" min="0"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Giá giờ cao điểm (VNĐ)</label>
+                    <input type="number" name="peak_price" value="180000" step="10000" min="0"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Khu vực sân</label>
+                    <select name="court_area"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                        <option value="Sân trong nhà">Sân trong nhà</option>
+                        <option value="Sân ngoài trời">Sân ngoài trời</option>
+                        <option value="Khu sân VIP">Khu sân VIP</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Chất liệu mặt sân</label>
+                    <input type="text" name="surface_type" value="Thảm PVC chuyên dụng"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+            </div>
+
+            <!-- Ảnh bìa -->
+            <div>
+                <label class="block text-xs font-black text-slate-700 mb-2">Ảnh bìa cụm sân</label>
+                <input type="file" name="image" accept="image/*"
+                    class="w-full text-xs font-bold text-slate-600 file:mr-4 file:py-3 file:px-5 file:rounded-xl file:border-0 file:bg-emerald-600 file:text-white file:text-xs file:font-black hover:file:bg-emerald-700 transition cursor-pointer">
+                <p class="text-[11px] text-slate-400 mt-1.5">Nên chọn ảnh ngang, sắc nét, có đủ ánh sáng (khuyến nghị 1600×900px).</p>
+            </div>
+
+            <!-- Mô tả & điểm nổi bật -->
+            <div>
+                <label class="block text-xs font-black text-slate-700 mb-2">Mô tả giới thiệu cụm sân</label>
+                <textarea name="description" rows="3"
+                    placeholder="VD: Cụm sân 2 sân cầu lông tiêu chuẩn thi đấu, trần cao 8m, đèn LED chống chói, có phòng thay đồ..."
+                    class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition resize-none"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-slate-700 mb-2">Điểm nổi bật</label>
+                <input type="text" name="highlights" placeholder="VD: Chính bãi đỗ xe miễn phí|Có căng tin|Parking ô tô 4 chỗ"
+                    class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                <p class="text-[11px] text-slate-400 mt-1.5">Phân cách các điểm nổi bật bằng dấu <span class="font-mono font-bold">|</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 3: NGÂN HÀNG & VIETQR -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+        <div class="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-qrcode"></i>
+            </div>
+            <div>
+                <h2 class="text-sm font-black text-slate-800">Tài khoản ngân hàng nhận tiền (VietQR)</h2>
+                <p class="text-[11px] text-slate-500">Khách thanh toán trực tiếp — không qua trung gian giữ tiền</p>
+            </div>
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-5">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Ngân hàng <span class="text-rose-500">*</span></label>
+                    <input type="text" name="bank_name" required placeholder="VD: MBBank, Vietcombank, Techcombank"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Số tài khoản <span class="text-rose-500">*</span></label>
+                    <input type="text" name="bank_account_no" required placeholder="VD: 0123456789"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">Tên chủ tài khoản <span class="text-rose-500">*</span></label>
+                    <input type="text" name="bank_account_name" required placeholder="VD: NGUYEN VAN A"
+                        class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition">
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+                <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 shrink-0"></i>
+                <p class="text-xs text-amber-800 leading-relaxed">
+                    Hệ thống sẽ tự động sinh <span class="font-black">mã QR VietQR động</span> kèm số tiền và mã đơn
+                    để khách không phải tự nhập tay. Tiền chuyển thẳng về tài khoản của bạn.
+                    Thông tin này được Ban quản trị kiểm tra lại trước khi duyệt.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NÚT SUBMIT -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 sm:p-6">
+        <p class="text-xs text-slate-500 leading-relaxed flex items-start gap-2 flex-1">
+            <i class="fa-solid fa-shield-halved text-emerald-600 mt-0.5 shrink-0"></i>
+            <span>Cam kết thông tin trên là chính xác. Hồ sơ sẽ được Ban quản trị kiểm tra trong tối đa 24 giờ.</span>
+        </p>
+        <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+            <a href="{% url 'bookings:owner_dashboard' %}"
+                class="flex-1 sm:flex-none px-5 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-black uppercase tracking-wide hover:bg-slate-50 transition text-center">
+                Hủy
+            </a>
+            <button type="submit"
+                class="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-xs font-black uppercase tracking-wide shadow-lg shadow-emerald-600/25 transition active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> Gửi hồ sơ đăng ký
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- ============ DANH SÁCH CỤM SÂN CỦA TÔI ============ -->
+{% if my_facilities %}
+<div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+    <div class="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-store"></i>
+            </div>
+            <div>
+                <h2 class="text-sm font-black text-slate-800">Cụm sân của tôi</h2>
+                <p class="text-[11px] text-slate-500">{{ my_facilities|length }} cụm sân trong hệ thống</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="divide-y divide-slate-100">
+        {% for fac in my_facilities %}
+        <div class="px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:bg-slate-50/50 transition">
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 text-lg">
+                <i class="fa-solid fa-store"></i>
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-sm font-black text-slate-800 truncate">{{ fac.name }}</h3>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black border {{ fac.approval_badge_color }}">
+                        {{ fac.approval_badge_label }}
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1 truncate flex items-center gap-1.5">
+                    <i class="fa-solid fa-location-dot text-[9px] text-slate-400"></i>
+                    {{ fac.address }}
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-bold text-slate-500 hidden sm:inline">
+                    {{ fac.courts.count }} sân
+                </span>
+                <a href="{% url 'facilities:owner_facility_manage_detail' fac.id %}"
+                    class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-black uppercase tracking-wide transition">
+                    Quản lý
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

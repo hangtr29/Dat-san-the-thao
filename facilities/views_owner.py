@@ -5,6 +5,7 @@ Bao gồm:
 1. FacilityManageView: Quản lý thông tin Cụm sân, ảnh thực địa, giờ hoạt động, hotline & tọa độ GPS.
 2. CourtCreateUpdateView: Thêm/Sửa sân con, định giá giờ thường/cao điểm & tự động sinh ma trận TimeSlot 60 phút.
 3. OwnerBookingApprovalView: Quản lý đối soát bill và phê duyệt / từ chối đơn đặt sân.
+4. FacilityRegisterView: Đăng ký cụm sân mới -> chờ Ban quản trị duyệt (PENDING_REVIEW).
 """
 
 from datetime import datetime, date, time, timedelta
@@ -15,6 +16,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.http import HttpResponseForbidden, JsonResponse
 from django.utils import timezone
+from django.db import transaction
 from .models import Facility, Court, SportCategory, PricingRule, FacilityStatus
 from bookings.models import Booking, BookingStatus, BookingSlot
 from bookings.services import SlotGeneratorService
@@ -38,6 +40,183 @@ class OwnerBaseView(LoginRequiredMixin, View):
         if user.is_superuser:
             return Facility.objects.all()
         return Facility.objects.filter(owner=user)
+
+
+class FacilityRegisterView(OwnerBaseView):
+    """
+    Mục tiêu: Luồng đăng ký CỤM SÂN MỚI của chủ sân.
+
+    Trước đây hệ thống thiếu mắt xích này:
+    - `FacilityStatus.PENDING_REVIEW` tồn tại trong model + admin nhưng KHÔNG có
+      bất kỳ mã nào tạo ra nó -> không ai có thể đăng ký sân mới và chờ duyệt.
+    - Chủ sân mới đăng ký tài khoản thì không có cụm sân nào để quản lý.
+
+    Luồng sau khi triển khai:
+      Chủ sân điền hồ sơ  ->  Facility(status=PENDING_REVIEW, is_verified=False)
+      -> Ban quản trị xem trong /admin/ và bấm "Cấp tích xanh KYC & Kích hoạt"
+      -> Facility(status=ACTIVE, is_verified=True)  ->  hiển thị công khai cho khách.
+    """
+
+    template_name = 'owner/facility_register.html'
+
+    def get(self, request):
+        my_facilities = self.get_owner_facilities(request.user)
+        context = {
+            'my_facilities': my_facilities,
+            'categories': SportCategory.objects.all(),
+            'pending_count': my_facilities.filter(status=FacilityStatus.PENDING_REVIEW).count(),
+            'active_count': my_facilities.filter(status=FacilityStatus.ACTIVE).count(),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        # --- 1. Thu thập & kiểm tra dữ liệu ---
+        name = request.POST.get('name', '').strip()
+        address = request.POST.get('address', '').strip()
+        phone_contact = request.POST.get('phone_contact', '').strip()
+        bank_name = request.POST.get('bank_name', '').strip()
+        bank_account_no = request.POST.get('bank_account_no', '').strip()
+        bank_account_name = request.POST.get('bank_account_name', '').strip()
+
+        errors = []
+        if len(name) < 3:
+            errors.append("Tên cụm sân phải có ít nhất 3 ký tự.")
+        if len(address) < 10:
+            errors.append("Địa chỉ phải mô tả chi tiết ít nhất 10 ký tự.")
+        if not phone_contact:
+            errors.append("Vui lòng nhập số Hotline / Zalo liên hệ.")
+        if not bank_name or not bank_account_no or not bank_account_name:
+            errors.append("Vui lòng nhập đầy đủ thông tin tài khoản ngân hàng nhận tiền.")
+
+        # Tọa độ GPS (bắt buộc để chống sân ma & hiển thị trên bản đồ)
+        try:
+            latitude = float(request.POST.get('latitude', '10.7769'))
+            longitude = float(request.POST.get('longitude', '106.7009'))
+            if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+                raise ValueError
+        except (TypeError, ValueError):
+            errors.append("Tọa độ GPS không hợp lệ.")
+
+        # Giờ mở/đóng cửa
+        try:
+            open_time = datetime.strptime(request.POST.get('open_time', '06:00'), '%H:%M').time()
+            close_time = datetime.strptime(request.POST.get('close_time', '22:00'), '%H:%M').time()
+            if open_time >= close_time:
+                errors.append("Giờ mở cửa phải trước giờ đóng cửa.")
+        except ValueError:
+            errors.append("Định dạng giờ mở/đóng cửa không hợp lệ.")
+            open_time, close_time = time(6, 0), time(22, 0)
+
+        # Số lượng sân con & giá
+        try:
+            court_count = max(1, min(20, int(request.POST.get('court_count', '2'))))
+        except (TypeError, ValueError):
+            court_count = 2
+        try:
+            off_peak_price = Decimal(request.POST.get('off_peak_price', '120000').replace('.', '').replace(',', ''))
+            peak_price = Decimal(request.POST.get('peak_price', '180000').replace('.', '').replace(',', ''))
+        except Exception:
+            off_peak_price, peak_price = Decimal('120000'), Decimal('180000')
+
+        category_id = request.POST.get('category_id')
+        category = SportCategory.objects.filter(id=category_id).first() if category_id else SportCategory.objects.first()
+        if not category:
+            errors.append("Vui lòng chọn môn thể thao chính của cụm sân.")
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return redirect('facilities:owner_facility_register')
+
+        # --- 2. Tạo cụm sân ở trạng thái CHỜ DUYỆT ---
+        with transaction.atomic():
+            facility = Facility.objects.create(
+                owner=request.user,
+                name=name,
+                address=address,
+                phone_contact=phone_contact,
+                hotline=request.POST.get('hotline', '').strip() or phone_contact,
+                bank_name=bank_name,
+                bank_account_no=bank_account_no,
+                bank_account_name=bank_account_name,
+                open_time=open_time,
+                close_time=close_time,
+                latitude=latitude,
+                longitude=longitude,
+                description=request.POST.get('description', '').strip(),
+                highlights=request.POST.get('highlights', '').strip(),
+                # Chờ Ban quản trị duyệt -> chưa hiển thị công khai
+                status=FacilityStatus.PENDING_REVIEW,
+                is_verified=False,
+                active_status=False,
+            )
+
+            # Ảnh bìa do chủ sân tải lên (tùy chọn)
+            if 'image' in request.FILES:
+                facility.image = request.FILES['image']
+                facility.save(update_fields=['image'])
+
+            # Tạo sân con
+            for i in range(1, court_count + 1):
+                Court.objects.create(
+                    facility=facility,
+                    category=category,
+                    court_name=f"Sân {i}",
+                    court_area=request.POST.get('court_area', 'Sân trong nhà'),
+                    surface_type=request.POST.get('surface_type', 'Thảm PVC chuyên dụng'),
+                    is_active=True,
+                )
+
+            # Bảng giá: Giờ thường (mở cửa -> 17:00) & Cao điểm (17:00 -> đóng cửa)
+            peak_start = time(17, 0)
+            if peak_start > close_time:
+                peak_start = close_time
+            for day in range(7):
+                PricingRule.objects.create(
+                    facility=facility, day_of_week=day,
+                    start_time=open_time, end_time=peak_start,
+                    price_per_hour=off_peak_price,
+                )
+                if peak_start < close_time:
+                    PricingRule.objects.create(
+                        facility=facility, day_of_week=day,
+                        start_time=peak_start, end_time=close_time,
+                        price_per_hour=peak_price,
+                    )
+
+            # Sinh slot giờ cho 14 ngày tới (chia nhỏ 30 phút/lần)
+            today = timezone.localdate()
+            for court in facility.courts.all():
+                for i in range(14):
+                    SlotGeneratorService.generate_slots_for_court(
+                        court=court, target_date=today + timedelta(days=i)
+                    )
+
+        # --- 3. Thông báo cho chủ sân & Ban quản trị ---
+        from bookings.services_extras import NotificationService
+        NotificationService.notify(
+            request.user, 'SYSTEM',
+            "Đã gửi hồ sơ đăng ký cụm sân",
+            f"Hồ sơ '{name}' đã được gửi tới Ban quản trị. Cụm sân sẽ hiển thị công khai sau khi được duyệt.",
+            "/facilities/owner/facility/register/",
+        )
+
+        # Gửi thông báo cho tất cả admin (superuser) để họ duyệt kịp thời
+        from users.models import User
+        for admin in User.objects.filter(is_superuser=True).exclude(pk=request.user.pk):
+            NotificationService.notify(
+                admin, 'SYSTEM',
+                "Hồ sơ đăng ký cụm sân mới chờ duyệt",
+                f"Chủ sân '{request.user.get_full_name() or request.user.username}' vừa đăng ký cụm sân '{name}'.",
+                f"/admin/facilities/facility/?q={name}",
+            )
+
+        messages.success(
+            request,
+            "🎉 Đã gửi hồ sơ đăng ký cụm sân! Ban quản trị sẽ kiểm tra và phản hồi sớm. "
+            "Trong lúc chờ duyệt, bạn có thể tiếp tục cấu hình sân thi đấu & dịch vụ.",
+        )
+        return redirect('facilities:owner_facility_register')
 
 
 class FacilityManageView(OwnerBaseView):
@@ -233,20 +412,20 @@ class CourtCreateUpdateView(OwnerBaseView):
                 price_per_hour=peak_price
             )
 
-        # Tự động phát sinh ma trận TimeSlot (60 phút) cho ngày hôm nay và 7 ngày tiếp theo
+        # Tự động phát sinh ma trận TimeSlot (chia nhỏ 30 phút) cho ngày hôm nay và 7 ngày tiếp theo
         today = timezone.localdate()
         total_slots_created = 0
         for i in range(8):
             target_date = today + timedelta(days=i)
             total_slots_created += SlotGeneratorService.generate_slots_for_court(
                 court=court,
-                target_date=target_date,
-                slot_minutes=60
+                target_date=target_date
             )
 
         messages.success(
             request,
-            f"{action_msg}! Đã tự động tạo {total_slots_created} slot giờ (60 phút) trong 8 ngày tới với giá Thường ({int(off_peak_price):,} đ) & Cao điểm ({int(peak_price):,} đ)."
+            f"{action_msg}! Đã tự động tạo {total_slots_created} slot giờ (chia nhỏ 30 phút) trong 8 ngày tới "
+            f"với giá Thường ({int(off_peak_price):,} đ/giờ) & Cao điểm ({int(peak_price):,} đ/giờ)."
         )
         return redirect('facilities:owner_court_manage', facility_id=facility.id)
 
@@ -263,47 +442,22 @@ class OwnerBookingApprovalView(OwnerBaseView):
     template_name = 'owner/booking_list.html'
 
     def get(self, request):
-        my_facilities = self.get_owner_facilities(request.user)
-        facility_id = request.GET.get('facility_id')
+        """
+        HỢP NHẤT LUỒNG DUYỆT ĐƠN:
+        Trang duyệt riêng này được chuyển hướng về Dashboard chủ sân
+        (tab=orders) để chỉ còn MỘT nơi duyệt đơn duy nhất.
+        """
+        facility_id = request.GET.get('facility_id', '')
         status_filter = request.GET.get('status', 'WAITING_APPROVAL')
-
-        target_facilities = my_facilities
+        query = request.GET.urlencode()
+        target = f"/bookings/dashboard/?tab=orders&status={status_filter}"
         if facility_id:
-            target_facilities = my_facilities.filter(id=facility_id)
-
-        # Query danh sách đơn đặt
-        bookings_qs = Booking.objects.filter(
-            slots__court__facility__in=target_facilities
-        ).distinct().select_related('customer').prefetch_related('slots__court__facility').order_by('-created_at')
-
-        if status_filter != 'ALL':
-            bookings_qs = bookings_qs.filter(status=status_filter)
-
-        pending_count = Booking.objects.filter(
-            slots__court__facility__in=target_facilities,
-            status=BookingStatus.WAITING_APPROVAL
-        ).distinct().count()
-
-        confirmed_count = Booking.objects.filter(
-            slots__court__facility__in=target_facilities,
-            status=BookingStatus.CONFIRMED
-        ).distinct().count()
-
-        context = {
-            'bookings': bookings_qs,
-            'my_facilities': my_facilities,
-            'config_facility': target_facilities.first(),
-            'selected_facility_id': facility_id or (str(target_facilities.first().id) if target_facilities.first() else ''),
-            'active_menu': 'approval',
-            'status_filter': status_filter,
-            'pending_count': pending_count,
-            'confirmed_count': confirmed_count,
-        }
-        return render(request, self.template_name, context)
+            target += f"&facility_id={facility_id}"
+        return redirect(target)
 
     def post(self, request):
         booking_code = request.POST.get('booking_code')
-        action = request.POST.get('action') # 'approve' hoặc 'reject'
+        action = request.POST.get('action')  # 'approve' hoặc 'reject'
         reject_reason = request.POST.get('reject_reason', 'Không nhận được tiền hoặc ảnh biên lai không hợp lệ.')
 
         booking = get_object_or_404(Booking, booking_code=booking_code)
@@ -327,6 +481,6 @@ class OwnerBookingApprovalView(OwnerBaseView):
         else:
             messages.error(request, "Thao tác không hợp lệ.")
 
-        next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/facilities/owner/bookings/approval/'
+        next_url = request.POST.get('next') or '/bookings/dashboard/?tab=orders'
         return redirect(next_url)
 

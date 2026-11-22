@@ -5,6 +5,12 @@ from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 
+class FacilityStatus(models.TextChoices):
+    PENDING_REVIEW = 'PENDING_REVIEW', 'Chờ duyệt hồ sơ'
+    ACTIVE = 'ACTIVE', 'Đang hoạt động'
+    SUSPENDED = 'SUSPENDED', 'Tạm ngưng hoạt động'
+
+
 class SportCategory(models.Model):
     """
     Tính đóng gói (Encapsulation): Danh mục bộ môn thể thao (Cầu lông, Pickleball, Bóng bàn).
@@ -31,17 +37,17 @@ class SportCategory(models.Model):
         return self.get_active_facilities().count()
 
     def get_active_facilities(self):
-        """Lấy danh sách các cụm sân có phục vụ môn này"""
+        """Lấy danh sách các cụm sân có phục vụ môn này (đã duyệt & đang hoạt động)"""
         facility_ids = self.courts.filter(is_active=True).values_list('facility_id', flat=True).distinct()
-        return Facility.objects.filter(id__in=facility_ids, active_status=True)
+        return Facility.objects.filter(
+            id__in=facility_ids,
+            active_status=True,
+            status=FacilityStatus.ACTIVE,
+            is_verified=True,
+        )
 
     def __str__(self):
         return self.name
-
-class FacilityStatus(models.TextChoices):
-    PENDING_REVIEW = 'PENDING_REVIEW', 'Chờ duyệt hồ sơ'
-    ACTIVE = 'ACTIVE', 'Đang hoạt động'
-    SUSPENDED = 'SUSPENDED', 'Tạm ngưng hoạt động'
 
 
 class Facility(models.Model):
@@ -80,6 +86,17 @@ class Facility(models.Model):
     # Ảnh đại diện cụm sân và ảnh mã QR tùy chọn do chủ sân tự upload
     image = models.ImageField(upload_to='facilities/', null=True, blank=True, verbose_name="Ảnh bìa cụm sân")
     custom_qr_image = models.ImageField(upload_to='qrcodes/', null=True, blank=True, verbose_name="Ảnh mã QR thanh toán (Tùy chọn)")
+    description = models.TextField(
+        blank=True,
+        default='',
+        verbose_name="Mô tả giới thiệu cụm sân"
+    )
+    highlights = models.CharField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name="Điểm nổi bật (ngăn cách bằng dấu |)"
+    )
     
     open_time = models.TimeField(default=time(6, 0), verbose_name="Giờ mở cửa")
     close_time = models.TimeField(default=time(22, 0), verbose_name="Giờ đóng cửa")
@@ -89,9 +106,13 @@ class Facility(models.Model):
     latitude = models.FloatField(default=10.7769, verbose_name="Vĩ độ (GPS Latitude)")
     longitude = models.FloatField(default=106.7009, verbose_name="Kinh độ (GPS Longitude)")
 
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày đăng ký")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+
     class Meta:
         verbose_name = "Cụm sân"
         verbose_name_plural = "Danh sách cụm sân"
+        ordering = ['-created_at']
 
     def can_accept_bookings(self) -> bool:
         """
@@ -167,6 +188,12 @@ class Facility(models.Model):
         """Kiểm tra thời điểm có nằm trong khung giờ mở cửa không"""
         return self.open_time <= check_time < self.close_time
 
+    @property
+    def is_open_now(self) -> bool:
+        """Cụm sân đang mở cửa tại thời điểm hiện tại"""
+        from django.utils import timezone
+        return self.is_open_at(timezone.localtime().time())
+
     def get_available_courts(self, date=None):
         """Lấy danh sách các sân đang hoạt động trong cụm sân"""
         return self.courts.filter(is_active=True)
@@ -184,8 +211,53 @@ class Facility(models.Model):
         return "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&auto=format&fit=crop&q=80"
 
     def get_distance_display(self) -> str:
-        """Khoảng cách thực tế chuẩn theo vị trí người dùng"""
-        return "~30km"
+        """Khoảng cách thực tế chuẩn theo vị trí người dùng (hiển thị gọn)"""
+        km = self.get_distance_km()
+        if km <= 0:
+            return "0km"
+        if km < 10:
+            return f"{km:.1f}km"
+        return f"{int(round(km))}km"
+
+    def get_distance_km(self) -> float:
+        """
+        Tính đóng gói (Encapsulation): Khoảng cách (km) từ trung tâm TP.HCM (mốc tham chiếu
+        của người dùng) tới cụm sân, dùng công thức Haversine.
+        """
+        from math import radians, sin, cos, asin, sqrt
+        # Mốc tham chiếu: trung tâm Quận 1, TP.HCM
+        ref_lat, ref_lng = 10.7769, 106.7009
+        lat1, lng1 = radians(ref_lat), radians(ref_lng)
+        lat2, lng2 = radians(self.latitude), radians(self.longitude)
+        dlat = lat2 - lat1
+        dlng = lng2 - lng1
+        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlng / 2) ** 2
+        return round(2 * 6371 * asin(sqrt(a)), 2)
+
+    def get_highlight_list(self) -> list:
+        """Trả về danh sách điểm nổi bật của cụm sân"""
+        if not self.highlights:
+            return []
+        return [h.strip() for h in self.highlights.split('|') if h.strip()]
+
+    def get_max_price(self) -> int:
+        """Giá cao nhất / giờ của cụm sân (để cấu hình thanh kéo giá)"""
+        prices = [rule.price_per_hour for rule in self.pricing_rules.all()]
+        if not prices:
+            return 0
+        return int(max(prices))
+
+    def get_addon_services(self):
+        """Danh sách dịch vụ bổ sung đang cung cấp của cụm sân"""
+        return self.addon_services.filter(is_active=True)
+
+    def get_racket_services(self):
+        """Danh sách dịch vụ thuê dụng cụ (vợt,...)"""
+        return self.addon_services.filter(is_active=True, category='EQUIPMENT')
+
+    def get_drink_services(self):
+        """Danh sách dịch vụ thức uống"""
+        return self.addon_services.filter(is_active=True, category='DRINK')
 
     def get_average_rating(self) -> float:
         """Tính đóng gói (Encapsulation): Điểm đánh giá trung bình từ các lượt đánh giá đã xác thực"""
@@ -205,8 +277,306 @@ class Facility(models.Model):
         except Exception:
             return 0
 
+    def get_gallery_images(self) -> list:
+        """
+        Tính đóng gói (Encapsulation): Trả về danh sách ảnh của cụm sân cho bảng thông tin.
+        Ưu tiên ảnh trong thư viện do chủ sân tải lên, sau đó tới ảnh bìa,
+        cuối cùng là bộ ảnh dự phòng theo môn thể thao.
+        """
+        gallery = []
+        for item in self.gallery_images.all():
+            try:
+                gallery.append({
+                    'url': item.image.url,
+                    'caption': item.caption or 'Ảnh cụm sân',
+                })
+            except Exception:
+                continue
+
+        if self.image:
+            try:
+                cover = {'url': self.image.url, 'caption': 'Ảnh bìa cụm sân'}
+                if not gallery:
+                    gallery.append(cover)
+                else:
+                    gallery.insert(0, cover)
+            except Exception:
+                pass
+
+        return gallery
+
+    def get_sport_names(self) -> list:
+        """Trả về danh sách tên các môn thể thao đang phục vụ tại cụm sân (không trùng lặp)"""
+        names = []
+        for court in self.courts.filter(is_active=True).select_related('category'):
+            label = court.category.name
+            if label not in names:
+                names.append(label)
+        return names
+
+    @property
+    def is_published(self) -> bool:
+        """
+        Cụm sân đã được Ban quản trị duyệt và đang hiển thị công khai cho khách hàng.
+        Chỉ cụm sân ACTIVE + đã tích xanh mới xuất hiện trên bản đồ & danh sách.
+        """
+        return (
+            self.status == FacilityStatus.ACTIVE
+            and self.active_status
+            and self.is_verified
+        )
+
+    def get_approval_badge(self) -> tuple:
+        """
+        Trả về (nhãn, class màu) hiển thị trạng thái duyệt của cụm sân cho chủ sân.
+        """
+        return (self.approval_badge_label, self.approval_badge_color)
+
+    @property
+    def approval_badge_label(self) -> str:
+        """Nhãn trạng thái duyệt hiển thị cho chủ sân"""
+        if self.status == FacilityStatus.ACTIVE:
+            return "Đã được duyệt"
+        if self.status == FacilityStatus.SUSPENDED:
+            return "Đã bị tạm ngưng"
+        return "Đang chờ Ban quản trị duyệt"
+
+    @property
+    def approval_badge_color(self) -> str:
+        """Class màu Tailwind tương ứng trạng thái duyệt"""
+        if self.status == FacilityStatus.ACTIVE:
+            return "bg-emerald-50 text-emerald-700 border-emerald-200"
+        if self.status == FacilityStatus.SUSPENDED:
+            return "bg-rose-50 text-rose-700 border-rose-200"
+        return "bg-amber-50 text-amber-700 border-amber-200"
+
+    def get_surface_types(self) -> list:
+        """Trả về danh sách chất liệu mặt sân đang sử dụng (không trùng lặp)"""
+        types = []
+        for court in self.courts.filter(is_active=True):
+            label = court.surface_type
+            if label and label not in types:
+                types.append(label)
+        return types
+
+    def get_min_price(self) -> int:
+        """Tính đóng gói (Encapsulation): Giá thấp nhất / giờ của cụm sân (để hiển thị 'Giá từ')"""
+        from django.utils import timezone
+        weekday = timezone.localdate().weekday()
+        prices = [
+            rule.price_per_hour
+            for rule in self.pricing_rules.filter(day_of_week=weekday)
+        ]
+        if not prices:
+            prices = [rule.price_per_hour for rule in self.pricing_rules.all()]
+        if not prices:
+            return 0
+        return int(min(prices))
+
     def __str__(self):
         return f"{self.name} - {self.address}"
+
+
+class AddonService(models.Model):
+    """
+    Tính trừu tượng hóa (Abstraction): Dịch vụ bổ sung của từng CỤM SÂN.
+    Ví dụ: Thuê vợt (tính theo lượt/người), Nước uống (tính theo chai/bình)...
+    MỗI CỤM SÂN có bảng giá dịch vụ RIÊNG, chủ sân tự sửa trong Kênh Chủ Sân.
+    """
+    UNIT_CHOICES = [
+        ('PER_BOOKING', 'Trọn đơn'),
+        ('PER_HOUR', 'Theo giờ'),
+        ('PER_PERSON', 'Theo người'),
+        ('PER_ITEM', 'Theo món'),
+    ]
+    CATEGORY_CHOICES = [
+        ('EQUIPMENT', 'Thuê dụng cụ'),
+        ('DRINK', 'Thức uống'),
+        ('FOOD', 'Đồ ăn'),
+        ('OTHER', 'Khác'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    facility = models.ForeignKey(
+        Facility,
+        on_delete=models.CASCADE,
+        related_name='addon_services',
+        verbose_name="Cụm sân"
+    )
+    name = models.CharField(max_length=120, verbose_name="Tên dịch vụ")
+    description = models.CharField(max_length=250, blank=True, default='', verbose_name="Mô tả")
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        default='DRINK',
+        verbose_name="Nhóm dịch vụ"
+    )
+    unit_type = models.CharField(
+        max_length=20,
+        choices=UNIT_CHOICES,
+        default='PER_ITEM',
+        verbose_name="Đơn vị tính"
+    )
+    unit_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        verbose_name="Đơn giá (VNĐ)"
+    )
+    icon = models.CharField(max_length=40, blank=True, default='', verbose_name="Icon (FontAwesome)")
+    is_active = models.BooleanField(default=True, verbose_name="Đang cung cấp")
+    sort_order = models.IntegerField(default=0, verbose_name="Thứ tự hiển thị")
+
+    class Meta:
+        verbose_name = "Dịch vụ bổ sung"
+        verbose_name_plural = "Danh mục dịch vụ bổ sung"
+        ordering = ['category', 'sort_order', 'name']
+        constraints = [
+            models.UniqueConstraint(fields=['facility', 'name'], name='unique_facility_addon_name')
+        ]
+
+    def get_unit_label(self) -> str:
+        """Nhãn đơn vị tính hiển thị trên giao diện"""
+        return dict(self.UNIT_CHOICES).get(self.unit_type, '')
+
+    def calculate_price(self, quantity: int = 1, hours: float = 0, people: int = 1) -> int:
+        """
+        Tính đóng gói (Encapsulation): Tính tiền dịch vụ theo đơn vị tính của từng sân.
+        """
+        qty = max(1, int(quantity or 1))
+        if self.unit_type == 'PER_HOUR':
+            factor = max(1, int(round(hours or 1)))
+        elif self.unit_type == 'PER_PERSON':
+            factor = max(1, int(people or 1))
+        else:
+            factor = qty
+        return int(self.unit_price) * factor
+
+    def __str__(self):
+        return f"{self.name} ({self.facility.name}) - {int(self.unit_price):,} đ"
+
+
+class Coupon(models.Model):
+    """
+    Tính đóng gói (Encapsulation): Mã giảm giá / khuyến mãi áp dụng khi khách đặt sân.
+    Hỗ trợ giảm theo % hoặc số tiền cố định, có hạn sử dụng và thời hạn hiệu lực.
+    """
+    DISCOUNT_CHOICES = [
+        ('PERCENT', 'Giảm (%)'),
+        ('FIXED', 'Giảm số tiền (VNĐ)'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    code = models.CharField(max_length=30, unique=True, verbose_name="Mã giảm giá")
+    description = models.CharField(max_length=200, blank=True, default='', verbose_name="Mô tả chương trình")
+    discount_type = models.CharField(
+        max_length=10,
+        choices=DISCOUNT_CHOICES,
+        default='PERCENT',
+        verbose_name="Loại giảm giá"
+    )
+    discount_value = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        verbose_name="Giá trị giảm"
+    )
+    max_discount = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        verbose_name="Giảm tối đa (0 = không giới hạn)"
+    )
+    min_order_value = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        verbose_name="Đơn tối thiểu (VNĐ)"
+    )
+    usage_limit = models.IntegerField(default=0, verbose_name="Giới hạn số lượt dùng (0 = không giới hạn)")
+    used_count = models.IntegerField(default=0, verbose_name="Đã dùng")
+    facility = models.ForeignKey(
+        Facility,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='coupons',
+        verbose_name="Áp dụng cho cụm sân (trống = tất cả)"
+    )
+    valid_from = models.DateTimeField(null=True, blank=True, verbose_name="Bắt đầu hiệu lực")
+    valid_to = models.DateTimeField(null=True, blank=True, verbose_name="Kết thúc hiệu lực")
+    is_active = models.BooleanField(default=True, verbose_name="Đang áp dụng")
+
+    class Meta:
+        verbose_name = "Mã giảm giá"
+        verbose_name_plural = "Danh sách mã giảm giá"
+        ordering = ['-is_active', 'code']
+
+    def is_valid_for(self, order_value, facility=None) -> tuple:
+        """
+        Tính đóng gói (Encapsulation): Kiểm tra mã có hợp lệ không.
+        Trả về (hợp_lệ, thông_báo_lỗi).
+        """
+        from django.utils import timezone
+        if not self.is_active:
+            return False, "Mã giảm giá đã ngừng hoạt động."
+        now = timezone.now()
+        if self.valid_from and now < self.valid_from:
+            return False, "Mã giảm giá chưa tới thời gian áp dụng."
+        if self.valid_to and now > self.valid_to:
+            return False, "Mã giảm giá đã hết hạn."
+        if self.usage_limit and self.used_count >= self.usage_limit:
+            return False, "Mã giảm giá đã hết lượt sử dụng."
+        if self.facility_id and facility is not None and self.facility_id != facility.id:
+            return False, "Mã giảm giá không áp dụng cho cụm sân này."
+        if order_value < self.min_order_value:
+            return False, f"Đơn hàng tối thiểu {int(self.min_order_value):,} đ để dùng mã này."
+        return True, ""
+
+    def calculate_discount(self, order_value) -> int:
+        """
+        Tính đóng gói (Encapsulation): Tính số tiền được giảm từ mã giảm giá.
+        """
+        value = Decimal(str(order_value or 0))
+        if self.discount_type == 'PERCENT':
+            discount = value * (Decimal(str(self.discount_value)) / Decimal(100))
+            if self.max_discount and discount > self.max_discount:
+                discount = self.max_discount
+        else:
+            discount = Decimal(str(self.discount_value))
+            if discount > value:
+                discount = value
+        return int(discount.quantize(Decimal('1')))
+
+    def __str__(self):
+        return f"{self.code} - {self.get_discount_type_display()}"
+
+
+class FacilityGalleryImage(models.Model):
+    """
+    Thư viện ảnh của cụm sân (Tính trừu tượng hóa - Abstraction):
+    Tách riêng ảnh tham khảo (gallery) khỏi ảnh bìa (cover image) để chủ sân
+    có thể tải lên nhiều ảnh minh hoạ về sân, mặt sân, tiện ích...
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    facility = models.ForeignKey(
+        Facility,
+        on_delete=models.CASCADE,
+        related_name='gallery_images',
+        verbose_name="Cụm sân"
+    )
+    image = models.ImageField(upload_to='facilities/gallery/', verbose_name="Ảnh")
+    caption = models.CharField(max_length=150, blank=True, default='', verbose_name="Chú thích ảnh")
+    sort_order = models.IntegerField(default=0, verbose_name="Thứ tự hiển thị")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tải lên")
+
+    class Meta:
+        verbose_name = "Ảnh thư viện cụm sân"
+        verbose_name_plural = "Thư viện ảnh cụm sân"
+        ordering = ['sort_order', '-created_at']
+
+    def __str__(self):
+        return f"{self.facility.name} - {self.caption or self.image.name}"
 
 class Court(models.Model):
     """
@@ -238,7 +608,7 @@ class Court(models.Model):
             end_time=end_time
         )
         for s in existing_slots:
-            if s.booking and s.booking.status in ['WAITING_APPROVAL', 'CONFIRMED']:
+            if s.booking and s.booking.status in ['WAITING_APPROVAL', 'CONFIRMED', 'NEEDS_REUPLOAD']:
                 return False
             if s.is_locked():
                 return False

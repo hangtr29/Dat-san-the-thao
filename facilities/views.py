@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, time
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.db.models import Q
@@ -7,7 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.conf import settings
-from .models import Facility, SportCategory, Court, PricingRule, FacilityStatus, Favorite
+from .models import (
+    Facility, SportCategory, Court, PricingRule, FacilityStatus, Favorite,
+    AddonService,
+)
 from bookings.models import BookingSlot, BookingStatus
 from bookings.services import SlotGeneratorService, CleanExpiredLocksService
 
@@ -93,11 +96,108 @@ def toggle_favorite(request, facility_id):
     })
 
 
+def facility_info_api(request, facility_id):
+    """
+    API trả về dữ liệu bảng thông tin chi tiết của cụm sân (chuẩn Alobo).
+    Dùng để đổ bảng thông tin vào Modal ngay trên trang danh sách /facilities/
+    mà không phải tải lại toàn bộ trang.
+    """
+    facility = get_object_or_404(
+        Facility.objects.prefetch_related(
+            'courts', 'courts__category', 'gallery_images',
+            'pricing_rules', 'addon_services',
+        ),
+        id=facility_id,
+        active_status=True,
+        status=FacilityStatus.ACTIVE,
+        is_verified=True,
+    )
+
+    courts = list(facility.courts.filter(is_active=True).select_related('category'))
+
+    # Bảng giá theo quy tắc định giá của từng cụm sân (gom theo khung giờ)
+    DAY_LABELS = {
+        0: 'Thứ Hai', 1: 'Thứ Ba', 2: 'Thứ Tư', 3: 'Thứ Năm',
+        4: 'Thứ Sáu', 5: 'Thứ Bảy', 6: 'Chủ Nhật',
+    }
+    pricing_rules = [
+        {
+            'day': rule.day_of_week,
+            'day_label': DAY_LABELS.get(rule.day_of_week, ''),
+            'start_time': rule.start_time.strftime('%H:%M'),
+            'end_time': rule.end_time.strftime('%H:%M'),
+            'price': int(rule.price_per_hour),
+        }
+        for rule in facility.pricing_rules.all().order_by('day_of_week', 'start_time')
+    ]
+
+    # Dịch vụ bổ sung (thuê vợt, nước uống...) của riêng cụm sân này
+    addon_services = [
+        {
+            'name': svc.name,
+            'description': svc.description,
+            'category': svc.category,
+            'category_label': dict(AddonService.CATEGORY_CHOICES).get(svc.category, svc.category),
+            'unit_type': svc.unit_type,
+            'unit_label': svc.get_unit_label(),
+            'price': int(svc.unit_price),
+            'icon': svc.icon,
+        }
+        for svc in facility.addon_services.filter(is_active=True)
+    ]
+
+    data = {
+        'id': str(facility.id),
+        'name': facility.name,
+        'address': facility.address,
+        'hotline': facility.get_display_hotline(),
+        'phone_contact': facility.phone_contact,
+        'rating': facility.get_average_rating(),
+        'reviews_count': facility.get_total_reviews(),
+        'open_time': facility.open_time.strftime('%H:%M'),
+        'close_time': facility.close_time.strftime('%H:%M'),
+        'is_open_now': facility.is_open_at(timezone.localtime().time()),
+        'is_verified': facility.is_verified,
+        'distance': facility.get_distance_display(),
+        'distance_km': facility.get_distance_km(),
+        'sports': facility.get_sport_names(),
+        'surfaces': facility.get_surface_types(),
+        'courts_count': len(courts),
+        'min_price': facility.get_min_price(),
+        'max_price': facility.get_max_price(),
+        'cover_image': facility.get_cover_image_url(),
+        'gallery': facility.get_gallery_images(),
+        'description': facility.description,
+        'highlights': facility.get_highlight_list(),
+        'pricing_rules': pricing_rules,
+        'addon_services': addon_services,
+        'booking_url': f"/facilities/{facility.id}/",
+        'map_url': (
+            'https://www.google.com/maps/dir/?api=1'
+            f"&destination={round(float(facility.latitude), 7)},{round(float(facility.longitude), 7)}"
+        ),
+        'facility_detail_url': f"/facilities/{facility.id}/",
+        'is_favorite': (
+            request.user.is_authenticated
+            and Favorite.objects.filter(user=request.user, facility=facility).exists()
+        ),
+    }
+
+    return JsonResponse(data)
+
+
 def facility_list(request):
     """
     Trang chủ & Danh sách Cụm sân Thể thao (Theo phong cách Alobo).
     Mục tiêu 1: Chỉ cho phép các sân đã xác minh tích xanh (is_verified=True)
     và đang hoạt động (status='ACTIVE') xuất hiện trên công cụ tìm kiếm của khách hàng.
+
+    Bộ lọc nâng cao (Task: Lọc & sắp xếp sân):
+    - Lọc theo khoảng giá (min_price / max_price) - thanh kéo giá trong thanh tìm kiếm
+    - Lọc theo đánh giá tối thiểu (min_rating)
+    - Lọc theo khoảng cách tối đa (max_distance) - km
+    - Lọc theo trạng thái đang mở cửa (open_now)
+    - Sắp xếp theo: giá, khoảng cách, đánh giá, mặc định (liên quan)
     """
     try:
         CleanExpiredLocksService.cleanup()
@@ -116,7 +216,9 @@ def facility_list(request):
     )
 
     total_facilities_count = base_qs.count()
-    facilities = base_qs.prefetch_related('courts')
+    facilities = base_qs.prefetch_related(
+        'courts', 'courts__category', 'gallery_images', 'addon_services',
+    )
 
     if selected_category_slug:
         facilities = facilities.filter(courts__category__slug=selected_category_slug).distinct()
@@ -124,13 +226,94 @@ def facility_list(request):
     if search_query:
         facilities = facilities.filter(name__icontains=search_query) | facilities.filter(address__icontains=search_query)
 
+    # ---------------- BỘ LỌC NÂNG CAO ----------------
+    def _get_float(key, default=None):
+        raw = request.GET.get(key, '').strip()
+        if raw == '':
+            return default
+        try:
+            return float(raw)
+        except ValueError:
+            return default
+
+    min_price = _get_float('min_price')
+    max_price = _get_float('max_price')
+    min_rating = _get_float('min_rating')
+    max_distance = _get_float('max_distance')
+    open_now = request.GET.get('open_now') == '1'
+    sort_by = request.GET.get('sort', 'default')
+
+    # Lấy danh sách dạng list để áp dụng các bộ lọc tính toán (giá, khoảng cách, rating)
+    facility_list = list(facilities.distinct())
+
+    def _passes(f):
+        if min_price is not None and f.get_min_price() < min_price:
+            return False
+        if max_price is not None and f.get_min_price() > max_price:
+            return False
+        if min_rating is not None and f.get_average_rating() < min_rating:
+            return False
+        if max_distance is not None and f.get_distance_km() > max_distance:
+            return False
+        if open_now and not f.is_open_at(timezone.localtime().time()):
+            return False
+        return True
+
+    if any(v is not None for v in [min_price, max_price, min_rating, max_distance]) or open_now:
+        facility_list = [f for f in facility_list if _passes(f)]
+
+    # ---------------- SẮP XẾP ----------------
+    if sort_by == 'price_asc':
+        facility_list.sort(key=lambda f: f.get_min_price())
+    elif sort_by == 'price_desc':
+        facility_list.sort(key=lambda f: -f.get_min_price())
+    elif sort_by == 'distance':
+        facility_list.sort(key=lambda f: f.get_distance_km())
+    elif sort_by == 'rating':
+        facility_list.sort(key=lambda f: (-f.get_average_rating(), -f.get_total_reviews()))
+    elif sort_by == 'popular':
+        facility_list.sort(key=lambda f: -f.get_total_reviews())
+
+    # Khoảng giá toàn hệ thống để cấu hình thanh kéo giá
+    # Chỉ tính cụm sân đã được duyệt & đang hoạt động (đồng bộ bộ lọc chống sân ma)
+    all_prices = []
+    for f in Facility.objects.filter(
+        active_status=True,
+        status=FacilityStatus.ACTIVE,
+        is_verified=True,
+    ):
+        p = f.get_min_price()
+        if p:
+            all_prices.append(p)
+    price_floor = (min(all_prices) // 10000) * 10000 if all_prices else 0
+    price_ceiling = (max(all_prices) // 10000) * 10000 if all_prices else 500000
+
+    # Tổng số sân thi đấu (đang hoạt động) trên toàn hệ thống - dùng cho hero banner
+    total_courts_count = (
+        Court.objects.filter(is_active=True, facility__in=base_qs).count()
+    )
+
     context = {
-        'facilities': facilities,
+        'facilities': facility_list,
         'categories': categories,
         'selected_category': selected_category_slug,
         'search_query': search_query,
         'total_facilities_count': total_facilities_count,
-        'favorite_ids': _get_favorite_ids(request, facilities),
+        'total_courts_count': total_courts_count,
+        'favorite_ids': _get_favorite_ids(request, facility_list),
+        # Bộ lọc nâng cao
+        'min_price': min_price,
+        'max_price': max_price,
+        'min_rating': min_rating,
+        'max_distance': max_distance,
+        'open_now': open_now,
+        'sort_by': sort_by,
+        'price_floor': price_floor,
+        'price_ceiling': price_ceiling,
+        'filter_active': any([
+            min_price is not None, max_price is not None, min_rating is not None,
+            max_distance is not None, open_now, sort_by != 'default',
+        ]),
     }
     return render(request, 'facilities/facility_list.html', context)
 
@@ -157,7 +340,7 @@ def facility_map(request):
         active_status=True,
         is_verified=True,
         status=FacilityStatus.ACTIVE
-    ).prefetch_related('courts', 'courts__category')
+    ).prefetch_related('courts', 'courts__category', 'gallery_images', 'addon_services')
 
     if selected_category_slug:
         facilities = facilities.filter(courts__category__slug=selected_category_slug).distinct()
@@ -274,6 +457,12 @@ def favorites_list(request):
         'selected_category': None,
         'search_query': '',
         'total_facilities_count': len(facilities),
+        'is_favorites_page': True,
+        'sort_by': 'default',
+        'open_now': False,
+        'filter_active': False,
+        'price_floor': 0,
+        'price_ceiling': 500000,
     }
     return render(request, 'facilities/facility_list.html', context)
 
@@ -289,7 +478,16 @@ def facility_detail(request, facility_id):
     except Exception:
         pass
 
-    facility = get_object_or_404(Facility, id=facility_id, active_status=True)
+    facility = get_object_or_404(
+        Facility.objects.prefetch_related(
+            'courts', 'courts__category', 'gallery_images',
+            'pricing_rules', 'addon_services',
+        ),
+        id=facility_id,
+        active_status=True,
+        status=FacilityStatus.ACTIVE,
+        is_verified=True,
+    )
     
     # Xử lý chọn ngày (mặc định hôm nay)
     date_str = request.GET.get('date')
@@ -310,13 +508,57 @@ def facility_detail(request, facility_id):
         date=target_date
     ).select_related('court', 'locked_by', 'booking').order_by('start_time')
 
-    # Danh sách các mốc giờ duy nhất (Cột thời gian nằm ngang)
-    time_headers = sorted(list(set((s.start_time, s.end_time) for s in slots)), key=lambda x: x[0])
+    # ---- Mốc hiển thị: KHÁCH có thể chọn xem lịch theo bước 30 phút hoặc 1 giờ ----
+    # step=30 (mặc định): hiện từng slot 30 phút -> khách đặt linh hoạt nửa giờ
+    # step=60: gộp 2 slot 30 phút liền kề thành khung 1 giờ -> gọn, dễ nhìn
+    try:
+        step_minutes = int(request.GET.get('step', 30))
+    except (TypeError, ValueError):
+        step_minutes = 30
+    if step_minutes not in (30, 60):
+        step_minutes = 30
 
-    # Tạo map tra cứu nhanh: (court_id, start_time) -> slot
-    slot_map = {}
-    for s in slots:
-        slot_map[(s.court_id, s.start_time)] = s
+    # Danh sách các mốc giờ duy nhất (Cột thời gian nằm ngang)
+    if step_minutes == 60:
+        # Gộp slot 30 phút thành khung 1 giờ
+        grouped = {}
+        for s in slots:
+            hour_start = s.start_time.replace(minute=0)
+            key = (s.court_id, hour_start)
+            g = grouped.setdefault(key, {
+                'start_time': hour_start,
+                'end_time': hour_start.replace(hour=(hour_start.hour + 1) % 24),
+                'parts': [],
+            })
+            g['parts'].append(s)
+
+        time_headers = sorted({
+            (g['start_time'], g['end_time']) for g in grouped.values()
+        }, key=lambda x: x[0])
+
+        # Mỗi ô = 1 giờ, gồm 2 slot 30 phút con
+        slot_map = {}
+        for (court_id, hour_start), g in grouped.items():
+            parts = sorted(g['parts'], key=lambda s: s.start_time)
+            slot_map[(court_id, hour_start)] = {
+                'parts': parts,
+                'price': sum(p.price for p in parts),
+                'booking': parts[0].booking if parts else None,
+                'is_locked': any(p.lock_time for p in parts),
+                'is_past': parts[0].is_past() if parts else False,
+            }
+    else:
+        time_headers = sorted(list(set((s.start_time, s.end_time) for s in slots)), key=lambda x: x[0])
+        # Tạo map tra cứu nhanh: (court_id, start_time) -> slot
+        slot_map = {}
+        for s in slots:
+            slot_map[(s.court_id, s.start_time)] = {
+                'parts': [s],
+                'price': s.price,
+                'booking': s.booking,
+                'is_locked': bool(s.lock_time),
+                'is_past': s.is_past(),
+            }
 
     now = timezone.localtime()
     is_today = (target_date == now.date())
@@ -326,19 +568,26 @@ def facility_detail(request, facility_id):
     area_groups = []
     # Lấy thứ tự các khu vực duy nhất
     unique_areas = list(dict.fromkeys(courts.values_list('court_area', flat=True)))
-    
+
     for area in unique_areas:
         courts_in_area = courts.filter(court_area=area)
         area_rows = []
         for court in courts_in_area:
             court_cells = []
             for start_t, end_t in time_headers:
-                slot = slot_map.get((court.id, start_t))
+                slot_data = slot_map.get((court.id, start_t))
+                slot = slot_data['parts'][0] if slot_data else None
                 is_past = (target_date < now.date()) or (is_today and start_t <= current_time)
+                if slot_data:
+                    is_past = is_past or slot_data['is_past']
                 court_cells.append({
                     'start_time': start_t,
                     'end_time': end_t,
                     'slot': slot,
+                    'parts': slot_data['parts'] if slot_data else [],
+                    'total_price': slot_data['price'] if slot_data else None,
+                    'is_booked': bool(slot_data and slot_data['booking']),
+                    'is_locked': bool(slot_data and slot_data['is_locked']),
                     'is_past': is_past,
                 })
             area_rows.append({
@@ -363,5 +612,6 @@ def facility_detail(request, facility_id):
         'target_date': target_date,
         'upcoming_dates': upcoming_dates,
         'today': today,
+        'step_minutes': step_minutes,
     }
     return render(request, 'facilities/facility_detail.html', context)

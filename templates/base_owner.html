@@ -134,25 +134,25 @@
                 <div>
                     <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Vận Hành & Đơn Hàng</span>
                     <div class="space-y-1">
-                        <!-- 1.1 Tổng quan doanh thu -->
+                        <!-- 1.1 TRUNG TÂM DUYỆT ĐƠN (hợp nhất dashboard + trang duyệt riêng) -->
                         <a href="{% url 'bookings:owner_dashboard' %}?tab=orders{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'overview' or active_tab == 'orders' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-chart-pie w-4 text-center {% if active_menu == 'overview' or active_tab == 'orders' %}text-white{% else %}text-emerald-400{% endif %}"></i>
-                                <span>Tổng Quan Doanh Thu</span>
-                            </div>
-                        </a>
-
-                        <!-- 1.2 Xác nhận đơn đặt sân -->
-                        <a href="{% url 'facilities:owner_booking_approval' %}{% if selected_facility_id %}?facility_id={{ selected_facility_id }}{% endif %}"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'approval' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-receipt w-4 text-center {% if active_menu == 'approval' %}text-white{% else %}text-amber-400{% endif %}"></i>
-                                <span>Xác Nhận Đơn Đặt Sân</span>
+                                <span>Tổng Quan & Duyệt Đơn</span>
                             </div>
                             {% if pending_count and pending_count > 0 %}
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">{{ pending_count }}</span>
                             {% endif %}
+                        </a>
+
+                        <!-- 1.2 Lịch xem nhanh sân trống / đã đặt -->
+                        <a href="{% url 'bookings:owner_calendar' %}"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'calendar' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-calendar-days w-4 text-center {% if active_menu == 'calendar' %}text-white{% else %}text-cyan-400{% endif %}"></i>
+                                <span>Lịch Sân Trống / Đã Đặt</span>
+                            </div>
                         </a>
 
                         <!-- 1.3 Đánh giá & Phản hồi -->
@@ -166,6 +166,15 @@
                             <span class="text-[11px] text-slate-400 font-bold">({{ reviews|length }})</span>
                             {% endif %}
                         </a>
+
+                        <!-- 1.4 Báo cáo Excel thật (.xlsx) -->
+                        <a href="{% url 'bookings:owner_export_excel' %}{% if selected_facility_id %}?facility_id={{ selected_facility_id }}{% endif %}"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'export' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-file-excel w-4 text-center {% if active_menu == 'export' %}text-white{% else %}text-emerald-400{% endif %}"></i>
+                                <span>Báo Cáo Excel (.xlsx)</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -173,6 +182,16 @@
                 <div>
                     <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Cấu Hình & Dịch Vụ</span>
                     <div class="space-y-1">
+                        <!-- 2.0 ĐĂNG KÝ CỤM SÂN MỚI (chờ Ban quản trị duyệt) -->
+                        <a href="{% url 'facilities:owner_facility_register' %}"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'facility_register' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-building-circle-check w-4 text-center {% if active_menu == 'facility_register' %}text-white{% else %}text-teal-400{% endif %}"></i>
+                                <span>Đăng Ký Cụm Sân Mới</span>
+                            </div>
+                            <i class="fa-solid fa-plus text-[10px] text-slate-400"></i>
+                        </a>
+
                         <!-- 2.1 Sân thi đấu & Biểu giá -->
                         <a href="{% if selected_facility_id %}{% url 'facilities:owner_court_manage' selected_facility_id %}{% elif config_facility %}{% url 'facilities:owner_court_manage' config_facility.id %}{% else %}{% url 'facilities:owner_court_manage_default' %}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'courts' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
@@ -200,6 +219,33 @@
                                 <span>Định Vị & Xác Thực Cơ Sở</span>
                             </div>
                             <span class="text-[10px] text-sky-400 font-bold">✓ Tích Xanh</span>
+                        </a>
+
+                        <!-- 2.4 Giá dịch vụ thuê vợt & thức uống -->
+                        <a href="{% url 'bookings:owner_services' %}"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'services' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-basket-shopping w-4 text-center {% if active_menu == 'services' %}text-white{% else %}text-orange-400{% endif %}"></i>
+                                <span>Giá Thuê Vợt & Thức Uống</span>
+                            </div>
+                        </a>
+
+                        <!-- 2.5 Mô tả & thư viện ảnh cụm sân -->
+                        <a href="{% url 'bookings:owner_gallery' %}"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'gallery' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-images w-4 text-center {% if active_menu == 'gallery' %}text-white{% else %}text-pink-400{% endif %}"></i>
+                                <span>Mô Tả & Thư Viện Ảnh</span>
+                            </div>
+                        </a>
+
+                        <!-- 2.6 Hồ sơ xác thực & gói duy trì -->
+                        <a href="{% url 'bookings:owner_kyc' %}"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'kyc' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-id-badge w-4 text-center {% if active_menu == 'kyc' %}text-white{% else %}text-sky-400{% endif %}"></i>
+                                <span>Xác Thực & Gói Duy Trì</span>
+                            </div>
                         </a>
                     </div>
                 </div>

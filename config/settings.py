@@ -69,6 +69,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Chống cache trình duyệt khi đang phát triển (tự động tắt ở DEBUG=False)
+    'config.middleware.NoCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

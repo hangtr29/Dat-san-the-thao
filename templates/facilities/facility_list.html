@@ -4,7 +4,75 @@
 {% block title %}SportBook - Đặt Sân Cầu Lông, Pickleball, Bóng Bàn{% endblock %}
 
 {% block content %}
+<!-- MODAL BẢNG THÔNG TIN CỤM SÂN (chuẩn Alobo) -->
+{% include 'includes/facility_info_modal.html' %}
+
 <div class="w-full px-4 sm:px-8 lg:px-12 py-6">
+
+    <!-- ============ HERO BANNER ============ -->
+    <section class="relative overflow-hidden rounded-3xl mb-6 sm:mb-8 bg-gradient-to-br from-[#032614] via-[#0b6b3a] to-[#065f46] shadow-xl shadow-emerald-900/20">
+        <!-- Decorations -->
+        <div class="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-28 -left-12 w-72 h-72 rounded-full bg-sky-400/10 blur-3xl pointer-events-none"></div>
+        <div class="absolute inset-0 opacity-[0.06] pointer-events-none"
+             style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 28px 28px;"></div>
+
+        <div class="relative px-6 sm:px-9 py-8 sm:py-11">
+            <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-7">
+
+                <!-- Left: Copy -->
+                <div class="max-w-2xl">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/12 border border-white/20 text-emerald-50 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
+                        <span class="relative flex h-1.5 w-1.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-300"></span>
+                        </span>
+                        {{ total_facilities_count }} cụm sân đã được Ban quản trị kiểm duyệt
+                    </span>
+
+                    <h1 class="mt-4 text-3xl sm:text-4xl lg:text-[2.6rem] font-black text-white tracking-tight leading-[1.12]">
+                        Tìm sân thể thao
+                        <span class="bg-gradient-to-r from-amber-300 to-amber-400 bg-clip-text text-transparent">chuẩn quốc tế</span>
+                        gần bạn nhất
+                    </h1>
+
+                    <p class="mt-3.5 text-sm sm:text-[15px] text-emerald-50/85 leading-relaxed max-w-xl">
+                        Đặt sân cầu lông, pickleball, bóng bàn chỉ trong vài giây.
+                        Thanh toán VietQR trực tiếp — không qua trung gian giữ tiền.
+                    </p>
+
+                    <!-- Trust badges -->
+                    <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2.5">
+                        <span class="inline-flex items-center gap-2 text-xs font-bold text-white/90">
+                            <i class="fa-solid fa-circle-check text-emerald-300"></i> Sân được xác minh thực địa
+                        </span>
+                        <span class="inline-flex items-center gap-2 text-xs font-bold text-white/90">
+                            <i class="fa-solid fa-bolt text-amber-300"></i> Xác nhận tức thì
+                        </span>
+                        <span class="inline-flex items-center gap-2 text-xs font-bold text-white/90">
+                            <i class="fa-solid fa-shield-halved text-sky-300"></i> Không giữ tiền trung gian
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Right: Quick stats -->
+                <div class="flex gap-3 shrink-0">
+                    <div class="flex-1 lg:flex-none px-5 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                        <div class="text-2xl font-black text-white leading-none">
+                            {{ total_courts_count|default:total_facilities_count }}
+                        </div>
+                        <div class="text-[10px] font-bold text-emerald-50/75 uppercase tracking-wider mt-1.5">Sân thi đấu</div>
+                    </div>
+                    <div class="flex-1 lg:flex-none px-5 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                        <div class="text-2xl font-black text-white leading-none">
+                            {{ total_facilities_count }}
+                        </div>
+                        <div class="text-[10px] font-bold text-emerald-50/75 uppercase tracking-wider mt-1.5">Cụm sân</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Categories Filter Chips -->
     <div class="flex items-center gap-2.5 overflow-x-auto pb-2 mb-6 text-xs font-black">
@@ -39,93 +107,241 @@
         {% endfor %}
     </div>
 
-    <!-- Facility Cards Grid (Rộng rãi 2 cột trên Desktop để hiển thị trọn vẹn Địa chỉ & Tên sân) -->
+    <!-- BỘ LỌC & SẮP XẾP NÂNG CAO -->
+    <form method="get" action="{% url 'facilities:facility_list' %}" id="advanced-filter-form"
+          class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-6">
+        {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-lg bg-[#0b6b3a] text-white flex items-center justify-center">
+                    <i class="fa-solid fa-sliders text-xs"></i>
+                </span>
+                <h2 class="text-sm font-black text-[#04331b]">Lọc & Sắp xếp</h2>
+                {% if filter_active %}
+                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-black">Đang lọc</span>
+                {% endif %}
+            </div>
+            <a href="{% url 'facilities:facility_list' %}"
+               class="text-xs font-bold text-slate-500 hover:text-[#0b6b3a] transition">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Xóa bộ lọc
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+            <!-- THANH KÉO GIÁ (Price Range Slider) -->
+            <div class="lg:col-span-4">
+                <label class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-2">
+                    Khoảng giá / giờ
+                </label>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="flex items-center justify-between text-xs font-black text-[#04331b] mb-3">
+                        <span id="price-min-label">{{ min_price|default:price_floor|floatformat:0 }}</span>
+                        <span class="text-slate-400">—</span>
+                        <span id="price-max-label">{{ max_price|default:price_ceiling|floatformat:0 }}</span>
+                    </div>
+                    <!-- Slider kép (2 input range chồng lên nhau) -->
+                    <div class="relative h-6 mb-1">
+                        <div class="absolute top-2.5 left-0 right-0 h-1.5 rounded-full bg-slate-200"></div>
+                        <div id="price-track" class="absolute top-2.5 h-1.5 rounded-full bg-[#0b6b3a]"></div>
+                        <input type="range" id="price-min" name="min_price"
+                               min="{{ price_floor }}" max="{{ price_ceiling }}" step="10000"
+                               value="{{ min_price|default:price_floor }}"
+                               class="price-slider absolute w-full top-0 left-0 h-6 appearance-none bg-transparent pointer-events-none">
+                        <input type="range" id="price-max" name="max_price"
+                               min="{{ price_floor }}" max="{{ price_ceiling }}" step="10000"
+                               value="{{ max_price|default:price_ceiling }}"
+                               class="price-slider absolute w-full top-0 left-0 h-6 appearance-none bg-transparent pointer-events-none">
+                    </div>
+                    <div class="flex justify-between text-[10px] font-bold text-slate-400 mt-1">
+                        <span>{{ price_floor|floatformat:0 }} đ</span>
+                        <span>{{ price_ceiling|floatformat:0 }} đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ĐÁNH GIÁ + KHOẢNG CÁCH + MỞ CỬA -->
+            <div class="lg:col-span-4 space-y-3">
+                <div>
+                    <label for="min_rating" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                        Đánh giá tối thiểu
+                    </label>
+                    <select id="min_rating" name="min_rating"
+                            class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                        <option value="">Tất cả đánh giá</option>
+                        <option value="3" {% if min_rating == 3 %}selected{% endif %}>Từ 3 sao trở lên</option>
+                        <option value="4" {% if min_rating == 4 %}selected{% endif %}>Từ 4 sao trở lên</option>
+                        <option value="4.5" {% if min_rating == 4.5 %}selected{% endif %}>Từ 4.5 sao trở lên</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="max_distance" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                        Khoảng cách tối đa
+                    </label>
+                    <select id="max_distance" name="max_distance"
+                            class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                        <option value="">Mọi khoảng cách</option>
+                        <option value="2" {% if max_distance == 2 %}selected{% endif %}>Trong 2 km</option>
+                        <option value="5" {% if max_distance == 5 %}selected{% endif %}>Trong 5 km</option>
+                        <option value="10" {% if max_distance == 10 %}selected{% endif %}>Trong 10 km</option>
+                        <option value="20" {% if max_distance == 20 %}selected{% endif %}>Trong 20 km</option>
+                    </select>
+                </div>
+                <label class="flex items-center gap-2 cursor-pointer bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-200">
+                    <input type="checkbox" name="open_now" value="1" id="open_now" {% if open_now %}checked{% endif %}
+                           class="w-4 h-4 rounded border-slate-300 text-[#0b6b3a] focus:ring-[#0b6b3a]">
+                    <span class="text-xs font-bold text-slate-700">
+                        <i class="fa-regular fa-clock text-emerald-600 mr-1"></i>Đang mở cửa
+                    </span>
+                </label>
+            </div>
+
+            <!-- SẮP XẾP -->
+            <div class="lg:col-span-4">
+                <label for="sort" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                    Sắp xếp theo
+                </label>
+                <select id="sort" name="sort"
+                        class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    <option value="default" {% if sort_by == 'default' %}selected{% endif %}>Mặc định (Liên quan)</option>
+                    <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Giá: Thấp → Cao</option>
+                    <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Giá: Cao → Thấp</option>
+                    <option value="distance" {% if sort_by == 'distance' %}selected{% endif %}>Khoảng cách gần nhất</option>
+                    <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Đánh giá cao nhất</option>
+                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Được đặt nhiều nhất</option>
+                </select>
+                <button type="submit"
+                        class="w-full mt-3 py-2.5 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white font-black text-xs uppercase tracking-wide transition shadow-sm">
+                    <i class="fa-solid fa-filter mr-1"></i>Áp dụng bộ lọc
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Facility Cards: 1 cột, ảnh bên trái (~28%) + thông tin bên phải (~72%) - tỷ lệ cân đối, thoáng -->
     {% if facilities %}
-    <div id="facilities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 sm:gap-8">
+    <div id="facilities-grid" class="grid grid-cols-1 gap-4 sm:gap-5">
         {% for fac in facilities %}
-        <div class="facility-card bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-lg transition duration-200 flex flex-col group"
+        <div class="facility-card bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-lg transition duration-200 group"
              data-id="{{ fac.id }}" data-lat="{{ fac.latitude }}" data-lng="{{ fac.longitude }}">
 
-            <!-- Top Court Photo Banner with Overlays (Chuẩn ảnh tham khảo) -->
-            <div class="h-48 sm:h-56 relative overflow-hidden bg-slate-100">
-                <img src="{{ fac.get_cover_image_url }}" alt="{{ fac.name }}" 
-                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+            <div class="flex flex-col sm:flex-row">
 
-                <!-- Top Left Combined Badges: [⭐ Rating] [Đơn ngày] [Sự kiện] -->
-                <div class="absolute top-3 left-3 flex items-center shadow-md rounded-full overflow-hidden text-[10px] sm:text-xs font-extrabold z-10">
-                    <span class="bg-white text-slate-800 px-2.5 py-1 flex items-center gap-1">
-                        <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> {{ fac.get_average_rating }}
-                    </span>
-                    <span class="bg-[#10b981] text-white px-2.5 py-1">
-                        Đơn ngày
-                    </span>
-                    <span class="bg-[#d946ef] text-white px-2.5 py-1">
-                        Sự kiện
-                    </span>
-                </div>
+                <!-- Ảnh bìa bên trái: chiếm ~26% chiều rộng, cao tối thiểu 180px - cân đối với khối thông tin -->
+                <div class="relative overflow-hidden bg-slate-100 flex-shrink-0
+                            w-full sm:w-[26%] sm:min-w-[190px] sm:max-w-[250px] h-44 sm:h-auto sm:min-h-[180px]">
+                    <img src="{{ fac.get_cover_image_url }}" alt="{{ fac.name }}"
+                         class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
 
-                <!-- Top Right Action Icons: [♡ Lưu yêu thích] -->
-                <div class="absolute top-3 right-3 flex items-center gap-2 z-10">
-                    <button type="button" title="Lưu yêu thích" data-fav-btn data-facility-id="{{ fac.id }}"
-                        class="fav-btn w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-500 shadow-md flex items-center justify-center text-xs transition">
-                        <i class="{% if fac.id in favorite_ids %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Bottom Info Card (Khung thông tin rộng rãi, thấy rõ địa chỉ) -->
-            <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
-                <!-- Bên trái: Logo + Tên sân + Khoảng cách GPS thật/Địa chỉ + Giờ mở cửa -->
-                <div class="flex items-center gap-3.5 min-w-0 flex-1">
-                    <!-- Circular Logo Thumbnail -->
-                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-50 border border-slate-200 flex-shrink-0 flex items-center justify-center text-[#0b6b3a] font-black text-xs sm:text-sm shadow-sm uppercase overflow-hidden">
-                        {{ fac.name|slice:":2" }}
+                    <!-- Top Left: Badge đánh giá -->
+                    <div class="absolute top-2.5 left-2.5 z-10 flex items-center shadow-md rounded-full overflow-hidden text-[9px] sm:text-[10px] font-extrabold">
+                        <span class="bg-white text-slate-800 px-2 py-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-star text-amber-400 text-[9px]"></i> {{ fac.get_average_rating }}
+                        </span>
                     </div>
 
-                    <!-- Text Info (Rộng rãi, hiển thị trọn vẹn tên và địa chỉ) -->
-                    <div class="min-w-0 flex-1">
-                        <h3 class="text-sm sm:text-base font-black text-[#04331b] truncate group-hover:text-[#0b6b3a] transition flex items-center gap-1.5">
-                            <span class="truncate">{{ fac.name }}</span>
-                            {% if fac.is_verified %}
-                            <span class="text-emerald-600 text-xs inline-flex items-center flex-shrink-0" title="Cụm sân đã xác minh thực địa KYC (Tích xanh)">
-                                <i class="fa-solid fa-circle-check"></i>
-                            </span>
-                            {% endif %}
-                        </h3>
-                        <p class="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
-                            <span class="text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0">({{ fac.get_distance_display }})</span>
-                            <span>{{ fac.address }}</span>
-                        </p>
-                        <div class="flex items-center gap-3 text-xs font-semibold text-slate-500 mt-1">
-                            <span class="flex items-center gap-1">
-                                <i class="fa-regular fa-clock text-slate-400 text-xs"></i>
-                                {{ fac.open_time|time:"H:i" }} - {{ fac.close_time|time:"H:i" }}
-                            </span>
-                            <span class="text-amber-600 font-bold flex items-center gap-1">
-                                <i class="fa-solid fa-star text-[10px]"></i> {{ fac.get_average_rating }} ({{ fac.get_total_reviews }} đánh giá)
-                            </span>
+                    <!-- Bottom Left: Badge ưu đãi -->
+                    <span class="absolute bottom-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md">
+                        <i class="fa-solid fa-gift text-[8px]"></i> Ưu đãi
+                    </span>
+
+                    <!-- Bottom Right Action Icons: [ℹ Xem thông tin] [♡ Lưu yêu thích] -->
+                    <div class="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 z-10">
+                        <!-- Nút xem thông tin nhanh (mở modal bảng thông tin kiểu Alobo) -->
+                        <button type="button" title="Xem thông tin cụm sân" data-info-btn data-facility-id="{{ fac.id }}"
+                            class="info-btn w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 hover:bg-white text-[#006d38] hover:text-emerald-800 shadow-md flex items-center justify-center text-[10px] sm:text-xs transition">
+                            <i class="fa-solid fa-circle-info"></i>
+                        </button>
+                        <button type="button" title="Lưu yêu thích" data-fav-btn data-facility-id="{{ fac.id }}"
+                            class="fav-btn w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-500 shadow-md flex items-center justify-center text-[10px] sm:text-xs transition">
+                            <i class="{% if fac.id in favorite_ids %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Thông tin bên phải -->
+                <div class="flex-1 min-w-0 p-4 sm:p-5 flex flex-col">
+
+                    <!-- Hàng 1: Tên sân + nút ĐẶT LỊCH -->
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-sm sm:text-base font-black text-[#04331b] truncate group-hover:text-[#0b6b3a] transition flex items-center gap-1.5">
+                                <span class="truncate">{{ fac.name }}</span>
+                                {% if fac.is_verified %}
+                                <span class="text-emerald-600 text-xs inline-flex items-center flex-shrink-0" title="Cụm sân đã xác minh thực địa KYC (Tích xanh)">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </span>
+                                {% endif %}
+                            </h3>
+                            <p class="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
+                                <span class="text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0">({{ fac.get_distance_display }})</span>
+                                <span>{{ fac.address }}</span>
+                            </p>
+                        </div>
+
+                        <!-- Cụm nút hành động bên phải -->
+                        <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            <a href="{% url 'facilities:facility_detail' fac.id %}"
+                                class="px-4 sm:px-5 py-2 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wide text-white bg-[#e5b63d] hover:bg-[#d8a834] shadow-md shadow-amber-500/20 transition active:scale-95 whitespace-nowrap">
+                                ĐẶT LỊCH
+                            </a>
+                            <a href="{% map_directions_url fac %}" target="_blank" rel="noopener"
+                                class="px-3 sm:px-4 py-1.5 rounded-lg font-bold text-[9px] sm:text-[10px] uppercase tracking-wide text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition active:scale-95 whitespace-nowrap flex items-center gap-1">
+                                <i class="fa-solid fa-location-arrow text-[9px]"></i> Chỉ đường
+                            </a>
                         </div>
                     </div>
-                </div>
 
-                <!-- Bên phải: Badge Ưu đãi + Nút ĐẶT LỊCH + Chỉ đường -->
-                <div class="flex flex-col items-end gap-2 flex-shrink-0 ml-1">
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-xs">
-                        <i class="fa-solid fa-gift text-[9px]"></i> Ưu đãi 1
-                    </span>
+                    <!-- Hàng 2: Thông tin nhanh (giờ, giá, số sân, đánh giá) -->
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-semibold text-slate-500 mt-2.5">
+                        <span class="flex items-center gap-1">
+                            <i class="fa-regular fa-clock text-slate-400 text-[10px]"></i>
+                            {{ fac.open_time|time:"H:i" }} - {{ fac.close_time|time:"H:i" }}
+                        </span>
+                        {% if fac.get_min_price %}
+                        <span class="text-[#0b6b3a] font-black flex items-center gap-1">
+                            <i class="fa-solid fa-tag text-[10px]"></i> Từ {{ fac.get_min_price|floatformat:0 }} đ/giờ
+                        </span>
+                        {% endif %}
+                        <span class="text-amber-600 font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-star text-[10px]"></i> {{ fac.get_average_rating }} ({{ fac.get_total_reviews }})
+                        </span>
+                        <span class="text-slate-400 font-semibold flex items-center gap-1" title="Số sân thi đấu">
+                            <i class="fa-solid fa-layer-group text-[10px]"></i> {{ fac.courts.count }} sân
+                        </span>
+                        {% if fac.is_open_now %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-black">
+                            <i class="fa-solid fa-circle text-[5px]"></i> ĐANG MỞ CỬA
+                        </span>
+                        {% endif %}
+                    </div>
 
-                    <a href="{% url 'facilities:facility_detail' fac.id %}"
-                        class="px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wide text-white bg-[#e5b63d] hover:bg-[#d8a834] shadow-md shadow-amber-500/20 transition active:scale-95 whitespace-nowrap">
-                        ĐẶT LỊCH
-                    </a>
+                    <!-- Hàng 3: Chip môn thể thao + dịch vụ phụ + số ảnh -->
+                    <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
+                        {% for sport in fac.get_sport_names %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] sm:text-[10px] font-black">
+                            {{ sport }}
+                        </span>
+                        {% endfor %}
+                        {% if fac.addon_services.exists %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9px] sm:text-[10px] font-black"
+                            title="Có dịch vụ phụ riêng: thuê vợt, thức uống, đồ ăn">
+                            <i class="fa-solid fa-concierge-bell text-[8px]"></i>
+                            {{ fac.addon_services.count }} dịch vụ
+                        </span>
+                        {% endif %}
+                        {% if fac.gallery_images.exists %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[9px] sm:text-[10px] font-black"
+                            title="Số ảnh trong thư viện cụm sân">
+                            <i class="fa-regular fa-image text-[8px]"></i>
+                            {{ fac.gallery_images.count }} ảnh
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-
-            <!-- Chỉ đường đến sân (đồng nhất với popup trên trang bản đồ) -->
-            <a href="{% map_directions_url fac %}" target="_blank" rel="noopener"
-               class="block text-center text-[11px] font-bold text-[#065f46] hover:text-emerald-700 transition border-t border-slate-100 py-2.5">
-                <i class="fa-solid fa-diamond-turn-right"></i> Chỉ đường đến sân
-            </a>
 
         </div>
         {% endfor %}
@@ -149,8 +365,87 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'includes/facility_info_modal_js.html' %}
 <script>
-    // Xử lý nút Lưu yêu thích (trái tim) - gọi API toggle yêu thích
+    /* ============ THANH KÉO GIÁ (Price Range Slider) ============ */
+    (function () {
+        const minInput = document.getElementById('price-min');
+        const maxInput = document.getElementById('price-max');
+        const minLabel = document.getElementById('price-min-label');
+        const maxLabel = document.getElementById('price-max-label');
+        const track = document.getElementById('price-track');
+        if (!minInput || !maxInput) return;
+
+        const floor = parseInt(minInput.min, 10);
+        const ceiling = parseInt(minInput.max, 10);
+        const STEP = 10000;
+
+        function fmt(n) {
+            return parseInt(n, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function update() {
+            let lo = parseInt(minInput.value, 10);
+            let hi = parseInt(maxInput.value, 10);
+            // Không cho min > max
+            if (lo > hi) {
+                if (document.activeElement === minInput) {
+                    minInput.value = Math.max(floor, hi - STEP);
+                    lo = parseInt(minInput.value, 10);
+                } else {
+                    maxInput.value = Math.min(ceiling, lo + STEP);
+                    hi = parseInt(maxInput.value, 10);
+                }
+            }
+            minLabel.textContent = fmt(lo);
+            maxLabel.textContent = fmt(hi);
+
+            // Vẽ track
+            const range = ceiling - floor || 1;
+            const leftPct = ((lo - floor) / range) * 100;
+            const rightPct = ((hi - floor) / range) * 100;
+            track.style.left = leftPct + '%';
+            track.style.width = Math.max(0, rightPct - leftPct) + '%';
+        }
+
+        function syncInputs() {
+            // Đồng bộ giá trị vào form khi submit (nếu bằng mặc định thì bỏ trống)
+            if (parseInt(minInput.value, 10) <= floor) minInput.removeAttribute('name');
+            if (parseInt(maxInput.value, 10) >= ceiling) maxInput.removeAttribute('name');
+        }
+
+        [minInput, maxInput].forEach(function (el) {
+            el.addEventListener('input', update);
+            el.addEventListener('change', function () {
+                el.setAttribute('name', el.id === 'price-min' ? 'min_price' : 'max_price');
+                update();
+            });
+        });
+
+        // Style thumb cho slider
+        const style = document.createElement('style');
+        style.textContent = `
+            .price-slider::-webkit-slider-thumb {
+                -webkit-appearance: none; appearance: none;
+                width: 18px; height: 18px; border-radius: 50%;
+                background: #0b6b3a; border: 3px solid #fff;
+                box-shadow: 0 1px 4px rgba(0,0,0,.35);
+                cursor: pointer; pointer-events: auto; position: relative; z-index: 3;
+            }
+            .price-slider::-moz-range-thumb {
+                width: 18px; height: 18px; border-radius: 50%;
+                background: #0b6b3a; border: 3px solid #fff;
+                box-shadow: 0 1px 4px rgba(0,0,0,.35);
+                cursor: pointer; pointer-events: auto; position: relative; z-index: 3;
+            }
+            .price-slider { pointer-events: none; }
+        `;
+        document.head.appendChild(style);
+
+        update();
+    })();
+
+    /* ============ XỬ LÝ NÚT LƯU YÊU THÍCH (TRÁI TIM) ============ */
     document.addEventListener('DOMContentLoaded', function () {
         function getCookie(name) {
             const v = `; ${document.cookie}`;

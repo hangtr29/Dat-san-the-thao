@@ -2,39 +2,49 @@ from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
-from facilities.models import Facility, Court, PricingRule
+from facilities.models import Facility, Court, PricingRule, FacilityStatus
 from .models import Booking, BookingSlot, BookingStatus
 
 class SlotGeneratorService:
     """
     Service tự động sinh BookingSlot theo khung giờ mở/đóng cửa
-    và quy tắc định giá PricingRule của Cụm sân.
+    và quy tắc định giá PricingRule của Cụm Sân.
+
+    Mặc định chia khung giờ 30 PHÚT (nửa giờ) để khách có thể đặt linh hoạt:
+    ví dụ khung 06:00-22:00 sẽ sinh các slot 06:00-06:30, 06:30-07:00, ...
+    Giá mỗi slot được PricingRule.calculate_price() tính theo đúng thời lượng
+    nên slot 30 phút tự động bằng 1/2 giá giờ của khung giờ đó.
     """
+
+    # Khung giờ chuẩn (phút) dùng để chia lịch
+    DEFAULT_SLOT_MINUTES = 30
+
     @staticmethod
-    def generate_slots_for_court(court: Court, target_date: date, slot_minutes: int = 60):
+    def generate_slots_for_court(court: Court, target_date: date,
+                                 slot_minutes: int = DEFAULT_SLOT_MINUTES):
         """Sinh các slot giờ cho 1 sân cụ thể trong 1 ngày"""
         facility = court.facility
         day_of_week = target_date.weekday() # 0 = Thứ 2, 6 = Chủ nhật
-        
+
         # Lấy quy tắc giá phù hợp cho ngày này
         pricing_rule = facility.pricing_rules.filter(day_of_week=day_of_week).first()
         default_price = Decimal('100000') # Mặc định 100k nếu chưa set
-        
+
         start_dt = datetime.combine(target_date, facility.open_time)
         end_dt = datetime.combine(target_date, facility.close_time)
-        
+
         current_dt = start_dt
         created_count = 0
-        
+
         while current_dt + timedelta(minutes=slot_minutes) <= end_dt:
             slot_start = current_dt.time()
             slot_end = (current_dt + timedelta(minutes=slot_minutes)).time()
-            
+
             # Tính giá slot
             slot_price = default_price
             if pricing_rule:
                 slot_price = pricing_rule.calculate_price(slot_start, slot_end)
-            
+
             # Tạo slot nếu chưa tồn tại
             slot, created = BookingSlot.objects.get_or_create(
                 court=court,
@@ -45,9 +55,9 @@ class SlotGeneratorService:
             )
             if created:
                 created_count += 1
-            
+
             current_dt += timedelta(minutes=slot_minutes)
-            
+
         return created_count
 
     @classmethod
@@ -75,10 +85,22 @@ class BookingEngineService:
         if not slot_ids:
             return False, "Vui lòng chọn ít nhất 1 khung giờ.", None
 
+        # Chuẩn hoá & lọc UUID hợp lệ (chống ValidationError 500 khi nhận sai định dạng)
+        import uuid as _uuid
+        clean_ids = []
+        for raw in slot_ids:
+            try:
+                clean_ids.append(str(_uuid.UUID(str(raw).strip())))
+            except (ValueError, AttributeError, TypeError):
+                continue
+        if not clean_ids:
+            return False, "Khung giờ không hợp lệ. Vui lòng chọn lại trên bảng lịch.", None
+        slot_ids = clean_ids
+
         with transaction.atomic():
             # Khóa các hàng slot trong Database
             slots = list(BookingSlot.objects.select_for_update().filter(id__in=slot_ids))
-            
+
             if len(slots) != len(slot_ids):
                 return False, "Một số slot đã chọn không hợp lệ.", None
 
@@ -114,6 +136,21 @@ class BookingEngineService:
                 return False, (
                     f"Không thể đặt khung giờ từ nhiều cụm sân khác nhau trong cùng một đơn "
                     f"({facility_names}). Vui lòng chỉ chọn khung giờ của một cụm sân."
+                ), None
+
+            # 3.1 Chốt chặn cuối cùng: cụm sân phải được Ban quản trị DUYỆT và đang hoạt động
+            # -> ngăn chặn việc đặt lịch vào cụm sân còn chờ duyệt / bị tạm ngưng
+            not_published = Facility.objects.filter(
+                id__in=facility_ids
+            ).exclude(
+                status=FacilityStatus.ACTIVE,
+                active_status=True,
+                is_verified=True,
+            ).values_list('name', flat=True)
+            if not_published:
+                return False, (
+                    f"Cụm sân '{', '.join(not_published)}' hiện không nhận đặt lịch "
+                    "(chờ duyệt hoặc đã tạm ngưng). Vui lòng chọn cụm sân khác."
                 ), None
 
             # Tính tổng tiền

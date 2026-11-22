@@ -1,0 +1,193 @@
+{% comment %}
+Bảng thông tin cụm sân kiểu Alobo - hiển thị trong MODAL ngay trên trang danh sách /facilities/
+Bố cục bám sát ảnh tham khảo:
+- Cột trái: ảnh bìa lớn (badge đánh giá góc trái + nút "Chat với sân" góc phải)
+          + tên sân + địa chỉ + ô "Giờ mở cửa" + nút Liên hệ + nút Đặt lịch ngay
+- Cột phải: ảnh nhỏ các môn thể thao + các ô Dịch vụ phụ / Hình ảnh /
+            Chính sách / Bảng giá / Đánh giá / Chỉ đường + nội dung tab + khung "Link đặt lịch online"
+{% endcomment %}
+{% load static %}
+<div id="facility-info-modal"
+    class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 hidden font-['Nunito',sans-serif]">
+
+    <div id="facility-info-panel"
+        class="bg-white rounded-3xl w-full max-w-5xl max-h-[92vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+
+        <!-- ===== Header: Nút đóng + Tiêu đề ===== -->
+        <div class="flex-none flex items-center justify-between gap-3 px-5 sm:px-7 py-3.5 bg-[#006d38] text-white">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <i class="fa-solid fa-circle-info text-[#ffec88] text-sm sm:text-base"></i>
+                <h3 class="font-black uppercase tracking-wide text-xs sm:text-sm truncate">
+                    Thông tin cụm sân
+                </h3>
+            </div>
+            <button type="button" onclick="closeFacilityInfoModal()"
+                class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition flex-shrink-0">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- ===== Nội dung (2 cột) ===== -->
+        <div class="flex-1 min-h-0 overflow-y-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+
+                <!-- ---------- CỘT TRÁI: Ảnh bìa + Thông tin cơ bản ---------- -->
+                <div class="p-4 sm:p-5 bg-[#f2fbf6] border-b lg:border-b-0 lg:border-r border-emerald-100">
+
+                    <!-- Ảnh bìa lớn + badge đánh giá (trái) + nút Chat (phải) -->
+                    <div class="rounded-2xl overflow-hidden bg-slate-100 aspect-[4/3] shadow-sm relative group">
+                        <img id="fim-cover" src="{% static 'images/logo_transparent.png' %}" alt=""
+                            class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+
+                        <!-- Badge đánh giá (góc trên trái) -->
+                        <div class="absolute top-2.5 left-2.5 flex items-center gap-1 bg-white/95 rounded-full px-2.5 py-1 shadow-md text-[10px] font-black text-slate-800">
+                            <i class="fa-solid fa-star text-amber-400 text-[10px]"></i>
+                            <span id="fim-rating">5.0</span>
+                            <span class="text-slate-400 font-bold">(<span id="fim-reviews">0</span>)</span>
+                        </div>
+
+                        <!-- Nút Chat với sân (góc trên phải) -->
+                        <button type="button" id="fim-chat" title="Chat với sân"
+                            class="absolute top-2.5 right-2.5 flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#006d38] hover:text-emerald-800 shadow-md rounded-full px-3 py-1.5 text-[10px] font-black transition">
+                            <i class="fa-solid fa-comment-dots text-[11px]"></i>
+                            <span>Chat với sân</span>
+                        </button>
+
+                        <!-- Badge tích xanh (góc dưới trái) -->
+                        <div id="fim-verified"
+                            class="absolute bottom-2.5 left-2.5 flex items-center gap-1 bg-emerald-600/95 text-white rounded-full px-2.5 py-1 shadow-md text-[10px] font-black">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i> Tích xanh
+                        </div>
+                    </div>
+
+                    <!-- Tên sân -->
+                    <h4 id="fim-name"
+                        class="mt-3.5 text-sm sm:text-base font-black text-[#04331b] leading-snug uppercase tracking-wide">
+                    </h4>
+
+                    <!-- Môn thể thao -->
+                    <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                        <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Môn:</span>
+                        <span id="fim-sports" class="flex flex-wrap gap-1.5"></span>
+                    </div>
+
+                    <!-- Địa chỉ -->
+                    <p class="mt-2.5 text-xs text-slate-600 leading-relaxed flex items-start gap-1.5">
+                        <i class="fa-solid fa-location-dot text-[#c2410c] mt-0.5 text-[11px] flex-shrink-0"></i>
+                        <span>
+                            <span class="text-[#c2410c] font-bold mr-1">(<span id="fim-distance">--</span>)</span>
+                            <span id="fim-address"></span>
+                        </span>
+                    </p>
+
+                    <!-- Ô Giờ mở cửa (viền như ảnh tham khảo) -->
+                    <div class="mt-3 flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <i class="fa-regular fa-clock text-[#006d38] text-xs flex-shrink-0"></i>
+                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap">Giờ mở cửa</span>
+                        </div>
+                        <span id="fim-hours" class="text-[11px] font-black text-slate-800 whitespace-nowrap">05:00 - 23:30</span>
+                    </div>
+
+                    <!-- Giá từ -->
+                    <div class="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                        <i class="fa-solid fa-tag text-amber-500 text-[11px]"></i>
+                        <span>Giá từ <span id="fim-price" class="text-[#006d38] font-black">0 đ</span>/giờ</span>
+                    </div>
+
+                    <!-- Số sân -->
+                    <div class="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                        <i class="fa-solid fa-layer-group text-emerald-600 text-[11px]"></i>
+                        <span><span id="fim-courts" class="text-[#006d38] font-black">0</span> sân thi đấu</span>
+                    </div>
+
+                    <!-- Nút Liên hệ -->
+                    <a id="fim-hotline" href="#"
+                        class="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white text-xs font-black uppercase tracking-wider transition shadow-sm">
+                        <i class="fa-solid fa-headset text-[11px]"></i> Liên hệ
+                    </a>
+
+                    <!-- Nút Đặt lịch ngay -->
+                    <a id="fim-booking" href="#"
+                        class="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#e5b63d] hover:bg-[#d9a528] text-white text-xs font-black uppercase tracking-wider transition shadow-sm">
+                        <i class="fa-solid fa-calendar-check text-[11px]"></i> Đặt lịch ngay
+                    </a>
+                </div>
+
+                <!-- ---------- CỘT PHẢI: Thumbnail môn + Grid ô thông tin ---------- -->
+                <div class="p-4 sm:p-5">
+
+                    <!-- Hàng thumbnail các môn thể thao -->
+                    <div id="fim-thumbs" class="flex items-center gap-2 overflow-x-auto pb-2 mb-4"></div>
+
+                    <!-- Grid các ô chức năng (3 cột trên desktop) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+
+                        <!-- Dịch vụ phụ -->
+                        <button type="button" data-fim-tab="service"
+                            class="fim-tab-btn text-center px-2 py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white transition shadow-sm">
+                            <i class="fa-solid fa-concierge-bell text-sm"></i>
+                            <span class="block text-[11px] font-black uppercase mt-1">Dịch vụ phụ</span>
+                        </button>
+
+                        <!-- Hình ảnh -->
+                        <button type="button" data-fim-tab="gallery"
+                            class="fim-tab-btn text-center px-2 py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white transition shadow-sm">
+                            <i class="fa-regular fa-image text-sm"></i>
+                            <span class="block text-[11px] font-black uppercase mt-1">Hình ảnh</span>
+                        </button>
+
+                        <!-- Chính sách -->
+                        <button type="button" data-fim-tab="terms"
+                            class="fim-tab-btn text-center px-2 py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white transition shadow-sm">
+                            <i class="fa-solid fa-file-contract text-sm"></i>
+                            <span class="block text-[11px] font-black uppercase mt-1">Chính sách</span>
+                        </button>
+
+                        <!-- Bảng giá -->
+                        <button type="button" data-fim-tab="pricing"
+                            class="fim-tab-btn text-center px-2 py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white transition shadow-sm">
+                            <i class="fa-solid fa-table-list text-sm"></i>
+                            <span class="block text-[11px] font-black uppercase mt-1">Bảng giá</span>
+                        </button>
+
+                        <!-- Đánh giá -->
+                        <button type="button" data-fim-tab="reviews"
+                            class="fim-tab-btn text-center px-2 py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white transition shadow-sm">
+                            <i class="fa-solid fa-star text-sm"></i>
+                            <span class="block text-[11px] font-black uppercase mt-1">Đánh giá</span>
+                        </button>
+
+                        <!-- Chỉ đường -->
+                        <a id="fim-map" href="#" target="_blank" rel="noopener"
+                            class="text-center px-2 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm">
+                            <i class="fa-solid fa-diamond-turn-right text-sm"></i>
+                            <span class="block text-[11px] font-black uppercase mt-1">Chỉ đường</span>
+                        </a>
+                    </div>
+
+                    <!-- Nội dung tab -->
+                    <div id="fim-tab-content" class="mt-4 min-h-[180px]"></div>
+
+                    <!-- Khung Link đặt lịch online -->
+                    <div class="mt-4 pt-3.5 border-t border-slate-100">
+                        <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                            <p class="text-[10px] font-black uppercase text-[#006d38] tracking-wider mb-1">
+                                Link đặt lịch online
+                            </p>
+                            <a id="fim-online-link" href="#" target="_blank" rel="noopener"
+                                class="block text-xs font-bold text-[#006d38] underline underline-offset-4 break-all hover:text-emerald-700 transition">
+                            </a>
+                        </div>
+
+                        <!-- Nút Đặt lịch ngay (nổi bật) -->
+                        <a id="fim-booking-cta" href="#"
+                            class="mt-2.5 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#f97316] hover:bg-[#ea580c] text-white text-xs font-black uppercase tracking-wider transition shadow-md">
+                            <i class="fa-solid fa-calendar-check text-[11px]"></i> Đặt lịch ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

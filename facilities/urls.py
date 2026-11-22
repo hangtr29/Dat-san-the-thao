@@ -10,8 +10,10 @@ urlpatterns = [
     path('favorites/', views.favorites_list, name='favorites_list'),
     path('map/', views.facility_map, name='facility_map'),
     path('api/favorite/<uuid:facility_id>/', views.toggle_favorite, name='toggle_favorite'),
+    path('api/info/<uuid:facility_id>/', views.facility_info_api, name='facility_info_api'),
     
     # Phân hệ Nghiệp vụ Chủ Sân (Owner Subsystem)
+    path('owner/facility/register/', views_owner.FacilityRegisterView.as_view(), name='owner_facility_register'),
     path('owner/facility/manage/', views_owner.FacilityManageView.as_view(), name='owner_facility_manage'),
     path('owner/facility/<uuid:facility_id>/manage/', views_owner.FacilityManageView.as_view(), name='owner_facility_manage_detail'),
     path('owner/courts/', views_owner.CourtCreateUpdateView.as_view(), name='owner_court_manage_default'),

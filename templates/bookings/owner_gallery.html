@@ -1,0 +1,200 @@
+{% extends 'base_owner.html' %}
+
+{% block title %}Mô tả & Thư viện ảnh - {{ facility.name }} | SportBook{% endblock %}
+
+{% block owner_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#04331b] flex items-center gap-2.5">
+                <i class="fa-solid fa-images text-[#0b6b3a]"></i>
+                Mô tả & Thư viện ảnh
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">{{ facility.name }} — viết mô tả giới thiệu và đăng nhiều ảnh cho cụm sân.</p>
+        </div>
+        <a href="/bookings/dashboard/?tab=settings&facility_id={{ facility.id }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+        </a>
+    </div>
+
+    <!-- Chọn cụm sân -->
+    <form method="get" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6">
+        <label class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-2">Đang cấu hình cho cụm sân</label>
+        <div class="flex flex-wrap items-end gap-3">
+            <select name="facility_id" onchange="this.form.submit()"
+                    class="flex-1 min-w-[220px] px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                {% for f in my_facilities %}
+                <option value="{{ f.id }}" {% if f.id == facility.id %}selected{% endif %}>{{ f.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-4 py-2.5 rounded-xl bg-[#0b6b3a] text-white font-black text-xs uppercase tracking-wide transition">Xem</button>
+        </div>
+    </form>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- MÔ TẢ GIỚI THIỆU -->
+        <div class="lg:col-span-5">
+            <form method="post" action="{% url 'bookings:owner_gallery' %}"
+                  class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sticky top-24 space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                <input type="hidden" name="action" value="save_profile">
+
+                <div>
+                    <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-[#0b6b3a]"></i>
+                        Mô tả giới thiệu
+                    </h2>
+                    <p class="text-[11px] text-slate-500 mt-1">Hiển thị trong bảng thông tin cụm sân và trang chi tiết.</p>
+                </div>
+
+                <div>
+                    <label for="description" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                        Mô tả chi tiết
+                    </label>
+                    <textarea id="description" name="description" rows="9"
+                              placeholder="Giới thiệu tổng quan về cụm sân: vị trí, chất lượng mặt sân, tiện ích, chỗ gửi xe, quán nước..."
+                              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">{{ facility.description }}</textarea>
+                </div>
+
+                <div>
+                    <label for="highlights" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                        Điểm nổi bật
+                    </label>
+                    <input type="text" id="highlights" name="highlights"
+                           value="{{ facility.highlights }}"
+                           placeholder="Mặt sân đạt chuẩn thi đấu|Có chỗ gửi xe rộng|Quán nước & đồ ăn ngay tại sân"
+                           class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                    <div class="text-[10px] text-slate-400 mt-1">Phân tách các điểm nổi bật bằng dấu <code class="font-black">|</code></div>
+                </div>
+
+                <button type="submit"
+                        class="w-full py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i>Lưu mô tả
+                </button>
+            </form>
+        </div>
+
+        <!-- THƯ VIỆN ẢNH -->
+        <div class="lg:col-span-7 space-y-5">
+
+            <!-- Upload -->
+            <form method="post" action="{% url 'bookings:owner_gallery' %}" enctype="multipart/form-data"
+                  class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                {% csrf_token %}
+                <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                <input type="hidden" name="action" value="upload">
+
+                <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2 mb-1">
+                    <i class="fa-solid fa-cloud-arrow-up text-[#0b6b3a]"></i>
+                    Đăng ảnh lên thư viện
+                </h2>
+                <p class="text-[11px] text-slate-500 mb-4">Chọn nhiều ảnh cùng lúc. Ảnh đầu tiên sẽ hiển thị làm ảnh đại diện.</p>
+
+                <label for="gallery_images"
+                       class="block border-2 border-dashed border-slate-300 hover:border-[#0b6b3a] rounded-2xl p-6 text-center cursor-pointer transition bg-slate-50/60">
+                    <input type="file" id="gallery_images" name="gallery_images" multiple accept="image/*"
+                           class="hidden" onchange="previewGallery(this)">
+                    <i class="fa-solid fa-images text-slate-300 text-3xl mb-2"></i>
+                    <div class="text-xs font-bold text-slate-600">Nhấn để chọn ảnh (JPG / PNG / WEBP)</div>
+                    <div class="text-[10px] text-slate-400 mt-1">Có thể chọn nhiều ảnh một lần</div>
+                </label>
+
+                <div id="gallery-preview" class="hidden mt-3">
+                    <div class="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-2">Chú thích ảnh (tùy chọn)</div>
+                    <div id="gallery-preview-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                </div>
+
+                <button type="submit"
+                        class="w-full mt-4 py-3 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white font-black text-xs uppercase tracking-wide transition shadow-md">
+                    <i class="fa-solid fa-upload mr-1"></i>Tải ảnh lên
+                </button>
+            </form>
+
+            <!-- Danh sách ảnh -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <h2 class="text-sm font-black text-[#04331b] flex items-center gap-2">
+                        <i class="fa-solid fa-photo-film text-[#0b6b3a]"></i>
+                        Thư viện hiện có
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black">{{ gallery_images.count }}</span>
+                    </h2>
+                </div>
+
+                {% if gallery_images %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 p-5">
+                    {% for img in gallery_images %}
+                    <div class="group relative">
+                        <div class="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                            <img src="{{ img.image.url }}" alt="{{ img.caption }}"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        </div>
+                        <form method="post" action="{% url 'bookings:owner_gallery' %}" class="mt-2 space-y-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                            <input type="hidden" name="action" value="update_caption">
+                            <input type="hidden" name="image_id" value="{{ img.id }}">
+                            <input type="text" name="caption" value="{{ img.caption }}"
+                                   placeholder="Chú thích ảnh..."
+                                   class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
+                            <div class="flex items-center gap-1.5">
+                                <button type="submit"
+                                        class="flex-1 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-[10px] font-black uppercase transition">
+                                    <i class="fa-solid fa-check mr-0.5"></i>Lưu
+                                </button>
+                                <button type="submit" name="action" value="delete_image"
+                                        onclick="return confirm('Xóa ảnh này khỏi thư viện?');"
+                                        class="w-8 h-7 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 text-[10px] transition"
+                                        title="Xóa ảnh">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="px-5 py-12 text-center">
+                    <i class="fa-regular fa-images text-slate-300 text-4xl mb-3"></i>
+                    <p class="text-xs text-slate-500 font-bold">Chưa có ảnh nào trong thư viện.</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Hãy tải lên ảnh thực tế cụm sân để tăng độ tin cậy & thu hút khách.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function previewGallery(input) {
+        const list = document.getElementById('gallery-preview-list');
+        const wrap = document.getElementById('gallery-preview');
+        if (!input.files || !input.files.length) {
+            wrap.classList.add('hidden');
+            return;
+        }
+        wrap.classList.remove('hidden');
+        list.innerHTML = '';
+        Array.from(input.files).forEach(function (file, i) {
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2';
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.className = 'w-10 h-10 rounded-lg object-cover border border-slate-200';
+            const cap = document.createElement('input');
+            cap.type = 'text';
+            cap.name = 'captions';
+            cap.placeholder = 'Chú thích ảnh ' + (i + 1);
+            cap.className = 'flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25';
+            row.appendChild(img);
+            row.appendChild(cap);
+            list.appendChild(row);
+        });
+    }
+</script>
+{% endblock %}

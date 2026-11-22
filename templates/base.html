@@ -138,6 +138,38 @@
                     </a>
                     {% endif %}
 
+                    <!-- NÚT THÔNG BÁO (badge số lượng chưa đọc, tự cập nhật bằng polling) -->
+                    <div class="relative" id="notif-wrapper">
+                        <button type="button" id="notif-btn" aria-haspopup="true" aria-expanded="false"
+                            title="Thông báo"
+                            class="relative w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 flex items-center justify-center text-white transition shadow-sm">
+                            <i class="fa-solid fa-bell text-sm"></i>
+                            <span id="notif-badge"
+                                class="hidden absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-[#04331b]">0</span>
+                        </button>
+                        <div id="notif-dropdown"
+                            class="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 hidden text-slate-800 z-50 max-h-[440px] overflow-y-auto">
+                            <div class="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2 sticky top-0 bg-white z-10">
+                                <span class="text-xs font-black text-slate-700">Thông báo</span>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" id="btn-notif-mark-all"
+                                        class="text-[10px] font-bold text-emerald-700 hover:underline flex items-center gap-1">
+                                        <i class="fa-solid fa-check-double"></i> Đánh dấu đã đọc tất cả
+                                    </button>
+                                    <a href="{% url 'bookings:notification_list' %}" class="text-[10px] font-bold text-emerald-700 hover:underline">Xem tất cả</a>
+                                </div>
+                            </div>
+                            <div id="notif-list" class="divide-y divide-slate-50">
+                                <div class="px-4 py-6 text-center text-[11px] text-slate-400">Đang tải...</div>
+                            </div>
+                            <div class="px-4 py-2.5 border-t border-slate-100 text-center">
+                                <a href="{% url 'bookings:notification_list' %}" class="text-[10px] font-bold text-emerald-700 hover:underline">
+                                    Xem tất cả thông báo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="relative" id="account-menu-wrapper">
                         <button type="button" id="account-menu-btn" aria-haspopup="true" aria-expanded="false"
                             class="flex items-center space-x-2.5 py-2 px-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 transition text-xs font-bold text-white shadow-sm">
@@ -277,20 +309,20 @@
 
     {% block site_footer %}
     <!-- Footer (Full width) -->
-    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-12 mt-auto w-full">
-        <div class="w-full px-4 sm:px-8 lg:px-12">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-                <div>
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-10 sm:py-12 mt-auto w-full">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
+                <div class="min-w-0">
                     <div class="flex items-center space-x-2 mb-3">
                         <img src="{% static 'images/logo_transparent.png' %}" alt="SportBook"
-                            class="h-16 w-auto logo-glow-effect">
+                            class="h-12 sm:h-14 w-auto max-w-full object-contain logo-glow-effect">
                     </div>
-                    <p class="text-xs text-slate-400 leading-relaxed max-w-md">
+                    <p class="text-xs text-slate-400 leading-relaxed max-w-xs sm:max-w-md">
                         SportBook - Đặt Sân Nhanh Chóng. Nền tảng kết nối trực tiếp Khách hàng & Chủ sân Cầu lông,
                         Pickleball, Bóng bàn. Chuyển khoản VietQR không giữ tiền trung gian.
                     </p>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <h4 class="text-white font-black text-xs mb-3 uppercase tracking-wider">Danh Mục Môn Thể Thao</h4>
                     <ul class="space-y-2 text-xs font-semibold">
                         <li><a href="{% url 'facilities:facility_list' %}?category=cau-long"
@@ -301,7 +333,7 @@
                                 class="hover:text-emerald-400">🏓 Sân Bóng Bàn</a></li>
                     </ul>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <h4 class="text-white font-black text-xs mb-3 uppercase tracking-wider">Chính sách & Hỗ trợ</h4>
                     <ul class="space-y-2 text-xs font-semibold">
                         <li><a href="{% url 'bookings:booking_terms' %}" class="hover:text-emerald-400">Điều khoản đặt sân</a></li>
@@ -310,7 +342,7 @@
                         <li><a href="{% url 'facilities:favorites_list' %}" class="hover:text-emerald-400">Sân yêu thích</a></li>
                     </ul>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <h4 class="text-white font-black text-xs mb-3 uppercase tracking-wider">Đề Cương Kiến Trúc OOP</h4>
                     <p class="text-xs font-bold text-slate-300">Phát triển ứng dụng Hướng Đối Tượng (HTTT14)</p>
                     <p class="text-xs text-slate-400 mt-1">Tech Stack: Python / Django / Tailwind CSS</p>
@@ -699,6 +731,171 @@
                 document.addEventListener('keydown', function (e) {
                     if (e.key === 'Escape') closeAccountMenu();
                 });
+            }
+
+            /* ============ THÔNG BÁO THỰC TẾ (polling không tải lại trang) ============ */
+            const notifBtn = document.getElementById('notif-btn');
+            const notifDropdown = document.getElementById('notif-dropdown');
+            const notifBadge = document.getElementById('notif-badge');
+            const notifList = document.getElementById('notif-list');
+
+            function notifOpen() {
+                notifDropdown.classList.remove('hidden');
+                notifBtn.setAttribute('aria-expanded', 'true');
+            }
+            function notifClose() {
+                notifDropdown.classList.add('hidden');
+                notifBtn.setAttribute('aria-expanded', 'false');
+            }
+
+            function renderNotifBadge(count) {
+                if (!notifBadge) return;
+                if (count > 0) {
+                    notifBadge.textContent = count > 99 ? '99+' : count;
+                    notifBadge.classList.remove('hidden');
+                } else {
+                    notifBadge.classList.add('hidden');
+                }
+            }
+
+            function renderNotifItems(items) {
+                if (!notifList) return;
+                if (!items || items.length === 0) {
+                    notifList.innerHTML =
+                        '<div class="px-4 py-6 text-center text-[11px] text-slate-400">Bạn chưa có thông báo nào.</div>';
+                    return;
+                }
+                notifList.innerHTML = items.map(function (n) {
+                    const isUnread = !n.is_read;
+                    const icon = n.type === 'BOOKING_APPROVED' ? 'fa-circle-check'
+                        : n.type === 'BOOKING_REJECTED' ? 'fa-circle-xmark'
+                            : n.type === 'BOOKING_NEEDS_REUPLOAD' ? 'fa-file-arrow-up'
+                                : n.type === 'BOOKING_NEW' ? 'fa-bell'
+                                    : n.type === 'BOOKING_CANCELLED' ? 'fa-ban'
+                                        : 'fa-envelope';
+                    const color = n.type === 'BOOKING_APPROVED' ? 'text-emerald-600'
+                        : n.type === 'BOOKING_REJECTED' ? 'text-rose-600'
+                            : n.type === 'BOOKING_NEEDS_REUPLOAD' ? 'text-orange-600'
+                                : n.type === 'BOOKING_NEW' ? 'text-amber-600'
+                                    : 'text-slate-500';
+                    return '<div class="notif-row flex items-start gap-2 px-3 py-2.5 hover:bg-slate-50 transition ' +
+                        (isUnread ? 'bg-emerald-50/50' : 'bg-white') + '">' +
+                        // Chấm tròn bật/tắt đã đọc (giống Gmail)
+                        '<button type="button" class="notif-toggle-read flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition ' +
+                        (isUnread ? 'text-[#0b6b3a]' : 'text-slate-300 hover:text-[#0b6b3a]') +
+                        '" data-id="' + (n.id || '') + '" title="' + (isUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc') + '">' +
+                        '<i class="fa-solid ' + (isUnread ? 'fa-circle-fill' : 'fa-circle') + ' text-[9px]"></i></button>' +
+                        '<a href="' + (n.url || '#') + '" data-id="' + (n.id || '') + '" class="notif-item flex items-start gap-2.5 min-w-0 flex-1">' +
+                        '<i class="fa-solid ' + icon + ' ' + color + ' mt-0.5 text-xs flex-shrink-0"></i>' +
+                        '<div class="min-w-0 flex-1">' +
+                        '<div class="text-[11px] leading-snug ' + (isUnread ? 'font-black text-slate-800' : 'font-bold text-slate-500') + '">' + (n.title || '') + '</div>' +
+                        '<div class="text-[10px] text-slate-500 leading-snug mt-0.5">' + (n.message || '') + '</div>' +
+                        '<div class="text-[9px] text-slate-400 font-bold mt-1">' + (n.time_ago || '') + '</div>' +
+                        '</div>' +
+                        (isUnread ? '<span class="flex-shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-[#0b6b3a]"></span>' : '') +
+                        '</a></div>';
+                }).join('');
+            }
+
+            async function pollNotifications() {
+                try {
+                    const res = await fetch("{% url 'bookings:notification_api' %}", {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin'
+                    });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    renderNotifBadge(data.unread_count || 0);
+                    renderNotifItems(data.notifications || []);
+                } catch (e) { /* im lặng */ }
+            }
+
+            if (notifBtn && notifDropdown) {
+                notifBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (notifDropdown.classList.contains('hidden')) {
+                        notifOpen();
+                        pollNotifications();
+                    } else {
+                        notifClose();
+                    }
+                });
+                document.addEventListener('click', function (e) {
+                    if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) notifClose();
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') notifClose();
+                });
+
+                // Bấm chấm tròn -> bật/tắt trạng thái đã đọc (giống Gmail), KHÔNG điều hướng
+                notifList.addEventListener('click', function (e) {
+                    const toggleBtn = e.target.closest('.notif-toggle-read');
+                    if (toggleBtn && toggleBtn.dataset.id) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        fetch("{% url 'bookings:notification_toggle_read' notification_id='00000000-0000-0000-0000-000000000000' %}"
+                            .replace('00000000-0000-0000-0000-000000000000', toggleBtn.dataset.id), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': "{{ csrf_token }}",
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            credentials: 'same-origin'
+                        })
+                            .then(function (r) { return r.json(); })
+                            .then(function (data) {
+                                if (!data || data.ok !== true) return;
+                                pollNotifications();
+                            })
+                            .catch(function () { });
+                        return;
+                    }
+
+                    // Bấm vào nội dung thông báo -> đánh dấu đã đọc rồi điều hướng
+                    const item = e.target.closest('.notif-item');
+                    if (!item || !item.dataset.id) return;
+                    fetch("{% url 'bookings:notification_mark_read' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': "{{ csrf_token }}",
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ id: item.dataset.id })
+                    }).catch(function () { });
+                });
+
+                // Nút "Đánh dấu đã đọc tất cả" trong dropdown
+                const markAllBtn = document.getElementById('btn-notif-mark-all');
+                if (markAllBtn) {
+                    markAllBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        markAllBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                        fetch("{% url 'bookings:notification_mark_all_read' %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': "{{ csrf_token }}",
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            credentials: 'same-origin'
+                        })
+                            .then(function (r) { return r.json(); })
+                            .then(function (data) {
+                                if (!data || data.ok !== true) return;
+                                pollNotifications();
+                            })
+                            .catch(function () { })
+                            .finally(function () {
+                                markAllBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> Đánh dấu đã đọc tất cả';
+                            });
+                    });
+                }
+
+                // Polling nền mỗi 20 giây -> không cần tải lại trang
+                pollNotifications();
+                setInterval(pollNotifications, 20000);
             }
         });
     </script>

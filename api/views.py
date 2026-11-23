@@ -287,7 +287,11 @@ class FacilityViewSet(viewsets.ReadOnlyModelViewSet):
 
         sport = params.get('sport')
         if sport:
-            qs = qs.filter(courts__category__name__iexact=sport).distinct()
+            # Hỗ trợ cả slug (cau-long) lẫn tên đầy đủ (Cầu Lông)
+            qs = qs.filter(
+                Q(courts__category__slug__iexact=sport)
+                | Q(courts__category__name__iexact=sport)
+            ).distinct()
 
         lat = params.get('lat')
         lng = params.get('lng')

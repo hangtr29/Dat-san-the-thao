@@ -5,6 +5,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import { LoadingScreen, ToastContainer } from '@/components/ui'
 
 // --- Pages ---
@@ -12,6 +13,11 @@ import Home from '@/pages/Home'
 import FacilityList from '@/pages/FacilityList'
 import FacilityDetail from '@/pages/FacilityDetail'
 import { LoginPage, RegisterPage } from '@/pages/Auth'
+import {
+  BookingTermsPage,
+  RefundPolicyPage,
+  BookingLookupPage,
+} from '@/pages/Legal'
 
 // Lazy load các trang không thường xuyên dùng
 const MyBookings = lazy(() => import('@/pages/MyBookings'))
@@ -68,7 +74,7 @@ function AppRoutes() {
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             {/* Public */}
@@ -78,6 +84,9 @@ function AppRoutes() {
             <Route path="/map" element={<MapPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/terms" element={<BookingTermsPage />} />
+            <Route path="/refund-policy" element={<RefundPolicyPage />} />
+            <Route path="/lookup" element={<BookingLookupPage />} />
 
             {/* Protected */}
             <Route
@@ -132,28 +141,7 @@ function AppRoutes() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="flex items-center gap-2.5">
-              <img
-                src="/logo-icon.png"
-                alt="SportBook"
-                className="h-8 w-auto object-contain"
-              />
-              <div>
-                <div className="text-sm font-black text-[#04331b]">SportBook</div>
-                <div className="text-xs text-slate-500">
-                  Nền tảng đặt sân thể thao trực tuyến
-                </div>
-              </div>
-            </div>
-            <div className="text-xs text-slate-400">
-              © 2026 SportBook · Đồ án HTTT14 · Django + ReactJS
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       <ToastContainer />
     </div>

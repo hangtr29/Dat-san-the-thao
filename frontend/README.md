@@ -53,6 +53,8 @@ frontend/
         ├── OwnerDashboard.jsx  # Kênh chủ sân (duyệt/từ chối, doanh thu)
         ├── Notifications.jsx   # Trung tâm thông báo kiểu Gmail
         ├── Favorites.jsx       # Sân yêu thích
+        ├── Profile.jsx         # Hồ sơ cá nhân (sửa info, đổi mật khẩu, thống kê)
+        ├── Legal.jsx           # Điều khoản / Chính sách hoàn tiền / Tra cứu mã đơn
         ├── MapPage.jsx         # Bản đồ Leaflet (7 tile provider dự phòng)
         ├── MapPage.css         # Style marker/popup phong cách Alobo
         ├── mapHelpers.js       # TILE_PROVIDERS + probeProvider()
@@ -212,6 +214,24 @@ Sân 3  [ 75k ] [ 75k ] [ 75k ] [ 75k ]
 - Cảnh báo khi không tải được nền bản đồ
 
 Dữ liệu lấy từ `GET /api/facilities/map/` (trả `results[]` + `center_lat/lng`).
+
+### 6.7. Footer & trang tĩnh
+
+Footer 4 cột (đồng bộ `templates/base.html`):
+
+- Cột 1: logo SportBook (hiệu ứng `logoSheen` + glow) + mô tả nền tảng
+- Cột 2: **Danh Mục Môn Thể Thao** → lọc theo slug (`?sport=cau-long`)
+- Cột 3: **Chính sách & Hỗ trợ** → `/terms`, `/refund-policy`, `/lookup`, `/favorites`
+- Cột 4: **Đề Cương Kiến Trúc OOP** (HTTT14, tech stack)
+- **Mobile Bottom Navigation Bar** (chỉ hiện `md:hidden`): Trang chủ / Bản đồ / nút logo nổi / Nổi bật / Tài khoản
+
+Trang tĩnh trong `src/pages/Legal.jsx`:
+
+| Route | Nội dung |
+|---|---|
+| `/terms` | Điều khoản đặt sân (6 mục) |
+| `/refund-policy` | Chính sách hoàn tiền & huỷ lịch (bảng tóm tắt + 6 mục) |
+| `/lookup` | Tra cứu mã đơn đặt (gọi `GET /api/bookings/lookup/<code>/`) |
 
 ---
 

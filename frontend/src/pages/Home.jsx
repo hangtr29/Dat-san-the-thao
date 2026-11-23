@@ -7,9 +7,9 @@ import { facilityApi } from '@/lib/api'
 import { CardSkeleton, ErrorAlert, RatingStars } from '@/components/ui'
 
 const SPORTS = [
-  { name: 'Cau long', icon: '🏸', color: 'from-emerald-500 to-teal-600' },
-  { name: 'Pickleball', icon: '🏓', color: 'from-blue-500 to-indigo-600' },
-  { name: 'Bong ban', icon: '🏓', color: 'from-amber-500 to-orange-600' },
+  { name: 'Cầu Lông', slug: 'cau-long', icon: '🏸', color: 'from-emerald-500 to-teal-600' },
+  { name: 'Pickleball', slug: 'pickleball', icon: '🏓', color: 'from-blue-500 to-indigo-600' },
+  { name: 'Bóng Bàn', slug: 'bong-ban', icon: '🏓', color: 'from-amber-500 to-orange-600' },
 ]
 
 export default function Home() {
@@ -110,7 +110,7 @@ export default function Home() {
               {SPORTS.map((sport) => (
                 <Link
                   key={sport.name}
-                  to={`/facilities?sport=${encodeURIComponent(sport.name)}`}
+                  to={`/facilities?sport=${sport.slug}`}
                   className="group flex items-center gap-2.5 rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur transition-all hover:bg-white/25"
                 >
                   <span className="text-lg">{sport.icon}</span>

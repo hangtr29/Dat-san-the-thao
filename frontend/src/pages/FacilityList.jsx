@@ -129,7 +129,7 @@ export default function FacilityList() {
             >
               <option value="">Tất cả</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.name}>
+                <option key={c.id} value={c.slug}>
                   {c.icon_url} {c.name} ({c.court_count})
                 </option>
               ))}
@@ -187,7 +187,12 @@ export default function FacilityList() {
               <FilterChip label={`"${keyword}"`} onRemove={() => { setDraftKeyword(''); setParam({ q: '' }) }} />
             )}
             {sport && (
-              <FilterChip label={sport} onRemove={() => setParam({ sport: '' })} />
+              <FilterChip
+                label={
+                  categories.find((c) => c.slug === sport)?.name || sport
+                }
+                onRemove={() => setParam({ sport: '' })}
+              />
             )}
             {minPrice && (
               <FilterChip label={`≥ ${Number(minPrice).toLocaleString('vi-VN')}đ`} onRemove={() => setParam({ min_price: '' })} />

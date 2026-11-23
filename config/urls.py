@@ -10,6 +10,8 @@ urlpatterns = [
     path('users/', include('users.urls', namespace='users')),
     path('facilities/', include('facilities.urls', namespace='facilities')),
     path('bookings/', include('bookings.urls', namespace='bookings')),
+    # RESTful API + JWT (dùng cho Frontend ReactJS/Flutter)
+    path('api/', include('api.urls')),
 ]
 
 if settings.DEBUG:

@@ -2,3 +2,10 @@ Django>=5.0,<6.0
 whitenoise>=6.6.0
 requests>=2.31.0
 
+# --- RESTful API + Xác thực JWT (yêu cầu đề tài HTTT14) ---
+djangorestframework>=3.15
+djangorestframework-simplejwt>=5.3
+django-cors-headers>=4.3
+
+# --- Xuất báo cáo Excel cho chủ sân ---
+openpyxl>=3.1

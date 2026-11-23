@@ -7,6 +7,9 @@ Cấu trúc URL chuẩn REST (danh từ số nhiều + động từ hành độn
     /api/auth/logout/              POST   Đăng xuất (blacklist token)
     /api/auth/token/refresh/       POST   Lấy access token mới
     /api/auth/me/                  GET    Thông tin user hiện tại
+    /api/auth/profile/             GET/PATCH  Hồ sơ + thống kê + đơn gần đây
+    /api/auth/profile/avatar/      DELETE Xóa ảnh đại diện
+    /api/auth/change-password/     POST   Đổi mật khẩu
 
     /api/categories/               GET    Danh mục môn thể thao
     /api/facilities/               GET    Danh sách cụm sân (tìm kiếm/lọc)
@@ -62,6 +65,11 @@ urlpatterns = [
     path('auth/login/', views.LoginView.as_view(), name='api-login'),
     path('auth/logout/', views.LogoutView.as_view(), name='api-logout'),
     path('auth/me/', views.CurrentUserView.as_view(), name='api-me'),
+    path('auth/profile/', views.ProfileView.as_view(), name='api-profile'),
+    path('auth/profile/avatar/', views.ProfileAvatarDeleteView.as_view(),
+         name='api-profile-avatar'),
+    path('auth/change-password/', views.ChangePasswordView.as_view(),
+         name='api-change-password'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='api-token-refresh'),
     path('auth/token/', TokenObtainPairView.as_view(), name='api-token-obtain'),
 

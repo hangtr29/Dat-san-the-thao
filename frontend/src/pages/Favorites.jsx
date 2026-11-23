@@ -26,7 +26,7 @@ export default function Favorites() {
       )
       setFacilities(full.filter(Boolean))
     } catch (e) {
-      setError(getErrorMessage(e, 'Khong tai duoc san yeu thich.'))
+      setError(getErrorMessage(e, 'Không tải được sân yêu thích.'))
     } finally {
       setLoading(false)
     }

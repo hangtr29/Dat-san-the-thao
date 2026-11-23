@@ -54,7 +54,7 @@ export default function FacilityDetail() {
       const data = await facilityApi.detail(id)
       setFacility(data)
     } catch (e) {
-      setError(getErrorMessage(e, 'Khong tim thay cum san.'))
+      setError(getErrorMessage(e, 'Không tìm thấy cụm sân.'))
     } finally {
       setLoading(false)
     }
@@ -83,7 +83,7 @@ export default function FacilityDetail() {
       const list = await slotApi.list({ facility: id, date })
       setSlots(list)
     } catch (e) {
-      toast(getErrorMessage(e, 'Khong tai duoc lich san.'), 'error')
+      toast(getErrorMessage(e, 'Không tải được lịch sân.'), 'error')
     } finally {
       setSlotsLoading(false)
     }
@@ -135,14 +135,14 @@ export default function FacilityDetail() {
   // --- Toggle favorite ---
   const handleToggleFavorite = async () => {
     if (!isAuthenticated) {
-      toast('Vui long dang nhap de luu san yeu thich.', 'warning')
+      toast('Vui lòng đăng nhập để lưu sân yêu thích.', 'warning')
       navigate('/login')
       return
     }
     try {
       const res = await favoriteApi.toggle(id)
       setIsFavorite(res.is_favorite)
-      toast(res.message || (res.is_favorite ? 'Da luu yeu thich.' : 'Da bo luu yeu thich.'))
+      toast(res.message || (res.is_favorite ? 'Đã lưu yêu thích.' : 'Đã bỏ lưu yêu thích.'))
     } catch (e) {
       toast(getErrorMessage(e), 'error')
     }
@@ -151,12 +151,12 @@ export default function FacilityDetail() {
   // --- Tạo đơn ---
   const handleBook = async () => {
     if (!isAuthenticated) {
-      toast('Vui long dang nhap de dat san.', 'warning')
+      toast('Vui lòng đăng nhập để đặt sân.', 'warning')
       navigate('/login')
       return
     }
     if (!selected.length) {
-      toast('Vui long chon it nhat 1 khung gio.', 'warning')
+      toast('Vui lòng chọn ít nhất 1 khung giờ.', 'warning')
       return
     }
     try {
@@ -170,7 +170,7 @@ export default function FacilityDetail() {
       // Refresh lịch để cập nhật trạng thái giữ chỗ
       loadSlots()
     } catch (e) {
-      toast(getErrorMessage(e, 'Khong dat san duoc.'), 'error')
+      toast(getErrorMessage(e, 'Không đặt sân được.'), 'error')
     }
   }
 
@@ -212,7 +212,7 @@ export default function FacilityDetail() {
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 {facility.is_verified && (
                   <span className="flex items-center gap-1 rounded-full bg-brand-600 px-2.5 py-1 text-[11px] font-bold text-white">
-                    ✓ Xac thuc
+                    ✓ Xác thực
                   </span>
                 )}
                 {(facility.category_names || []).map((name) => (
@@ -240,7 +240,7 @@ export default function FacilityDetail() {
                     ? 'bg-red-500/90 text-white'
                     : 'bg-white/15 text-white hover:bg-white/25'
                 }`}
-                title={isFavorite ? 'Bo yeu thich' : 'Luu yeu thich'}
+                title={isFavorite ? 'Bỏ yêu thích' : 'Lưu yêu thích'}
               >
                 <svg className="h-5 w-5" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
@@ -656,10 +656,10 @@ function CheckoutModal({ open, booking, onClose }) {
     setUploading(true)
     try {
       await bookingApi.uploadProof(booking.booking_code, file)
-      toast('Da gui anh thanh toan. Chu san se kiem tra va phan hoi.')
+      toast('Đã gửi ảnh thanh toán. Chủ sân sẽ kiểm tra và phản hồi.')
       onClose()
     } catch (e) {
-      toast(getErrorMessage(e, 'Khong tai len duoc anh bill.'), 'error')
+      toast(getErrorMessage(e, 'Không tải lên được ảnh bill.'), 'error')
     } finally {
       setUploading(false)
     }
@@ -700,7 +700,7 @@ function CheckoutModal({ open, booking, onClose }) {
             </p>
             <img
               src={booking.vietqr_url}
-              alt="QR thanh toan VietQR"
+              alt="QR thanh toán VietQR"
               className="mx-auto h-56 w-56 rounded-xl border border-slate-200 bg-white p-2"
               onError={(e) => {
                 e.currentTarget.style.display = 'none'

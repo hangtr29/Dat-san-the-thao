@@ -25,7 +25,7 @@ export default function Home() {
       const data = await facilityApi.list({ page_size: 6 })
       setFacilities(data.results || data)
     } catch (e) {
-      setError(e.response?.data?.detail || 'Khong tai duoc danh sach cum san.')
+      setError(e.response?.data?.detail || 'Không tải được danh sách cụm sân.')
     } finally {
       setLoading(false)
     }

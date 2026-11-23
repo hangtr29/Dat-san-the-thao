@@ -37,7 +37,7 @@ export default function OwnerDashboard() {
       setFacilities(f)
       setStats(s)
     } catch (e) {
-      setError(getErrorMessage(e, 'Khong tai duoc du lieu chu san.'))
+      setError(getErrorMessage(e, 'Không tải được dữ liệu chủ sân.'))
     } finally {
       setLoading(false)
     }
@@ -51,10 +51,10 @@ export default function OwnerDashboard() {
     setProcessing(true)
     try {
       await ownerApi.approve(booking.booking_code)
-      toast(`Da duyet don ${booking.booking_code}.`)
+      toast(`Đã duyệt đơn ${booking.booking_code}.`)
       load()
     } catch (e) {
-      toast(getErrorMessage(e, 'Khong duyet duoc don.'), 'error')
+      toast(getErrorMessage(e, 'Không duyệt được đơn.'), 'error')
     } finally {
       setProcessing(false)
     }
@@ -65,12 +65,12 @@ export default function OwnerDashboard() {
     setProcessing(true)
     try {
       await ownerApi.reject(rejectTarget.booking_code, rejectReason)
-      toast(`Da tu choi don ${rejectTarget.booking_code}.`)
+      toast(`Đã từ chối đơn ${rejectTarget.booking_code}.`)
       setRejectTarget(null)
       setRejectReason('')
       load()
     } catch (e) {
-      toast(getErrorMessage(e, 'Khong tu choi duoc don.'), 'error')
+      toast(getErrorMessage(e, 'Không từ chối được đơn.'), 'error')
     } finally {
       setProcessing(false)
     }
@@ -83,10 +83,10 @@ export default function OwnerDashboard() {
   )
 
   const tabData = {
-    pending: { list: pending, empty: 'Khong co don nao cho duyet.', icon: '📥' },
-    confirmed: { list: confirmed, empty: 'Chua co don nao duoc xac nhan.', icon: '✅' },
-    rejected: { list: rejected, empty: 'Khong co don bi tu choi.', icon: '❌' },
-    all: { list: bookings, empty: 'Chua co don nao.', icon: '📋' },
+    pending: { list: pending, empty: 'Không có đơn nào chờ duyệt.', icon: '📥' },
+    confirmed: { list: confirmed, empty: 'Chưa có đơn nào được xác nhận.', icon: '✅' },
+    rejected: { list: rejected, empty: 'Không có đơn nào bị từ chối.', icon: '❌' },
+    all: { list: bookings, empty: 'Chưa có đơn nào.', icon: '📋' },
   }
 
   if (loading) return <LoadingScreen label="Đang tải dữ liệu chủ sân..." />

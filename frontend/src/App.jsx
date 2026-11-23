@@ -19,6 +19,7 @@ const Notifications = lazy(() => import('@/pages/Notifications'))
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'))
 const MapPage = lazy(() => import('@/pages/MapPage'))
 const Favorites = lazy(() => import('@/pages/Favorites'))
+const Profile = lazy(() => import('@/pages/Profile'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 /**
@@ -100,6 +101,14 @@ function AppRoutes() {
               element={
                 <ProtectedRoute>
                   <Favorites />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />

@@ -52,7 +52,7 @@ function AuthForm({ mode }) {
           username: form.username,
           password: form.password,
         })
-        toast(data.message || 'Dang nhap thanh cong!')
+        toast(data.message || 'Đăng nhập thành công!')
       } else {
         const data = await register({
           username: form.username,
@@ -62,11 +62,11 @@ function AuthForm({ mode }) {
           password_confirm: form.password_confirm,
           role: form.role,
         })
-        toast(data.message || 'Dang ky thanh cong!')
+        toast(data.message || 'Đăng ký thành công!')
       }
       navigate(location.state?.from || '/', { replace: true })
     } catch (err) {
-      setError(getErrorMessage(err, 'Khong the thuc hien. Vui long thu lai.'))
+      setError(getErrorMessage(err, 'Không thể thực hiện. Vui lòng thử lại.'))
     } finally {
       setLoading(false)
     }

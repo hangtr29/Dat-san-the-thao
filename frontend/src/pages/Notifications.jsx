@@ -19,7 +19,7 @@ export default function Notifications() {
       const data = await notificationApi.list()
       setItems(data)
     } catch (e) {
-      setError(getErrorMessage(e, 'Khong tai duoc thong bao.'))
+      setError(getErrorMessage(e, 'Không tải được thông báo.'))
     } finally {
       setLoading(false)
     }
@@ -46,7 +46,7 @@ export default function Notifications() {
     setItems((prev) => prev.map((n) => ({ ...n, is_read: true })))
     try {
       const res = await notificationApi.markRead()
-      toast(`Da danh dau ${res.updated} thong bao da xem.`)
+      toast(`Đã đánh dấu ${res.updated} thông báo đã xem.`)
     } catch (e) {
       toast(getErrorMessage(e), 'error')
       load()

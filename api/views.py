@@ -58,6 +58,8 @@ from .serializers import (
     RegisterSerializer,
     SportCategorySerializer,
     UserSerializer,
+    ProfileUpdateSerializer,
+    ChangePasswordSerializer,
 )
 
 User = get_user_model()
@@ -166,6 +168,86 @@ class CurrentUserView(APIView):
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+
+class ProfileView(APIView):
+    """
+    GET   /api/auth/profile/ - Hồ sơ + thống kê + đơn gần đây
+    PATCH /api/auth/profile/ - Cập nhật thông tin cá nhân
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        bookings = Booking.objects.filter(customer=user)
+
+        stats = {
+            'total': bookings.count(),
+            'confirmed': bookings.filter(status='CONFIRMED').count(),
+            'pending': bookings.filter(status__in=('PENDING', 'WAITING_APPROVAL')).count(),
+            'spent': sum(
+                b.total_amount for b in bookings.filter(status='CONFIRMED')
+            ),
+            'favorites': Favorite.objects.filter(user=user).count(),
+        }
+
+        recent = Booking.objects.filter(customer=user).order_by('-created_at')[:5]
+        recent_data = [{
+            'id': str(b.id),
+            'booking_code': b.booking_code,
+            'status': b.status,
+            'status_display': b.get_status_display(),
+            'total_amount': b.total_amount,
+            'created_at': b.created_at.isoformat(),
+            'facility_name': b.facility.name if b.facility else '',
+        } for b in recent]
+
+        return Response({
+            'user': UserSerializer(user).data,
+            'stats': stats,
+            'recent_bookings': recent_data,
+        })
+
+    def patch(self, request):
+        serializer = ProfileUpdateSerializer(
+            request.user, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({
+            'message': 'Cập nhật hồ sơ thành công.',
+            'user': UserSerializer(user).data,
+        })
+
+
+class ProfileAvatarDeleteView(APIView):
+    """DELETE /api/auth/profile/avatar/ - Xóa ảnh đại diện."""
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        if user.avatar:
+            user.avatar.delete(save=False)
+            user.avatar = None
+            user.save(update_fields=['avatar'])
+        return Response({'message': 'Đã xóa ảnh đại diện.'})
+
+
+class ChangePasswordView(APIView):
+    """POST /api/auth/change-password/ - Đổi mật khẩu."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        # Trả về token mới vì mật khẩu cũ (và JWT hiện tại) có thể bị vô hiệu
+        return Response({
+            'message': 'Đổi mật khẩu thành công.',
+            'tokens': _tokens_for(request.user),
+        })
 
 
 # ==========================================================================

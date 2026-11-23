@@ -37,7 +37,7 @@ export default function MapPage() {
       setMarkers(list)
       renderMap(list, data.center_lat, data.center_lng)
     } catch (e) {
-      setError(getErrorMessage(e, 'Khong tai duoc du lieu ban do.'))
+      setError(getErrorMessage(e, 'Không tải được dữ liệu bản đồ.'))
     } finally {
       setLoading(false)
     }
@@ -196,7 +196,7 @@ export default function MapPage() {
 
     const priceHtml = m.price_from
       ? `<span class="text-[#c2410c] font-black">${m.price_from.toLocaleString('vi-VN')} đ/h</span>`
-      : '<span class="text-slate-400">Lien he san</span>'
+      : '<span class="text-slate-400">Liên hệ sân</span>'
 
     return `
       <div class="alobo-popup-content">
@@ -212,7 +212,7 @@ export default function MapPage() {
             </span>
             ${
               m.is_verified
-                ? '<span class="px-2 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-black"><i class="fa-solid fa-circle-check"></i> Tich xanh</span>'
+                ? '<span class="px-2 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-black"><i class="fa-solid fa-circle-check"></i> Tích xanh</span>'
                 : ''
             }
           </div>
@@ -238,7 +238,7 @@ export default function MapPage() {
             </span>
             <span class="flex items-center gap-1.5">
               <i class="fa-solid fa-layer-group text-slate-400"></i>
-              ${m.courts_count} san
+              ${m.courts_count} sân
             </span>
           </div>
 
@@ -246,18 +246,18 @@ export default function MapPage() {
 
           <div class="flex items-center justify-between pt-2.5 border-t border-slate-100">
             <div class="text-[11px]">
-              <span class="text-slate-400 font-bold block leading-tight">Gia tu</span>
+              <span class="text-slate-400 font-bold block leading-tight">Giá từ</span>
               ${priceHtml}
             </div>
             <a href="${m.url}"
                class="px-4 py-2 rounded-xl bg-[#e5b63d] hover:bg-[#d8a834] text-white text-[11px] font-black uppercase tracking-wide transition shadow-md shadow-amber-500/25">
-              Dat lich
+              Đặt lịch
             </a>
           </div>
 
           <a href="${m.directions_url || ''}" target="_blank" rel="noopener"
              class="block text-center text-[11px] font-bold text-[#065f46] hover:text-emerald-700 transition">
-            <i class="fa-solid fa-diamond-turn-right"></i> Chi duong den san
+            <i class="fa-solid fa-diamond-turn-right"></i> Chỉ đường đến sân
           </a>
         </div>
       </div>
@@ -299,7 +299,7 @@ export default function MapPage() {
     const map = mapInstance.current
     if (!map) return
     if (!navigator.geolocation) {
-      window.alert('Trinh duyet cua ban khong ho tro dinh vi.')
+      window.alert('Trình duyệt của bạn không hỗ trợ định vị.')
       return
     }
     navigator.geolocation.getCurrentPosition(
@@ -314,10 +314,10 @@ export default function MapPage() {
         })
         window.L.marker([latitude, longitude], { icon: meIcon, zIndexOffset: 1000 })
           .addTo(map)
-          .bindPopup('<b>Vi tri cua ban</b>')
+          .bindPopup('<b>Vị trí của bạn</b>')
       },
       () => {
-        window.alert('Khong the lay vi tri cua ban. Vui long bat quyen truy cap vi tri.')
+        window.alert('Không thể lấy vị trí của bạn. Vui lòng bật quyền truy cập vị trí.')
       },
       { enableHighAccuracy: true, timeout: 10000 },
     )

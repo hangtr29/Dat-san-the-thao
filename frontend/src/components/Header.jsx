@@ -35,15 +35,15 @@ export default function Header() {
   }
 
   const navLinks = [
-    { to: '/', label: 'Trang chu', end: true },
-    { to: '/facilities', label: 'Tim san' },
-    { to: '/map', label: 'Ban do' },
+    { to: '/', label: 'Trang chủ', end: true },
+    { to: '/facilities', label: 'Tìm sân' },
+    { to: '/map', label: 'Bản đồ' },
   ]
 
   if (isAuthenticated) {
-    navLinks.push({ to: '/bookings', label: 'Don cua toi' })
+    navLinks.push({ to: '/bookings', label: 'Đơn của tôi' })
     if (user?.role === 'OWNER' || user?.is_staff) {
-      navLinks.push({ to: '/owner', label: 'Kenh chu san' })
+      navLinks.push({ to: '/owner', label: 'Kênh chủ sân' })
     }
   }
 
@@ -95,7 +95,7 @@ export default function Header() {
               <Link
                 to="/notifications"
                 className="relative rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100"
-                title="Thong bao"
+                title="Thông báo"
               >
                 <svg
                   className="h-5 w-5"
@@ -154,20 +154,20 @@ export default function Header() {
                         onClick={() => setMenuOpen(false)}
                         className="block px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                       >
-                        Ho so ca nhan
+                        Hồ sơ cá nhân
                       </Link>
                       <Link
                         to="/favorites"
                         onClick={() => setMenuOpen(false)}
                         className="block px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                       >
-                        San yeu thich
+                        Sân yêu thích
                       </Link>
                       <button
                         onClick={handleLogout}
                         className="block w-full border-t border-slate-100 px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
                       >
-                        Dang xuat
+                        Đăng xuất
                       </button>
                     </div>
                   </>
@@ -177,10 +177,10 @@ export default function Header() {
           ) : (
             <div className="flex items-center gap-2">
               <Link to="/login" className="btn-ghost hidden sm:inline-flex">
-                Dang nhap
+                Đăng nhập
               </Link>
               <Link to="/register" className="btn-primary !px-4 !py-2 text-sm">
-                Dang ky
+                Đăng ký
               </Link>
             </div>
           )}

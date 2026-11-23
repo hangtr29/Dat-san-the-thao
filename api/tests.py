@@ -479,6 +479,85 @@ class ApiBookingTests(ApiTestBase):
 # 4. YÊU THÍCH, THÔNG BÁO, COUPON
 # ==========================================================================
 
+class ApiProfileTests(ApiTestBase):
+    """Hồ sơ cá nhân: xem, sửa, đổi mật khẩu."""
+
+    def setUp(self):
+        super().setUp()
+        self.token = self.register('profile_user', '0900777000')
+        self.user = User.objects.get(username='profile_user')
+
+    def api_patch(self, url, data, token=None):
+        headers = {'HTTP_AUTHORIZATION': 'Bearer %s' % token} if token else {}
+        return self.client.patch(url, data=json.dumps(data),
+                                content_type='application/json', **headers)
+
+    def test_profile_requires_auth(self):
+        r = self.api_get('/api/auth/profile/')
+        self.assertEqual(r.status_code, 401)
+
+    def test_profile_returns_user_stats_and_recent(self):
+        r = self.api_get('/api/auth/profile/', token=self.token)
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertEqual(data['user']['username'], 'profile_user')
+        self.assertIn('stats', data)
+        for key in ('total', 'confirmed', 'spent', 'favorites'):
+            self.assertIn(key, data['stats'])
+        self.assertIn('recent_bookings', data)
+
+    def test_profile_update_personal_info(self):
+        r = self.api_patch('/api/auth/profile/', {
+            'first_name': 'Nguyễn',
+            'last_name': 'Văn A',
+            'email': 'profile.user@test.vn',
+            'phone': '0900777001',
+        }, token=self.token)
+        self.assertEqual(r.status_code, 200, r.content)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, 'Nguyễn')
+        self.assertEqual(self.user.email, 'profile.user@test.vn')
+        self.assertEqual(self.user.phone, '0900777001')
+
+    def test_profile_update_rejects_duplicate_email(self):
+        User.objects.create_user(username='other_user', password='password123',
+                                 email='taken@test.vn', phone='0900777009')
+        r = self.api_patch('/api/auth/profile/', {'email': 'taken@test.vn'},
+                           token=self.token)
+        self.assertEqual(r.status_code, 400)
+
+    def test_change_password_requires_correct_old_password(self):
+        r = self.api_post('/api/auth/change-password/', {
+            'old_password': 'wrongpass',
+            'new_password1': 'newpassword123',
+            'new_password2': 'newpassword123',
+        }, token=self.token)
+        self.assertEqual(r.status_code, 400)
+
+    def test_change_password_success(self):
+        r = self.api_post('/api/auth/change-password/', {
+            'old_password': 'password123',
+            'new_password1': 'newpassword123',
+            'new_password2': 'newpassword123',
+        }, token=self.token)
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertIn('tokens', r.json())
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('newpassword123'))
+
+    def test_change_password_rejects_mismatched_confirmation(self):
+        r = self.api_post('/api/auth/change-password/', {
+            'old_password': 'password123',
+            'new_password1': 'newpassword123',
+            'new_password2': 'different123',
+        }, token=self.token)
+        self.assertEqual(r.status_code, 400)
+
+
+# ==========================================================================
+# 4. YÊU THÍCH, THÔNG BÁO, COUPON
+# ==========================================================================
+
 class ApiEngagementTests(ApiTestBase):
     """Yêu thích, thông báo, mã giảm giá."""
 

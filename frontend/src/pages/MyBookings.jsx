@@ -30,7 +30,7 @@ export default function MyBookings() {
       const data = await bookingApi.list()
       setBookings(data)
     } catch (e) {
-      setError(getErrorMessage(e, 'Khong tai duoc danh sach don.'))
+      setError(getErrorMessage(e, 'Không tải được danh sách đơn.'))
     } finally {
       setLoading(false)
     }
@@ -50,12 +50,12 @@ export default function MyBookings() {
     setCancelling(true)
     try {
       await bookingApi.cancel(cancelTarget.booking_code, cancelReason)
-      toast('Da huy don dat san.')
+      toast('Đã hủy đơn đặt sân.')
       setCancelTarget(null)
       setCancelReason('')
       load()
     } catch (e) {
-      toast(getErrorMessage(e, 'Khong huy duoc don.'), 'error')
+      toast(getErrorMessage(e, 'Không hủy được đơn.'), 'error')
     } finally {
       setCancelling(false)
     }

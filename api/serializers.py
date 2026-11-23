@@ -41,15 +41,98 @@ class UserSerializer(serializers.ModelSerializer):
 
     full_name = serializers.SerializerMethodField()
     role_display = serializers.CharField(source='get_role_display', read_only=True)
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'full_name', 'phone', 'role',
-                  'role_display', 'is_staff', 'date_joined')
-        read_only_fields = fields
+        fields = ('id', 'username', 'email', 'full_name', 'first_name',
+                  'last_name', 'phone', 'role', 'role_display', 'is_staff',
+                  'date_joined', 'avatar', 'avatar_url')
+        read_only_fields = ('id', 'username', 'role', 'role_display',
+                            'is_staff', 'date_joined', 'full_name', 'avatar_url')
 
     def get_full_name(self, obj):
         return obj.get_full_name() or obj.username
+
+    def get_avatar_url(self, obj):
+        """URL ảnh đại diện (kèm host để frontend dùng trực tiếp)."""
+        if not obj.avatar:
+            return None
+        try:
+            url = obj.avatar.url
+        except Exception:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Cập nhật thông tin cá nhân (họ tên, email, số điện thoại, ảnh đại diện)."""
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'phone', 'avatar')
+        extra_kwargs = {
+            'email': {'required': False, 'allow_blank': True},
+            'phone': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'avatar': {'required': False, 'allow_null': True},
+        }
+
+    def validate_email(self, value):
+        """Email phải là duy nhất (trừ chính người dùng đang sửa)."""
+        if not value:
+            return value
+        qs = User.objects.filter(email__iexact=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError('Email này đã được sử dụng.')
+        return value
+
+    def validate_phone(self, value):
+        """Số điện thoại phải là duy nhất."""
+        if not value:
+            return value
+        qs = User.objects.filter(phone=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError('Số điện thoại này đã được sử dụng.')
+        return value
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """Đổi mật khẩu (kiểm tra mật khẩu hiện tại)."""
+
+    old_password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    new_password1 = serializers.CharField(write_only=True, min_length=8,
+                                          style={'input_type': 'password'})
+    new_password2 = serializers.CharField(write_only=True,
+                                          style={'input_type': 'password'})
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError('Mật khẩu hiện tại không đúng.')
+        return value
+
+    def validate(self, attrs):
+        if attrs['new_password1'] != attrs['new_password2']:
+            raise serializers.ValidationError(
+                {'new_password2': 'Mật khẩu xác nhận không khớp.'})
+        user = self.context['request'].user
+        if user.check_password(attrs['new_password1']):
+            raise serializers.ValidationError(
+                {'new_password1': 'Mật khẩu mới không được trùng mật khẩu hiện tại.'})
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password1'])
+        user.save(update_fields=['password'])
+        return user
 
 
 class RegisterSerializer(serializers.ModelSerializer):

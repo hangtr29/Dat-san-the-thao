@@ -70,6 +70,12 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
+  /** Cập nhật user trong context (dùng sau khi sửa hồ sơ). */
+  const updateUser = useCallback((next) => {
+    setUser(next)
+    if (next) tokenStorage.set({ user: next })
+  }, [])
+
   const value = useMemo(
     () => ({
       user,
@@ -80,8 +86,9 @@ export function AuthProvider({ children }) {
       login,
       register,
       logout,
+      setUser: updateUser,
     }),
-    [user, loading, login, register, logout],
+    [user, loading, login, register, logout, updateUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

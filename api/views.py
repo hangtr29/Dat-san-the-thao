@@ -244,19 +244,64 @@ class FacilityViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def map(self, request):
         """GET /api/facilities/map/ - Dữ liệu bản đồ (marker cho Leaflet)."""
-        data = [{
-            'id': str(f.id),
-            'name': f.name,
-            'address': f.address,
-            'latitude': f.latitude,
-            'longitude': f.longitude,
-            'hotline': f.get_display_hotline(),
-            'is_verified': f.is_verified,
-            'average_rating': f.get_average_rating(),
-            'total_reviews': f.get_total_reviews(),
-            'total_courts': f.courts.filter(is_active=True).count(),
-        } for f in self.get_queryset()]
-        return Response(data)
+        from django.utils import timezone
+
+        weekday = timezone.localdate().weekday()
+
+        data = []
+        for f in self.get_queryset():
+            courts = list(f.courts.filter(is_active=True))
+            sport_names = sorted({
+                c.category.name for c in courts if c.category
+            })
+
+            # Giá thấp nhất theo quy tắc giá của ngày hiện tại
+            min_price = None
+            for rule in f.pricing_rules.filter(day_of_week=weekday):
+                price = rule.price_per_hour
+                if min_price is None or price < min_price:
+                    min_price = price
+
+            data.append({
+                'id': str(f.id),
+                'name': f.name,
+                'address': f.address,
+                'lat': f.latitude,
+                'lng': f.longitude,
+                'hotline': f.get_display_hotline(),
+                'rating': f.get_average_rating(),
+                'reviews': f.get_total_reviews(),
+                'courts_count': len(courts),
+                'sports': sport_names,
+                'open_time': f.open_time.strftime('%H:%M'),
+                'close_time': f.close_time.strftime('%H:%M'),
+                'price_from': int(min_price) if min_price else None,
+                'image': f.get_cover_image_url(),
+                'is_verified': f.is_verified,
+                'url': '/facilities/%s/' % f.id,
+                'distance': f.get_distance_display(),
+                'directions_url': (
+                    'https://www.google.com/maps/dir/?api=1'
+                    '&destination=%s,%s' % (
+                        round(float(f.latitude), 7),
+                        round(float(f.longitude), 7),
+                    )
+                ),
+            })
+
+        # Tâm bản đồ = trung bình các marker (fallback: trung tâm TP.HCM)
+        if data:
+            center_lat = sum(m['lat'] for m in data) / len(data)
+            center_lng = sum(m['lng'] for m in data) / len(data)
+        else:
+            center_lat, center_lng = 10.7769, 106.7009
+
+        return Response({
+            'results': data,
+            'count': len(data),
+            'center_lat': center_lat,
+            'center_lng': center_lng,
+        })
 
 
 class CourtViewSet(viewsets.ReadOnlyModelViewSet):

@@ -1,0 +1,93 @@
+/* Styles bản đồ Leaflet - phong cách Alobo (đồng bộ với bản Django gốc) */
+.leaflet-container {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  z-index: 1;
+}
+
+/* Marker tùy chỉnh */
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.marker-pin {
+  width: 40px;
+  height: 40px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: linear-gradient(135deg, #10b981 0%, #0b6b3a 100%);
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(11, 107, 58, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.marker-pin:hover {
+  transform: rotate(-45deg) scale(1.12);
+}
+
+.marker-pin i {
+  transform: rotate(45deg);
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.marker-pin.is-active {
+  background: linear-gradient(135deg, #e5b63d 0%, #c2410c 100%);
+  box-shadow: 0 4px 14px rgba(194, 65, 12, 0.5);
+}
+
+/* Popup chuẩn phong cách Alobo */
+.alobo-popup .leaflet-popup-content-wrapper {
+  border-radius: 18px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22);
+  border: 1px solid #e2e8f0;
+}
+
+.alobo-popup .leaflet-popup-content {
+  margin: 0;
+  width: 290px !important;
+}
+
+.alobo-popup .leaflet-popup-tip {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.alobo-popup .leaflet-popup-close-button {
+  color: #ffffff !important;
+  top: 8px !important;
+  right: 8px !important;
+  font-size: 18px !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+/* Danh sách sân bên trái */
+.map-sidebar-scroll {
+  scrollbar-width: thin;
+}
+
+.map-sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.map-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.map-list-item.active {
+  border-color: #0b6b3a;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 2px rgba(11, 107, 58, 0.12);
+}
+
+.leaflet-control-zoom a {
+  color: #0b6b3a !important;
+  font-weight: 900;
+}

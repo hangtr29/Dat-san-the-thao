@@ -127,18 +127,20 @@ function AppRoutes() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-                🏸
-              </div>
+              <img
+                src="/logo-icon.png"
+                alt="SportBook"
+                className="h-8 w-auto object-contain"
+              />
               <div>
-                <div className="text-sm font-bold text-slate-900">SânViệt</div>
+                <div className="text-sm font-black text-[#04331b]">SportBook</div>
                 <div className="text-xs text-slate-500">
                   Nền tảng đặt sân thể thao trực tuyến
                 </div>
               </div>
             </div>
             <div className="text-xs text-slate-400">
-              © 2026 SânViệt · Đồ án HTTT14 · Django + ReactJS
+              © 2026 SportBook · Đồ án HTTT14 · Django + ReactJS
             </div>
           </div>
         </div>

@@ -77,15 +77,17 @@ function AuthForm({ mode }) {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-6 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-2xl text-white shadow-lg">
-            🏸
-          </div>
+          <img
+            src="/logo.png"
+            alt="SportBook"
+            className="mx-auto h-16 w-auto object-contain"
+          />
           <h1 className="mt-4 text-2xl font-bold text-slate-900">
             {isLogin ? 'Đăng nhập' : 'Tạo tài khoản'}
           </h1>
           <p className="mt-1.5 text-sm text-slate-500">
             {isLogin
-              ? 'Chào mừng trở lại với SânViệt'
+              ? 'Chào mừng trở lại với SportBook'
               : 'Đăng ký để bắt đầu đặt sân thể thao'}
           </p>
         </div>

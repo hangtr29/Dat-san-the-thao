@@ -142,7 +142,7 @@ export default function Home() {
       {/* ---------------- FEATURES ---------------- */}
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <h2 className="text-center text-2xl font-bold text-slate-900 sm:text-3xl">
-          Vì sao chọn SânViệt?
+          Vì sao chọn SportBook?
         </h2>
         <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-500">
           Giải pháp toàn diện cho cả người chơi và chủ sân

@@ -257,9 +257,14 @@ class ApiPublicDataTests(ApiTestBase):
         r = self.api_get('/api/facilities/map/')
         self.assertEqual(r.status_code, 200)
         data = r.json()
-        self.assertTrue(data)
-        self.assertIn('latitude', data[0])
-        self.assertIn('longitude', data[0])
+        self.assertTrue(data['results'])
+        self.assertIn('center_lat', data)
+        self.assertIn('center_lng', data)
+        first = data['results'][0]
+        for field in ('lat', 'lng', 'sports', 'open_time', 'close_time',
+                      'price_from', 'image', 'url', 'directions_url',
+                      'rating', 'reviews', 'courts_count'):
+            self.assertIn(field, first)
 
     def test_courts_pricing_addons_coupons_public(self):
         for url in ('/api/courts/', '/api/pricing-rules/',

@@ -2,6 +2,8 @@
 
 Frontend SPA tách rời (decoupled) giao tiếp với Django REST API qua JWT.
 
+> **Tên sản phẩm:** SportBook - Đặt sân nhanh chóng (đồng bộ với bản Django gốc)
+
 ---
 
 ## 1. Công nghệ sử dụng
@@ -51,7 +53,9 @@ frontend/
         ├── OwnerDashboard.jsx  # Kênh chủ sân (duyệt/từ chối, doanh thu)
         ├── Notifications.jsx   # Trung tâm thông báo kiểu Gmail
         ├── Favorites.jsx       # Sân yêu thích
-        ├── MapPage.jsx         # Bản đồ Leaflet
+        ├── MapPage.jsx         # Bản đồ Leaflet (7 tile provider dự phòng)
+        ├── MapPage.css         # Style marker/popup phong cách Alobo
+        ├── mapHelpers.js       # TILE_PROVIDERS + probeProvider()
         └── NotFound.jsx        # Trang 404
 ```
 
@@ -193,6 +197,21 @@ Sân 3  [ 75k ] [ 75k ] [ 75k ] [ 75k ]
 - Kiểu Gmail: đọc / chưa đọc, màu nền khác nhau
 - Đánh dấu đã xem từng thông báo hoặc tất cả
 - Badge số chưa đọc trên icon chuông (Header)
+
+### 6.6. Bản đồ Leaflet (`/map`)
+
+Đồng bộ hoàn toàn với bản Django gốc (`templates/facilities/facility_map.html`):
+
+- **7 nhà cung cấp tile dự phòng**: Google Maps → Esri → OpenStreetMap → OSM DE/JP/FR → CARTO Voyager
+- Tự động **dò (probe)** provider trước khi dùng bằng `<img>.onerror` (bắt chắc lỗi HTTP 403 mà `tileerror` của Leaflet bỏ sót)
+- Nút **"Đổi nền bản đồ"** để chuyển thủ công khi IP bị chặn
+- Marker gradient xanh lá, đổi sang cam khi được chọn
+- Popup đầy đủ: ảnh bìa, rating, tích xanh KYC, giờ mở cửa, môn thể thao, giá từ, nút "Đặt lịch", link chỉ đường Google Maps
+- Bấm item trong sidebar → `setView` zoom 17 + mở popup, đồng bộ highlight hai chiều
+- Nút **"Vị trí tôi"** dùng Geolocation API
+- Cảnh báo khi không tải được nền bản đồ
+
+Dữ liệu lấy từ `GET /api/facilities/map/` (trả `results[]` + `center_lat/lng`).
 
 ---
 

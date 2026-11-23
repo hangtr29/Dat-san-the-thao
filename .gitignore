@@ -62,3 +62,9 @@ db.sqlite3.bak_*
 # Log server & file tam
 _server*.err
 _server*.log
+
+# ===== Frontend (React + Vite) =====
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.local

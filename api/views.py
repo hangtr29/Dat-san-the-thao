@@ -16,6 +16,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .pagination import FlexiblePageNumberPagination
+
 from bookings.models import (
     Booking,
     BookingSlot,
@@ -185,6 +187,7 @@ class FacilityViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     permission_classes = [AllowAny]
+    pagination_class = FlexiblePageNumberPagination
 
     def get_queryset(self):
         qs = _published_facilities().select_related('owner').prefetch_related(
@@ -368,6 +371,10 @@ class SlotViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = BookingSlotSerializer
     permission_classes = [AllowAny]
+
+    # Ma trận khung giờ cần TOÀN BỘ slot của ngày, không phân trang
+    # (một cụm sân có nhiều sân × nhiều khung 30 phút)
+    pagination_class = None
 
     def get_queryset(self):
         qs = BookingSlot.objects.select_related(

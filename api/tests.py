@@ -82,6 +82,21 @@ class ApiTestBase(TestCase):
         self.assertEqual(r.status_code, 201, r.content)
         return r.json()['tokens']['access']
 
+    def create_facility(self, name='CLB Phụ'):
+        """Tạo nhanh một cụm sân đang hoạt động."""
+        return Facility.objects.create(
+            owner=self.owner,
+            name=name,
+            address='456 Lê Lợi, Quận 1, TP.HCM',
+            phone_contact='0900123456',
+            bank_name='MBBank',
+            bank_account_no='0123456789',
+            bank_account_name='NGUYEN VAN A',
+            status=FacilityStatus.ACTIVE,
+            is_verified=True,
+            active_status=True,
+        )
+
     def create_slots(self, count=4):
         from datetime import timedelta
         from django.utils import timezone
@@ -205,6 +220,25 @@ class ApiPublicDataTests(ApiTestBase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json()['count'], 1)
 
+    def test_facilities_support_page_size_param(self):
+        """Client có thể tùy chỉnh số item/trang bằng ?page_size="""
+        # Tạo thêm vài cụm sân để có nhiều hơn 1 trang
+        for i in range(3):
+            self.create_facility(name='Cum san phu %d' % i)
+
+        r = self.api_get('/api/facilities/?page_size=2')
+        self.assertEqual(r.status_code, 200)
+        body = r.json()
+        self.assertEqual(body['count'], 4)
+        self.assertEqual(len(body['results']), 2)
+        self.assertIsNotNone(body['next'])
+
+    def test_facilities_page_size_capped(self):
+        """page_size vượt quá max sẽ bị giới hạn (max_page_size=100)"""
+        r = self.api_get('/api/facilities/?page_size=9999')
+        self.assertEqual(r.status_code, 200)
+        self.assertLessEqual(len(r.json()['results']), 100)
+
     def test_facility_list_hides_bank_info(self):
         """Danh sách KHÔNG được lộ số tài khoản ngân hàng của chủ sân"""
         r = self.api_get('/api/facilities/')
@@ -271,10 +305,30 @@ class ApiBookingTests(ApiTestBase):
     def test_slots_endpoint(self):
         r = self.api_get('/api/slots/?facility=%s' % self.facility.id)
         self.assertEqual(r.status_code, 200)
-        self.assertTrue(r.json()['count'])
-        first = r.json()['results'][0]
+        # Endpoint slots KHÔNG phân trang (trả về mảng) vì cần đủ ma trận
+        # khung giờ cho toàn bộ sân trong ngày.
+        slots = r.json()
+        self.assertIsInstance(slots, list)
+        self.assertTrue(slots)
+        first = slots[0]
         self.assertIn('is_available', first)
         self.assertIn('start_time_str', first)
+
+    def test_slots_endpoint_filters_by_date(self):
+        from bookings.models import BookingSlot
+        from django.utils import timezone
+        import datetime
+
+        tomorrow = timezone.localdate() + datetime.timedelta(days=1)
+        BookingSlot.objects.filter(court__facility=self.facility).update(date=tomorrow)
+
+        r = self.api_get(
+            '/api/slots/?facility=%s&date=%s' % (self.facility.id, tomorrow))
+        self.assertEqual(r.status_code, 200)
+        slots = r.json()
+        self.assertIsInstance(slots, list)
+        self.assertTrue(slots)
+        self.assertTrue(all(s['date'] == tomorrow.isoformat() for s in slots))
 
     def test_create_booking(self):
         slot_ids = [str(s.id) for s in self.slots[:2]]

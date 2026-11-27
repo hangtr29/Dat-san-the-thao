@@ -74,15 +74,16 @@ def get_booking_or_restore(request, booking_code):
 
     Bảo mật: Chỉ phục hồi đơn từ session nếu session đó thuộc về chính người đang yêu cầu.
     """
-    # 1. Tra cứu trực tiếp trong Database
-    booking = Booking.objects.filter(booking_code=booking_code).first()
+    # 1. Tra cứu trực tiếp trong Database (không phân biệt hoa/thường)
+    normalized_code = (booking_code or '').strip().upper()
+    booking = Booking.objects.filter(booking_code__iexact=normalized_code).first()
     if booking:
         save_booking_to_session(request, booking)
         return booking
 
     # 2. Phục hồi từ Session Signed Cookie
     saved = getattr(request, 'session', {}).get('saved_bookings', {})
-    b_data = saved.get(booking_code)
+    b_data = saved.get(normalized_code) or saved.get(booking_code)
     if b_data:
         try:
             created_at = timezone.now()
@@ -1071,9 +1072,16 @@ def booking_lookup(request):
                 booking = Booking.objects.filter(
                     Q(customer_phone=query_code) & Q(customer=request.user)
                 ).first()
+                # Fallback phục hồi từ session cookie trên Vercel serverless
+                if not booking:
+                    saved = getattr(request, 'session', {}).get('saved_bookings', {})
+                    for code_key, b_data in saved.items():
+                        if b_data.get('customer_phone') == query_code and str(b_data.get('user_id')) == str(request.user.id):
+                            booking = get_booking_or_restore(request, code_key)
+                            break
         else:
-            # Tra cứu bằng mã đơn (không yêu cầu đăng nhập)
-            booking = Booking.objects.filter(booking_code__iexact=query_code).first()
+            # Tra cứu bằng mã đơn (không yêu cầu đăng nhập; có fallback phục hồi từ session cookie trên Vercel)
+            booking = get_booking_or_restore(request, query_code)
 
     return render(request, 'bookings/booking_lookup.html', {
         'booking': booking,

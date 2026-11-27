@@ -49,7 +49,7 @@
                             </span>
                         </div>
                         <div class="text-xs text-slate-600">
-                            Khách hàng: <strong>{{ booking.customer_name|default:booking.customer.get_full_name|default:booking.customer.username|default:"Khách vãng lai" }}</strong>
+                            Khách hàng: <strong>{{ booking.display_customer_name }}</strong>
                             {% if booking.customer_phone %}
                                 ({{ booking.customer_phone }})
                             {% endif %}

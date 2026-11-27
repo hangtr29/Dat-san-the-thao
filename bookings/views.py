@@ -395,6 +395,12 @@ def checkout_view(request, booking_code):
         })
     addon_total_formatted = f"{int(addon_total):,} đ".replace(',', '.')
 
+    discount_amount = int(getattr(booking, 'discount_amount', 0) or 0)
+    coupon_code = getattr(booking, 'coupon_code', '') or (booking.coupon.code if getattr(booking, 'coupon_id', None) else '')
+    subtotal_before_discount = int(booking.total_amount) + discount_amount
+    subtotal_before_discount_formatted = f"{subtotal_before_discount:,} đ".replace(',', '.')
+    discount_amount_formatted = f"{discount_amount:,} đ".replace(',', '.')
+
     context = {
         'booking': booking,
         'facility': facility,
@@ -402,6 +408,10 @@ def checkout_view(request, booking_code):
         'seconds_remaining': seconds_remaining,
         'slots_list': slots_list,
         'total_amount_formatted': total_amount_formatted,
+        'subtotal_before_discount_formatted': subtotal_before_discount_formatted,
+        'discount_amount': discount_amount,
+        'discount_amount_formatted': discount_amount_formatted,
+        'coupon_code': coupon_code,
         'addons_list': addons_list,
         'addon_total_formatted': addon_total_formatted,
         'booking_code': booking.booking_code,
@@ -531,6 +541,12 @@ def booking_detail(request, booking_code):
         })
     addon_total_formatted = f"{int(addon_total):,} đ".replace(',', '.')
 
+    discount_amount = int(getattr(booking, 'discount_amount', 0) or 0)
+    coupon_code = getattr(booking, 'coupon_code', '') or (booking.coupon.code if getattr(booking, 'coupon_id', None) else '')
+    subtotal_before_discount = int(booking.total_amount) + discount_amount
+    subtotal_before_discount_formatted = f"{subtotal_before_discount:,} đ".replace(',', '.')
+    discount_amount_formatted = f"{discount_amount:,} đ".replace(',', '.')
+
     context = {
         'booking': booking,
         'facility': facility,
@@ -539,6 +555,10 @@ def booking_detail(request, booking_code):
         'status_display': booking.get_status_display(),
         'reject_reason': booking.reject_reason or '',
         'total_amount_formatted': total_amount_formatted,
+        'subtotal_before_discount_formatted': subtotal_before_discount_formatted,
+        'discount_amount': discount_amount,
+        'discount_amount_formatted': discount_amount_formatted,
+        'coupon_code': coupon_code,
         'addons_list': addons_list,
         'addon_total_formatted': addon_total_formatted,
         'created_at_formatted': created_at_formatted,

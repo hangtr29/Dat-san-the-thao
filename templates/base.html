@@ -132,10 +132,17 @@
                 {% if user.is_authenticated %}
                 <div class="flex items-center space-x-3">
                     {% if user.is_owner or user.is_staff %}
+                    {% if user.role == 'ADMIN' or user.is_superuser %}
+                    <a href="{% url 'bookings:admin_hub' %}"
+                        class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-amber-400 text-slate-900 font-black text-xs shadow-md hover:bg-amber-300 transition">
+                        <i class="fa-solid fa-shield-halved"></i> Cổng Admin
+                    </a>
+                    {% else %}
                     <a href="{% url 'bookings:owner_dashboard' %}"
                         class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-amber-400 text-slate-900 font-black text-xs shadow-md hover:bg-amber-300 transition">
                         <i class="fa-solid fa-store"></i> Kênh Chủ Sân
                     </a>
+                    {% endif %}
                     {% endif %}
 
                     <!-- NÚT THÔNG BÁO (badge số lượng chưa đọc, tự cập nhật bằng polling) -->

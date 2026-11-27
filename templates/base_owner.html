@@ -338,8 +338,9 @@
                         </div>
                         <div class="truncate">
                             <span class="text-xs font-extrabold text-white block truncate">{{ user.get_full_name|default:user.username }}</span>
-                            <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                                <i class="fa-solid fa-circle-check text-[8px]"></i> Chủ Sân Đối Tác
+                            <span class="text-[10px] {% if user.role == 'ADMIN' %}text-amber-400{% else %}text-emerald-400{% endif %} font-bold flex items-center gap-1">
+                                <i class="fa-solid {% if user.role == 'ADMIN' %}fa-shield-halved{% else %}fa-circle-check{% endif %} text-[8px]"></i>
+                                {% if user.role == 'ADMIN' %}Quản Trị Viên Hệ Thống{% else %}Chủ Sân Đối Tác{% endif %}
                             </span>
                         </div>
                     </div>

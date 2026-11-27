@@ -55,19 +55,54 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
+def _bootstrap_serverless_db():
+    """Chạy migrate và nạp đủ 6 cụm sân + mô tả + giá riêng + dịch vụ + coupon cực nhanh cho Vercel."""
+    from django.core.management import call_command
+    from django.db import connection, transaction
+
+    with connection.cursor() as cursor:
+        cursor.execute('PRAGMA synchronous = OFF;')
+        cursor.execute('PRAGMA temp_store = MEMORY;')
+
+    call_command('migrate', '--noinput', verbosity=0)
+
+    from bookings.services import SlotGeneratorService
+
+    orig_gen = SlotGeneratorService.__dict__.get('generate_slots_for_facility')
+    # Bỏ qua sinh sẵn hàng nghìn slot lúc cold-start (views.py sẽ tự sinh on-demand theo ngày khách chọn)
+    SlotGeneratorService.generate_slots_for_facility = classmethod(
+        lambda cls, facility, target_date: 0
+    )
+    try:
+        import seed_data
+        import seed_map_facilities
+        import seed_owners
+        import seed_facility_descriptions
+        import seed_facility_pricing
+        import seed_coupons
+
+        with transaction.atomic():
+            seed_data.seed()
+            seed_map_facilities.seed()
+            seed_owners.seed_owners()
+            seed_facility_descriptions.main()
+            seed_facility_pricing.main()
+            seed_coupons.main()
+    finally:
+        if orig_gen is not None:
+            SlotGeneratorService.generate_slots_for_facility = orig_gen
+        with connection.cursor() as cursor:
+            cursor.execute('PRAGMA synchronous = FULL;')
+
+
 if needs_bootstrap:
     # Tạm bỏ qua DDL thủ công trong AppConfig.ready() để migrate tạo đủ bảng không bị xung đột
     _orig_argv = list(sys.argv)
     sys.argv = ['manage.py', 'migrate']
     try:
         application = get_wsgi_application()
-        from django.core.management import call_command
-
-        call_command('migrate', '--noinput', verbosity=0)
         try:
-            import seed_data
-
-            seed_data.seed()
+            _bootstrap_serverless_db()
         except Exception:
             pass
     finally:

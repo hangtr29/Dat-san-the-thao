@@ -1106,6 +1106,13 @@ def booking_refund_policy(request):
     return render(request, 'bookings/booking_refund_policy.html', {'policy_type': 'refund'})
 
 
+def _get_managed_facilities(user):
+    """Admin giám sát toàn bộ cụm sân trên nền tảng; Chủ sân chỉ quản lý cụm sân thuộc sở hữu của mình."""
+    if getattr(user, 'role', '') == 'ADMIN' or user.is_superuser:
+        return Facility.objects.all().order_by('name')
+    return Facility.objects.filter(owner=user).order_by('name')
+
+
 @login_required
 def owner_dashboard(request):
     """
@@ -1122,7 +1129,7 @@ def owner_dashboard(request):
     from django.db.models import Sum
     from datetime import timedelta
 
-    my_facilities = Facility.objects.filter(owner=request.user)
+    my_facilities = _get_managed_facilities(request.user)
     facility_id = request.GET.get('facility_id', '')
     status_filter = request.GET.get('status', 'WAITING_APPROVAL')
     date_from = request.GET.get('date_from', '')
@@ -1264,7 +1271,7 @@ def owner_export_revenue_csv(request):
     import csv
     from django.http import HttpResponse
 
-    my_facilities = Facility.objects.filter(owner=request.user)
+    my_facilities = _get_managed_facilities(request.user)
     facility_id = request.GET.get('facility_id', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
@@ -1333,7 +1340,7 @@ def owner_export_revenue_pdf(request):
     if not (request.user.is_owner() or request.user.is_staff):
         return HttpResponseForbidden("Chỉ Chủ sân mới có quyền xem báo cáo doanh thu.")
 
-    my_facilities = Facility.objects.filter(owner=request.user)
+    my_facilities = _get_managed_facilities(request.user)
     facility_id = request.GET.get('facility_id', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
@@ -1599,7 +1606,7 @@ def owner_calendar(request):
     if not (request.user.is_owner() or request.user.is_staff):
         return HttpResponseForbidden("Chỉ Chủ sân mới có quyền xem lịch.")
 
-    my_facilities = Facility.objects.filter(owner=request.user)
+    my_facilities = _get_managed_facilities(request.user)
     facility_id = request.GET.get('facility_id', '')
     target_facilities = my_facilities
     if facility_id:
@@ -1716,7 +1723,7 @@ def owner_export_excel(request):
     from openpyxl.utils import get_column_letter
     from django.http import HttpResponse
 
-    my_facilities = Facility.objects.filter(owner=request.user)
+    my_facilities = _get_managed_facilities(request.user)
     facility_id = request.GET.get('facility_id', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
@@ -1931,7 +1938,7 @@ def owner_manage_addons(request):
     if not (request.user.is_owner() or request.user.is_staff):
         return HttpResponseForbidden("Chỉ Chủ sân mới có quyền quản lý dịch vụ.")
 
-    my_facilities = Facility.objects.filter(owner=request.user)
+    my_facilities = _get_managed_facilities(request.user)
     facility_id = request.GET.get('facility_id') or request.POST.get('facility_id')
     facility = None
     if facility_id:
@@ -2027,7 +2034,7 @@ def owner_manage_gallery(request):
     if not (request.user.is_owner() or request.user.is_staff):
         return HttpResponseForbidden("Chỉ Chủ sân mới có quyền quản lý ảnh.")
 
-    my_facilities = Facility.objects.filter(owner=request.user)
+    my_facilities = _get_managed_facilities(request.user)
     facility_id = request.GET.get('facility_id') or request.POST.get('facility_id')
     facility = None
     if facility_id:
@@ -2188,7 +2195,7 @@ def owner_pending_orders_api(request):
     if not (request.user.is_owner() or request.user.is_staff):
         return JsonResponse({'ok': False}, status=403)
 
-    my_facilities = Facility.objects.filter(owner=request.user)
+    my_facilities = _get_managed_facilities(request.user)
     pending = Booking.objects.filter(
         slots__court__facility__in=my_facilities,
         status=BookingStatus.WAITING_APPROVAL

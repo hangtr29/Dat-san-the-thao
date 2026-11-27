@@ -1431,9 +1431,10 @@ def owner_approve_booking(request, booking_code):
 
     first_slot = booking.slots.select_related('court__facility').first()
 
-    # Kiểm tra quyền sở hữu
-    if first_slot and first_slot.court.facility.owner != request.user and not request.user.is_staff:
-        return HttpResponseForbidden("Bạn không có quyền quản lý đơn đặt của sân này.")
+    # Kiểm tra quyền sở hữu (Direct-to-Owner: chỉ đúng Chủ sân sở hữu sân mới được duyệt bill,
+    # Admin trung gian chỉ giám sát, không tự xác nhận thanh toán thay Chủ sân)
+    if getattr(request.user, 'role', '') == 'ADMIN' or (first_slot and first_slot.court.facility.owner != request.user):
+        return HttpResponseForbidden("Chỉ Chủ sân sở hữu cụm sân này mới có quyền xác nhận đơn và đối soát bill.")
 
     # Tính đóng gói (Encapsulation)
     if booking.approve_by_owner(request.user):
@@ -1470,8 +1471,9 @@ def owner_reject_booking(request, booking_code):
 
     first_slot = booking.slots.select_related('court__facility').first()
 
-    if first_slot and first_slot.court.facility.owner != request.user and not request.user.is_staff:
-        return HttpResponseForbidden("Bạn không có quyền quản lý đơn đặt của sân này.")
+    # Direct-to-Owner: chỉ đúng Chủ sân sở hữu sân mới được từ chối bill
+    if getattr(request.user, 'role', '') == 'ADMIN' or (first_slot and first_slot.court.facility.owner != request.user):
+        return HttpResponseForbidden("Chỉ Chủ sân sở hữu cụm sân này mới có quyền từ chối đơn và đối soát bill.")
 
     reason = request.POST.get('reject_reason', 'Không nhận được tiền hoặc thông tin bill không hợp lệ.').strip()
     allow_reupload = request.POST.get('allow_reupload', '1') != '0'

@@ -220,15 +220,6 @@
                             <span class="text-[11px] text-slate-400 font-bold">({{ reviews|length }})</span>
                             {% endif %}
                         </a>
-
-                        <!-- 1.4 Báo cáo Excel thật (.xlsx) -->
-                        <a href="{% url 'bookings:owner_export_excel' %}{% if selected_facility_id %}?facility_id={{ selected_facility_id }}{% endif %}"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'export' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-file-excel w-4 text-center {% if active_menu == 'export' %}text-white{% else %}text-emerald-400{% endif %}"></i>
-                                <span>Báo Cáo Excel (.xlsx)</span>
-                            </div>
-                        </a>
                     </div>
                 </div>
 

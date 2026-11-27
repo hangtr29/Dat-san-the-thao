@@ -48,10 +48,11 @@
 
         {% if active_tab == 'orders' %}
         <div class="flex items-center gap-2">
-            <a href="{% url 'bookings:owner_export_revenue_csv' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}"
+            <a href="{% url 'bookings:owner_export_excel' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}"
+                title="Tải báo cáo doanh thu định dạng Excel (.xlsx) theo bộ lọc hiện tại"
                 class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase shadow-xs transition flex items-center gap-1.5">
                 <i class="fa-solid fa-file-excel"></i>
-                <span>Xuất Excel</span>
+                <span>Xuất Excel (.xlsx)</span>
             </a>
             <a href="{% url 'bookings:owner_export_revenue_pdf' %}?facility_id={{ selected_facility_id }}&date_from={{ date_from }}&date_to={{ date_to }}"
                 target="_blank"

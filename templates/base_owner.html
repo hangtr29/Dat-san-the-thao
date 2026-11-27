@@ -381,8 +381,13 @@
                     <nav class="flex items-center gap-2 text-xs font-bold text-slate-500 truncate">
                         <a href="{% url 'bookings:owner_dashboard' %}"
                             class="hover:text-emerald-700 transition flex items-center gap-1.5 shrink-0">
+                            {% if user.role == 'ADMIN' %}
+                            <i class="fa-solid fa-shield-halved text-amber-500"></i>
+                            <span class="hidden sm:inline">Cổng Admin</span>
+                            {% else %}
                             <i class="fa-solid fa-store text-emerald-600"></i>
                             <span class="hidden sm:inline">Kênh Chủ Sân</span>
+                            {% endif %}
                         </a>
                         <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 shrink-0"></i>
                         <span class="text-slate-700 font-extrabold truncate shrink-0 max-w-[140px] sm:max-w-xs">
@@ -396,6 +401,13 @@
                 <!-- PHẢI: HUY HIỆU TRẠNG THÁI & HÀNH ĐỘNG NHANH -->
                 <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
 
+                    {% if user.role == 'ADMIN' %}
+                    <span
+                        class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-amber-50 text-amber-700 border border-amber-200">
+                        <i class="fa-solid fa-shield-halved text-amber-600"></i>
+                        <span>Quản Trị Viên</span>
+                    </span>
+                    {% else %}
                     <!-- Tích xanh xác thực KYC -->
                     <span
                         class="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-sky-50 text-sky-700 border border-sky-200">
@@ -409,6 +421,7 @@
                         <i class="fa-solid fa-shield-halved text-emerald-600"></i>
                         <span>Gói 1 Năm</span>
                     </span>
+                    {% endif %}
 
                     <!-- Nút sang trang Khách hàng -->
                     <a href="{% url 'facilities:facility_list' %}" target="_blank"

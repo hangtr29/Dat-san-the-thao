@@ -12,3 +12,7 @@ openpyxl>=3.1
 
 # --- Xử lý ảnh (ImageField trong Django) ---
 Pillow>=10.0
+
+# --- PostgreSQL Cloud (Neon / Supabase trên Vercel) ---
+dj-database-url>=2.2
+psycopg2-binary>=2.9

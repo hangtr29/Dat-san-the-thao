@@ -23,6 +23,8 @@ class UsersConfig(AppConfig):
 
         try:
             from django.db import connection
+            if connection.vendor != 'sqlite':
+                return
             from django.utils import timezone
             from datetime import timedelta
             from decimal import Decimal

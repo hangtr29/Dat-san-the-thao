@@ -16,6 +16,8 @@ class FacilitiesConfig(AppConfig):
             return
 
         from django.db import connection
+        if connection.vendor != 'sqlite':
+            return
         try:
             with connection.cursor() as cursor:
                 cursor.execute("""

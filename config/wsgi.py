@@ -38,9 +38,13 @@ def _table_exists(db_file: str, table_name: str) -> bool:
         return False
 
 
+has_external_db = bool(
+    (os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL') or '').strip()
+)
+
 # Đảm bảo database ở /tmp có quyền đọc ghi và đủ bảng trên môi trường Vercel Serverless
 needs_bootstrap = False
-if is_serverless:
+if is_serverless and not has_external_db:
     tmp_db = '/tmp/db.sqlite3'
     orig_db = BASE_DIR / 'db.sqlite3'
     if not os.path.exists(tmp_db) and orig_db.exists():
@@ -55,16 +59,26 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
+
 def _bootstrap_serverless_db():
-    """Chạy migrate và nạp đủ 6 cụm sân + mô tả + giá riêng + dịch vụ + coupon cực nhanh cho Vercel."""
+    """Chạy migrate và nạp đủ 6 cụm sân + mô tả + giá riêng + dịch vụ + coupon cho Vercel (SQLite hoặc PostgreSQL)."""
     from django.core.management import call_command
     from django.db import connection, transaction
 
-    with connection.cursor() as cursor:
-        cursor.execute('PRAGMA synchronous = OFF;')
-        cursor.execute('PRAGMA temp_store = MEMORY;')
+    is_sqlite = connection.vendor == 'sqlite'
+    if is_sqlite:
+        with connection.cursor() as cursor:
+            cursor.execute('PRAGMA synchronous = OFF;')
+            cursor.execute('PRAGMA temp_store = MEMORY;')
 
     call_command('migrate', '--noinput', verbosity=0)
+
+    from facilities.models import Facility
+    if Facility.objects.exists():
+        if is_sqlite:
+            with connection.cursor() as cursor:
+                cursor.execute('PRAGMA synchronous = FULL;')
+        return
 
     from bookings.services import SlotGeneratorService
 
@@ -91,8 +105,9 @@ def _bootstrap_serverless_db():
     finally:
         if orig_gen is not None:
             SlotGeneratorService.generate_slots_for_facility = orig_gen
-        with connection.cursor() as cursor:
-            cursor.execute('PRAGMA synchronous = FULL;')
+        if is_sqlite:
+            with connection.cursor() as cursor:
+                cursor.execute('PRAGMA synchronous = FULL;')
 
 
 if needs_bootstrap:
@@ -107,6 +122,14 @@ if needs_bootstrap:
             pass
     finally:
         sys.argv = _orig_argv
+elif is_serverless and has_external_db:
+    application = get_wsgi_application()
+    try:
+        from django.db import connection
+        if 'facilities_facility' not in connection.introspection.table_names():
+            _bootstrap_serverless_db()
+    except Exception:
+        pass
 else:
     application = get_wsgi_application()
 

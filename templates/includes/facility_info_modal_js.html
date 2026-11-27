@@ -166,7 +166,15 @@ Script + Style cho MODAL bảng thông tin cụm sân kiểu Alobo.
         // Tên & địa chỉ
         document.getElementById('fim-name').textContent = data.name;
         document.getElementById('fim-address').textContent = data.address;
-        document.getElementById('fim-distance').textContent = data.distance;
+        let displayDistance = data.distance;
+        if (window.SportBookGeo && typeof data.lat === 'number' && typeof data.lng === 'number') {
+            const coords = window.SportBookGeo.getCoords();
+            if (coords) {
+                const km = window.SportBookGeo.haversineKm(coords.lat, coords.lng, data.lat, data.lng);
+                displayDistance = window.SportBookGeo.formatDistance(km);
+            }
+        }
+        document.getElementById('fim-distance').textContent = displayDistance;
         document.getElementById('fim-hours').textContent = `${data.open_time} - ${data.close_time}`;
         document.getElementById('fim-price').textContent = fimNum(data.min_price) + ' đ';
         document.getElementById('fim-courts').textContent = data.courts_count;

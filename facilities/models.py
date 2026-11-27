@@ -210,25 +210,27 @@ class Facility(models.Model):
             return "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80"
         return "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&auto=format&fit=crop&q=80"
 
-    def get_distance_display(self) -> str:
+    def get_distance_display(self, ref_lat=None, ref_lng=None) -> str:
         """Khoảng cách thực tế chuẩn theo vị trí người dùng (hiển thị gọn)"""
-        km = self.get_distance_km()
+        km = self.get_distance_km(ref_lat=ref_lat, ref_lng=ref_lng)
         if km <= 0:
-            return "0km"
+            return "0m"
+        if km < 1:
+            return f"{int(round(km * 1000))}m"
         if km < 10:
             return f"{km:.1f}km"
         return f"{int(round(km))}km"
 
-    def get_distance_km(self) -> float:
+    def get_distance_km(self, ref_lat=None, ref_lng=None) -> float:
         """
-        Tính đóng gói (Encapsulation): Khoảng cách (km) từ trung tâm TP.HCM (mốc tham chiếu
-        của người dùng) tới cụm sân, dùng công thức Haversine.
+        Tính đóng gói (Encapsulation): Khoảng cách (km) từ vị trí người dùng (hoặc mốc
+        mặc định trung tâm TP.HCM nếu chưa chia sẻ GPS) tới cụm sân, dùng công thức Haversine.
         """
         from math import radians, sin, cos, asin, sqrt
-        # Mốc tham chiếu: trung tâm Quận 1, TP.HCM
-        ref_lat, ref_lng = 10.7769, 106.7009
-        lat1, lng1 = radians(ref_lat), radians(ref_lng)
-        lat2, lng2 = radians(self.latitude), radians(self.longitude)
+        if ref_lat is None or ref_lng is None:
+            ref_lat, ref_lng = 10.7769, 106.7009
+        lat1, lng1 = radians(float(ref_lat)), radians(float(ref_lng))
+        lat2, lng2 = radians(float(self.latitude)), radians(float(self.longitude))
         dlat = lat2 - lat1
         dlng = lng2 - lng1
         a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlng / 2) ** 2

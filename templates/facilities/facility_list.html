@@ -177,9 +177,18 @@
                     </select>
                 </div>
                 <div>
-                    <label for="max_distance" class="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
-                        Khoảng cách tối đa
-                    </label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="max_distance" class="block text-[11px] font-black uppercase tracking-wider text-slate-500">
+                            Khoảng cách tối đa
+                        </label>
+                        <button type="button" onclick="window.SportBookGeo && window.SportBookGeo.requestLocation(true)"
+                                class="text-[10px] font-bold text-[#0b6b3a] hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                            <span id="geo-status-label">{% if has_user_location %}Đã định vị{% else %}Bật vị trí{% endif %}</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="filter-user-lat" name="user_lat" value="{{ user_lat }}">
+                    <input type="hidden" id="filter-user-lng" name="user_lng" value="{{ user_lng }}">
                     <select id="max_distance" name="max_distance"
                             class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0b6b3a]/25 focus:border-[#0b6b3a]">
                         <option value="">Mọi khoảng cách</option>
@@ -225,7 +234,7 @@
     <div id="facilities-grid" class="grid grid-cols-1 gap-4 sm:gap-5">
         {% for fac in facilities %}
         <div class="facility-card bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-lg transition duration-200 group"
-             data-id="{{ fac.id }}" data-lat="{{ fac.latitude }}" data-lng="{{ fac.longitude }}">
+             data-id="{{ fac.id }}" data-lat="{{ fac.latitude|stringformat:'.7f' }}" data-lng="{{ fac.longitude|stringformat:'.7f' }}">
 
             <div class="flex flex-col sm:flex-row">
 
@@ -276,7 +285,9 @@
                                 {% endif %}
                             </h3>
                             <p class="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
-                                <span class="text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0">({{ fac.get_distance_display }})</span>
+                                <span class="facility-distance-badge text-[#c2410c] font-bold mr-1 inline-block flex-shrink-0 cursor-pointer"
+                                      title="Nhấn để cập nhật vị trí thực tế của bạn"
+                                      onclick="window.SportBookGeo && window.SportBookGeo.requestLocation(true)">({{ fac.user_distance_display }})</span>
                                 <span>{{ fac.address }}</span>
                             </p>
                         </div>

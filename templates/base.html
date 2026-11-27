@@ -899,6 +899,229 @@
             }
         });
     </script>
+
+    <!-- Modal Yêu Cầu Chia Sẻ Vị Trí (Global Geolocation & Live Distance Calculator) -->
+    <div id="geo-permission-modal"
+         class="hidden fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-100 text-center">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-[#0b6b3a] flex items-center justify-center text-2xl mb-4 shadow-inner">
+                <i class="fa-solid fa-location-dot"></i>
+            </div>
+            <h3 class="text-lg font-black text-slate-900">Chia sẻ vị trí của bạn</h3>
+            <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                Cho phép <strong>SportBook</strong> truy cập vị trí hiện tại để tính <strong>khoảng cách chính xác</strong> từ bạn tới từng cụm sân và gợi ý sân gần bạn nhất.
+            </p>
+            <p id="geo-modal-error" class="hidden text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 mt-3"></p>
+            <div class="mt-5 flex flex-col sm:flex-row gap-2.5">
+                <button type="button" id="btn-geo-allow"
+                        class="flex-1 py-3 px-4 rounded-xl bg-[#0b6b3a] hover:bg-[#064e2a] text-white font-black text-xs sm:text-sm shadow-md transition">
+                    <i class="fa-solid fa-location-crosshairs mr-1.5"></i>Cho phép chia sẻ vị trí
+                </button>
+                <button type="button" id="btn-geo-later"
+                        class="py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition">
+                    Để sau
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const COOKIE_MAX_AGE = 86400; // 24 giờ
+            const PROMPT_SESSION_KEY = 'sb_geo_prompted_v1';
+
+            function getCookie(name) {
+                const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+                return match ? decodeURIComponent(match[1]) : null;
+            }
+
+            function setCookie(name, value) {
+                document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+            }
+
+            function haversineKm(lat1, lng1, lat2, lng2) {
+                const toRad = (deg) => (deg * Math.PI) / 180;
+                const dLat = toRad(lat2 - lat1);
+                const dLng = toRad(lng2 - lng1);
+                const a = Math.sin(dLat / 2) ** 2 +
+                          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+                return 2 * 6371 * Math.asin(Math.sqrt(a));
+            }
+
+            function formatDistance(km) {
+                if (km === null || km === undefined || Number.isNaN(km)) return 'Chưa bật vị trí';
+                if (km <= 0) return '0m';
+                if (km < 1) return `${Math.round(km * 1000)}m`;
+                if (km < 10) return `${km.toFixed(1)}km`;
+                return `${Math.round(km)}km`;
+            }
+
+            function getCoords() {
+                const lat = parseFloat(getCookie('sb_user_lat'));
+                const lng = parseFloat(getCookie('sb_user_lng'));
+                if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+                    return { lat, lng };
+                }
+                return null;
+            }
+
+            function updateAllDistances(userLat, userLng) {
+                const latInput = document.getElementById('filter-user-lat');
+                const lngInput = document.getElementById('filter-user-lng');
+                if (latInput) latInput.value = userLat.toFixed(7);
+                if (lngInput) lngInput.value = userLng.toFixed(7);
+
+                const statusLabel = document.getElementById('geo-status-label');
+                if (statusLabel) statusLabel.textContent = 'Đã định vị';
+
+                const grid = document.getElementById('facilities-grid');
+                const cards = Array.from(document.querySelectorAll('.facility-card[data-lat][data-lng]'));
+
+                cards.forEach(function (card) {
+                    const fLat = parseFloat(String(card.dataset.lat).replace(',', '.'));
+                    const fLng = parseFloat(String(card.dataset.lng).replace(',', '.'));
+                    if (Number.isNaN(fLat) || Number.isNaN(fLng)) return;
+
+                    const km = haversineKm(userLat, userLng, fLat, fLng);
+                    card.dataset.distanceKm = km.toFixed(4);
+
+                    const badge = card.querySelector('.facility-distance-badge');
+                    if (badge) {
+                        badge.textContent = `(${formatDistance(km)})`;
+                    }
+
+                    // Cập nhật link chỉ đường Google Maps thêm tọa độ xuất phát thực tế
+                    const dirLink = card.querySelector('a[href*="google.com/maps/dir"]');
+                    if (dirLink) {
+                        try {
+                            const u = new URL(dirLink.href);
+                            u.searchParams.set('origin', `${userLat.toFixed(6)},${userLng.toFixed(6)}`);
+                            dirLink.href = u.toString();
+                        } catch (e) {}
+                    }
+                });
+
+                // Tự động sắp xếp lại danh sách sân nếu đang chọn "Khoảng cách gần nhất"
+                const sortSelect = document.getElementById('sort');
+                if (grid && cards.length > 1 && sortSelect && sortSelect.value === 'distance') {
+                    cards.sort(function (a, b) {
+                        return parseFloat(a.dataset.distanceKm || '99999') - parseFloat(b.dataset.distanceKm || '99999');
+                    });
+                    cards.forEach(function (c) { grid.appendChild(c); });
+                }
+
+                // Thông báo cho bản đồ & modal biết vị trí vừa cập nhật
+                window.dispatchEvent(new CustomEvent('sportbook:location-updated', {
+                    detail: { lat: userLat, lng: userLng }
+                }));
+            }
+
+            function hideModal() {
+                const modal = document.getElementById('geo-permission-modal');
+                if (modal) modal.classList.add('hidden');
+            }
+
+            function showModal() {
+                const modal = document.getElementById('geo-permission-modal');
+                const errBox = document.getElementById('geo-modal-error');
+                if (errBox) errBox.classList.add('hidden');
+                if (modal) modal.classList.remove('hidden');
+            }
+
+            function requestLocation(isManual) {
+                const allowBtn = document.getElementById('btn-geo-allow');
+                const errBox = document.getElementById('geo-modal-error');
+
+                if (!navigator.geolocation) {
+                    if (isManual && errBox) {
+                        errBox.textContent = 'Trình duyệt của bạn không hỗ trợ định vị GPS.';
+                        errBox.classList.remove('hidden');
+                        showModal();
+                    }
+                    return;
+                }
+
+                if (allowBtn) {
+                    allowBtn.disabled = true;
+                    allowBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Đang lấy vị trí...';
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    function (pos) {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        setCookie('sb_user_lat', lat.toFixed(7));
+                        setCookie('sb_user_lng', lng.toFixed(7));
+                        sessionStorage.setItem(PROMPT_SESSION_KEY, 'granted');
+                        updateAllDistances(lat, lng);
+                        hideModal();
+                        if (allowBtn) {
+                            allowBtn.disabled = false;
+                            allowBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-1.5"></i>Cho phép chia sẻ vị trí';
+                        }
+                    },
+                    function (err) {
+                        if (allowBtn) {
+                            allowBtn.disabled = false;
+                            allowBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-1.5"></i>Thử lại';
+                        }
+                        if (errBox) {
+                            errBox.textContent = 'Không thể lấy vị trí. Vui lòng cho phép quyền Vị trí (Location) trong cài đặt trình duyệt.';
+                            errBox.classList.remove('hidden');
+                        }
+                        if (isManual) showModal();
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                );
+            }
+
+            window.SportBookGeo = {
+                getCoords: getCoords,
+                haversineKm: haversineKm,
+                formatDistance: formatDistance,
+                updateAllDistances: updateAllDistances,
+                requestLocation: requestLocation,
+                showModal: showModal,
+            };
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const allowBtn = document.getElementById('btn-geo-allow');
+                const laterBtn = document.getElementById('btn-geo-later');
+
+                if (allowBtn) {
+                    allowBtn.addEventListener('click', function () { requestLocation(true); });
+                }
+                if (laterBtn) {
+                    laterBtn.addEventListener('click', function () {
+                        sessionStorage.setItem(PROMPT_SESSION_KEY, 'dismissed');
+                        hideModal();
+                    });
+                }
+
+                // Nếu đã có tọa độ lưu trong cookie -> áp dụng ngay lập tức
+                const existing = getCoords();
+                if (existing) {
+                    updateAllDistances(existing.lat, existing.lng);
+                }
+
+                // Mỗi lần người dùng vào app (phiên mới): tự lấy vị trí nếu đã cấp quyền, ngược lại hiện popup xin quyền
+                const promptedState = sessionStorage.getItem(PROMPT_SESSION_KEY);
+                if (navigator.permissions && navigator.permissions.query) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
+                        if (result.state === 'granted') {
+                            requestLocation(false);
+                        } else if (!promptedState) {
+                            setTimeout(showModal, 450);
+                        }
+                    }).catch(function () {
+                        if (!promptedState) setTimeout(showModal, 450);
+                    });
+                } else if (!promptedState) {
+                    setTimeout(showModal, 450);
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>

@@ -14,6 +14,22 @@ from .models import (
 from bookings.models import BookingSlot, BookingStatus
 from bookings.services import SlotGeneratorService, CleanExpiredLocksService
 
+def _get_user_coords(request):
+    """Đọc tọa độ GPS thực tế của người dùng từ query param hoặc cookie (sb_user_lat, sb_user_lng)."""
+    raw_lat = request.GET.get('user_lat') or request.COOKIES.get('sb_user_lat')
+    raw_lng = request.GET.get('user_lng') or request.COOKIES.get('sb_user_lng')
+    if not raw_lat or not raw_lng:
+        return None, None
+    try:
+        lat = float(str(raw_lat).replace(',', '.').strip())
+        lng = float(str(raw_lng).replace(',', '.').strip())
+        if -90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0:
+            return lat, lng
+    except (ValueError, TypeError):
+        pass
+    return None, None
+
+
 def search_suggest(request):
     """
     API Gợi ý tìm kiếm (Auto-suggest) theo thời gian thực khi người dùng gõ từ khóa.
@@ -146,10 +162,15 @@ def facility_info_api(request, facility_id):
         for svc in facility.addon_services.filter(is_active=True)
     ]
 
+    user_lat, user_lng = _get_user_coords(request)
+    has_user_location = (user_lat is not None and user_lng is not None)
+
     data = {
         'id': str(facility.id),
         'name': facility.name,
         'address': facility.address,
+        'lat': float(facility.latitude),
+        'lng': float(facility.longitude),
         'hotline': facility.get_display_hotline(),
         'phone_contact': facility.phone_contact,
         'rating': facility.get_average_rating(),
@@ -158,8 +179,8 @@ def facility_info_api(request, facility_id):
         'close_time': facility.close_time.strftime('%H:%M'),
         'is_open_now': facility.is_open_at(timezone.localtime().time()),
         'is_verified': facility.is_verified,
-        'distance': facility.get_distance_display(),
-        'distance_km': facility.get_distance_km(),
+        'distance': facility.get_distance_display(user_lat, user_lng) if has_user_location else 'Chưa bật vị trí',
+        'distance_km': facility.get_distance_km(user_lat, user_lng) if has_user_location else None,
         'sports': facility.get_sport_names(),
         'surfaces': facility.get_surface_types(),
         'courts_count': len(courts),
@@ -243,8 +264,15 @@ def facility_list(request):
     open_now = request.GET.get('open_now') == '1'
     sort_by = request.GET.get('sort', 'default')
 
+    # Lấy tọa độ GPS thực tế của người dùng (từ query param hoặc cookie sb_user_lat/lng)
+    user_lat, user_lng = _get_user_coords(request)
+    has_user_location = (user_lat is not None and user_lng is not None)
+
     # Lấy danh sách dạng list để áp dụng các bộ lọc tính toán (giá, khoảng cách, rating)
     facility_list = list(facilities.distinct())
+    for f in facility_list:
+        f.user_distance_km = f.get_distance_km(user_lat, user_lng) if has_user_location else None
+        f.user_distance_display = f.get_distance_display(user_lat, user_lng) if has_user_location else "Chưa bật vị trí"
 
     def _passes(f):
         if min_price is not None and f.get_min_price() < min_price:
@@ -253,7 +281,7 @@ def facility_list(request):
             return False
         if min_rating is not None and f.get_average_rating() < min_rating:
             return False
-        if max_distance is not None and f.get_distance_km() > max_distance:
+        if max_distance is not None and f.get_distance_km(user_lat, user_lng) > max_distance:
             return False
         if open_now and not f.is_open_at(timezone.localtime().time()):
             return False
@@ -268,7 +296,7 @@ def facility_list(request):
     elif sort_by == 'price_desc':
         facility_list.sort(key=lambda f: -f.get_min_price())
     elif sort_by == 'distance':
-        facility_list.sort(key=lambda f: f.get_distance_km())
+        facility_list.sort(key=lambda f: f.get_distance_km(user_lat, user_lng))
     elif sort_by == 'rating':
         facility_list.sort(key=lambda f: (-f.get_average_rating(), -f.get_total_reviews()))
     elif sort_by == 'popular':
@@ -310,6 +338,9 @@ def facility_list(request):
         'sort_by': sort_by,
         'price_floor': price_floor,
         'price_ceiling': price_ceiling,
+        'has_user_location': has_user_location,
+        'user_lat': repr(user_lat) if has_user_location else '',
+        'user_lng': repr(user_lng) if has_user_location else '',
         'filter_active': any([
             min_price is not None, max_price is not None, min_rating is not None,
             max_distance is not None, open_now, sort_by != 'default',
@@ -383,8 +414,8 @@ def facility_map(request):
             'image': f.get_cover_image_url(),
             'is_verified': f.is_verified,
             'url': f'/facilities/{f.id}/',
-            # Khoảng cách hiển thị (giống trang danh sách)
-            'distance': f.get_distance_display(),
+            # Khoảng cách hiển thị (theo vị trí thực tế của người dùng nếu đã chia sẻ GPS)
+            'distance': f.get_distance_display(*_get_user_coords(request)) if _get_user_coords(request)[0] is not None else 'Chưa bật vị trí',
             # URL chỉ đường Google Maps (dấu thập phân chuẩn)
             'directions_url': (
                 'https://www.google.com/maps/dir/?api=1'

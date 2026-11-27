@@ -39,7 +39,13 @@ def _table_exists(db_file: str, table_name: str) -> bool:
 
 
 has_external_db = bool(
-    (os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL') or '').strip()
+    (
+        os.environ.get('DATABASE_URL_UNPOOLED')
+        or os.environ.get('POSTGRES_URL_NON_POOLING')
+        or os.environ.get('DATABASE_URL')
+        or os.environ.get('POSTGRES_URL')
+        or ''
+    ).strip()
 )
 
 # Đảm bảo database ở /tmp có quyền đọc ghi và đủ bảng trên môi trường Vercel Serverless
@@ -123,13 +129,18 @@ if needs_bootstrap:
     finally:
         sys.argv = _orig_argv
 elif is_serverless and has_external_db:
-    application = get_wsgi_application()
+    _orig_argv = list(sys.argv)
+    sys.argv = ['manage.py', 'migrate']
     try:
+        application = get_wsgi_application()
         from django.db import connection
         if 'facilities_facility' not in connection.introspection.table_names():
             _bootstrap_serverless_db()
     except Exception:
-        pass
+        import traceback
+        traceback.print_exc()
+    finally:
+        sys.argv = _orig_argv
 else:
     application = get_wsgi_application()
 

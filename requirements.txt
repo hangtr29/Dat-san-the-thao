@@ -9,3 +9,6 @@ django-cors-headers>=4.3
 
 # --- Xuất báo cáo Excel cho chủ sân ---
 openpyxl>=3.1
+
+# --- Xử lý ảnh (ImageField trong Django) ---
+Pillow>=10.0

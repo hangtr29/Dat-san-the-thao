@@ -209,6 +209,13 @@
                     </div>
                 </div>
                 {% else %}
+                {% if request.session.saved_bookings %}
+                <a href="{% url 'bookings:booking_lookup' %}"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-amber-400 text-slate-900 font-black text-xs hover:bg-amber-300 transition shadow-md">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>Vé của bạn ({{ request.session.saved_bookings|length }})</span>
+                </a>
+                {% endif %}
                 <a href="{% url 'users:login' %}"
                     class="px-6 py-2.5 rounded-full bg-white text-[#0b6b3a] font-black text-xs hover:bg-emerald-50 transition shadow-md">
                     Đăng nhập

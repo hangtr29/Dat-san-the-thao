@@ -1083,12 +1083,48 @@ def booking_lookup(request):
             # Tra cứu bằng mã đơn (không yêu cầu đăng nhập; có fallback phục hồi từ session cookie trên Vercel)
             booking = get_booking_or_restore(request, query_code)
 
+    # Danh sách đơn gần đây đã lưu trong session trình duyệt (để khách không cần nhớ mã BK...)
+    recent_bookings = []
+    saved_map = getattr(request, 'session', {}).get('saved_bookings', {}) or {}
+    if saved_map:
+        saved_codes = list(saved_map.keys())
+        db_recent = {
+            b.booking_code: b
+            for b in Booking.objects.filter(booking_code__in=saved_codes)
+        }
+        # Giữ thứ tự mới nhất lên đầu
+        for code_key in reversed(saved_codes):
+            b_obj = db_recent.get(code_key)
+            if b_obj:
+                recent_bookings.append({
+                    'booking_code': b_obj.booking_code,
+                    'status': b_obj.status,
+                    'status_display': b_obj.get_status_display(),
+                    'total_amount': b_obj.total_amount,
+                    'customer_name': b_obj.display_customer_name,
+                    'created_at': b_obj.created_at,
+                })
+            else:
+                b_data = saved_map.get(code_key) or {}
+                recent_bookings.append({
+                    'booking_code': code_key,
+                    'status': b_data.get('status', BookingStatus.PENDING_BILL),
+                    'status_display': dict(BookingStatus.choices).get(
+                        b_data.get('status', BookingStatus.PENDING_BILL),
+                        'Đang xử lý',
+                    ),
+                    'total_amount': Decimal(str(b_data.get('total_amount', '0') or '0')),
+                    'customer_name': b_data.get('customer_name') or 'Khách vãng lai',
+                    'created_at': None,
+                })
+
     return render(request, 'bookings/booking_lookup.html', {
         'booking': booking,
         'query_code': query_code,
         'searched': searched,
         'lookup_denied': lookup_denied,
         'lookup_by_phone': lookup_by_phone,
+        'recent_bookings': recent_bookings[:10],
     })
 
 

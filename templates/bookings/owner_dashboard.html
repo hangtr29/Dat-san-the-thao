@@ -298,8 +298,7 @@
                             {% for slot in b.slots.all %}
                             <div class="font-semibold text-slate-700">{{ slot.court.court_name }}</div>
                             <div class="text-[10px] text-slate-400">
-                                {{ slot.date|date:"d/m" }} | {{ slot.start_time|time:"H:i" }}-{{
-                                slot.end_time|time:"H:i" }}
+                                {{ slot.date|date:"d/m" }} | {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}
                             </div>
                             {% endfor %}
                         </td>

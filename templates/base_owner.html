@@ -77,9 +77,23 @@
         <aside id="owner-sidebar"
             class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-200 flex flex-col transition-transform duration-300 -translate-x-full lg:translate-x-0 lg:static lg:w-64 xl:w-72 shadow-xl border-r border-slate-800">
 
-            <!-- LOGO BRANDING CHỦ SÂN -->
+            <!-- LOGO BRANDING CHỦ SÂN / ADMIN -->
             <div class="h-18 px-5 flex items-center justify-between border-b border-slate-800 bg-slate-950/60">
                 <a href="{% url 'bookings:owner_dashboard' %}" class="flex items-center gap-2.5 group">
+                    {% if user.role == 'ADMIN' %}
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-amber-900/40 group-hover:scale-105 transition">
+                        <i class="fa-solid fa-shield-halved text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-lg font-black text-white tracking-tight">SportBook</span>
+                            <span
+                                class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">Admin</span>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-semibold block">Giám Sát Nền Tảng Trung Gian</span>
+                    </div>
+                    {% else %}
                     <div
                         class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-md shadow-emerald-900/40 group-hover:scale-105 transition">
                         <i class="fa-solid fa-store text-lg"></i>
@@ -92,6 +106,7 @@
                         </div>
                         <span class="text-[11px] text-slate-400 font-semibold block">Kênh Quản Trị Chủ Sân</span>
                     </div>
+                    {% endif %}
                 </a>
                 <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white p-2">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -127,19 +142,66 @@
                 </form>
             </div>
 
-            <!-- DANH SÁCH MENU ĐIỀU HƯỚNG THEO NHÓM CHUYÊN BIỆT -->
+            <!-- DANH SÁCH MENU ĐIỀU HƯỚNG THEO VAI TRÒ (RBAC: ADMIN TRUNG GIAN vs CHỦ SÂN) -->
             <nav class="flex-1 overflow-y-auto p-3.5 space-y-6">
 
-                <!-- NHÓM 1: VẬN HÀNH & ĐƠN HÀNG -->
+                {% if user.role == 'ADMIN' %}
+                <!-- NHÓM DÀNH RIÊNG CHO ADMIN TRUNG GIAN: KIỂM DUYỆT & QUẢN TRỊ NỀN TẢNG -->
                 <div>
-                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Vận Hành & Đơn Hàng</span>
+                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-amber-400/90 block mb-2">Quản Trị Nền Tảng (Admin)</span>
+                    <div class="space-y-1">
+                        <a href="/admin/" target="_blank"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-shield-halved w-4 text-center text-amber-400"></i>
+                                <span>Cổng Quản Trị Hệ Thống</span>
+                            </div>
+                            <span class="text-[10px] font-black">↗</span>
+                        </a>
+                        <a href="/admin/users/ownerprofile/" target="_blank"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-id-card-clip w-4 text-center text-sky-400"></i>
+                                <span>Duyệt Hồ Sơ KYC Chủ Sân</span>
+                            </div>
+                        </a>
+                        <a href="/admin/facilities/facility/" target="_blank"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-circle-check w-4 text-center text-emerald-400"></i>
+                                <span>Duyệt Cụm Sân & Tích Xanh</span>
+                            </div>
+                        </a>
+                        <a href="/admin/users/subscriptionorder/" target="_blank"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-crown w-4 text-center text-amber-400"></i>
+                                <span>Duyệt Gói Duy Trì Chủ Sân</span>
+                            </div>
+                        </a>
+                        <a href="/admin/facilities/coupon/" target="_blank"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-ticket w-4 text-center text-pink-400"></i>
+                                <span>Quản Lý Mã Giảm Giá</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- NHÓM 1: VẬN HÀNH & ĐƠN HÀNG (Chủ sân vận hành / Admin giám sát) -->
+                <div>
+                    <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">
+                        {% if user.role == 'ADMIN' %}Giám Sát Vận Hành & Đơn Hàng{% else %}Vận Hành & Đơn Hàng{% endif %}
+                    </span>
                     <div class="space-y-1">
                         <!-- 1.1 TRUNG TÂM DUYỆT ĐƠN (hợp nhất dashboard + trang duyệt riêng) -->
                         <a href="{% url 'bookings:owner_dashboard' %}?tab=orders{% if selected_facility_id %}&facility_id={{ selected_facility_id }}{% endif %}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'overview' or active_tab == 'orders' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-chart-pie w-4 text-center {% if active_menu == 'overview' or active_tab == 'orders' %}text-white{% else %}text-emerald-400{% endif %}"></i>
-                                <span>Tổng Quan & Duyệt Đơn</span>
+                                <span>{% if user.role == 'ADMIN' %}Tổng Quan & Giám Sát Đơn{% else %}Tổng Quan & Duyệt Đơn{% endif %}</span>
                             </div>
                             {% if pending_count and pending_count > 0 %}
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">{{ pending_count }}</span>
@@ -160,7 +222,7 @@
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'reviews' or active_tab == 'reviews' %}bg-emerald-600 text-white shadow-md shadow-emerald-950/30{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-star w-4 text-center {% if active_menu == 'reviews' or active_tab == 'reviews' %}text-white{% else %}text-yellow-400{% endif %}"></i>
-                                <span>Đánh Giá & Phản Hồi</span>
+                                <span>{% if user.role == 'ADMIN' %}Kiểm Duyệt Đánh Giá{% else %}Đánh Giá & Phản Hồi{% endif %}</span>
                             </div>
                             {% if reviews %}
                             <span class="text-[11px] text-slate-400 font-bold">({{ reviews|length }})</span>
@@ -178,7 +240,8 @@
                     </div>
                 </div>
 
-                <!-- NHÓM 2: CẤU HÌNH & DỊCH VỤ -->
+                {% if user.role != 'ADMIN' %}
+                <!-- NHÓM 2: CẤU HÌNH & DỊCH VỤ (CHỈ DÀNH CHO CHỦ SÂN - ẨN VỚI ADMIN TRUNG GIAN) -->
                 <div>
                     <span class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Cấu Hình & Dịch Vụ</span>
                     <div class="space-y-1">
@@ -249,6 +312,7 @@
                         </a>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- NHÓM 3: LIÊN KẾT NHANH -->
                 <div>

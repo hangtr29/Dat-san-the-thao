@@ -199,16 +199,31 @@ class Facility(models.Model):
         return self.courts.filter(is_active=True)
 
     def get_cover_image_url(self) -> str:
-        """Ảnh đại diện sân thi đấu sống động chuẩn phong cách thể thao Alobo"""
+        """Ảnh đại diện riêng biệt, sắc nét cho từng cụm sân (ưu tiên ảnh chủ sân tải lên, dự phòng ảnh static CDN)"""
         if self.image:
             try:
                 return self.image.url
             except Exception:
                 pass
-        name_lower = self.name.lower()
+
+        name_lower = (self.name or '').lower()
+        static_map = [
+            (('sài gòn star', 'sai gon star'), '/static/images/facilities/saigon_star.jpg'),
+            (('bạch đằng', 'bach dang'), '/static/images/facilities/bach_dang.jpg'),
+            (('thanh đa', 'thanh da'), '/static/images/facilities/thanh_da.jpg'),
+            (('hoa lư', 'hoa lu'), '/static/images/facilities/hoa_lu.jpg'),
+            (('phú nhuận', 'phu nhuan', 'sky garden'), '/static/images/facilities/phu_nhuan.jpg'),
+            (('thảo điền', 'thao dien'), '/static/images/facilities/thao_dien.jpg'),
+        ]
+        for keywords, static_url in static_map:
+            if any(k in name_lower for k in keywords):
+                return static_url
+
+        if 'bóng bàn' in name_lower or 'bong ban' in name_lower:
+            return '/static/images/facilities/thao_dien.jpg'
         if 'pickleball' in name_lower:
-            return "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80"
-        return "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&auto=format&fit=crop&q=80"
+            return '/static/images/facilities/hoa_lu.jpg'
+        return '/static/images/facilities/saigon_star.jpg'
 
     def get_distance_display(self, ref_lat=None, ref_lng=None) -> str:
         """Khoảng cách thực tế chuẩn theo vị trí người dùng (hiển thị gọn)"""
@@ -304,6 +319,12 @@ class Facility(models.Model):
                     gallery.insert(0, cover)
             except Exception:
                 pass
+
+        if not gallery:
+            gallery.append({
+                'url': self.get_cover_image_url(),
+                'caption': self.name or 'Ảnh cụm sân',
+            })
 
         return gallery
 

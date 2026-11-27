@@ -1,0 +1,402 @@
+{% extends 'base_owner.html' %}
+
+{% block title %}Quản Trị Nền Tảng (Admin) - SportBook{% endblock %}
+{% block page_title %}Trung Tâm Quản Trị Nền Tảng{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- 4 THẺ TỔNG QUAN GỌN GÀNG -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <a href="?tab=facilities"
+           class="bg-white rounded-2xl p-5 border {% if admin_tab == 'facilities' %}border-emerald-500 ring-2 ring-emerald-500/20{% else %}border-slate-200 hover:border-emerald-300{% endif %} shadow-sm transition">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Cụm Sân Hệ Thống</span>
+                <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <i class="fa-solid fa-circle-check"></i>
+                </span>
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-2xl font-black text-slate-900">{{ stats.total_facilities }}</span>
+                <span class="text-xs font-bold {% if stats.pending_facilities > 0 %}text-amber-600{% else %}text-emerald-600{% endif %}">
+                    {% if stats.pending_facilities > 0 %}{{ stats.pending_facilities }} chờ duyệt{% else %}Tất cả đã duyệt{% endif %}
+                </span>
+            </div>
+        </a>
+
+        <a href="?tab=kyc"
+           class="bg-white rounded-2xl p-5 border {% if admin_tab == 'kyc' %}border-sky-500 ring-2 ring-sky-500/20{% else %}border-slate-200 hover:border-sky-300{% endif %} shadow-sm transition">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Hồ Sơ KYC Chủ Sân</span>
+                <span class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                </span>
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-2xl font-black text-slate-900">{{ stats.total_kyc }}</span>
+                <span class="text-xs font-bold {% if stats.pending_kyc > 0 %}text-amber-600{% else %}text-sky-600{% endif %}">
+                    {% if stats.pending_kyc > 0 %}{{ stats.pending_kyc }} chờ duyệt{% else %}Ổn định{% endif %}
+                </span>
+            </div>
+        </a>
+
+        <a href="?tab=subscriptions"
+           class="bg-white rounded-2xl p-5 border {% if admin_tab == 'subscriptions' %}border-amber-500 ring-2 ring-amber-500/20{% else %}border-slate-200 hover:border-amber-300{% endif %} shadow-sm transition">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Đơn Gói Duy Trì</span>
+                <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <i class="fa-solid fa-crown"></i>
+                </span>
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-2xl font-black text-slate-900">{{ stats.pending_subs }}</span>
+                <span class="text-xs font-bold text-slate-500">đơn chờ duyệt</span>
+            </div>
+        </a>
+
+        <a href="?tab=coupons"
+           class="bg-white rounded-2xl p-5 border {% if admin_tab == 'coupons' %}border-pink-500 ring-2 ring-pink-500/20{% else %}border-slate-200 hover:border-pink-300{% endif %} shadow-sm transition">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Mã Giảm Giá</span>
+                <span class="w-9 h-9 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
+                    <i class="fa-solid fa-ticket"></i>
+                </span>
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-2xl font-black text-slate-900">{{ stats.active_coupons }}</span>
+                <span class="text-xs font-bold text-emerald-600">đang hoạt động</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- THANH CHUYỂN TAB -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex flex-wrap gap-1 p-2 bg-slate-50 border-b border-slate-200">
+            <a href="?tab=facilities"
+               class="px-4 py-2 rounded-xl text-xs font-extrabold transition {% if admin_tab == 'facilities' %}bg-emerald-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-white{% endif %}">
+                <i class="fa-solid fa-circle-check mr-1.5"></i>Duyệt Cụm Sân & Tích Xanh
+            </a>
+            <a href="?tab=kyc"
+               class="px-4 py-2 rounded-xl text-xs font-extrabold transition {% if admin_tab == 'kyc' %}bg-emerald-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-white{% endif %}">
+                <i class="fa-solid fa-id-card-clip mr-1.5"></i>Duyệt Hồ Sơ KYC Chủ Sân
+            </a>
+            <a href="?tab=subscriptions"
+               class="px-4 py-2 rounded-xl text-xs font-extrabold transition {% if admin_tab == 'subscriptions' %}bg-emerald-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-white{% endif %}">
+                <i class="fa-solid fa-crown mr-1.5"></i>Duyệt Gói Duy Trì
+            </a>
+            <a href="?tab=coupons"
+               class="px-4 py-2 rounded-xl text-xs font-extrabold transition {% if admin_tab == 'coupons' %}bg-emerald-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-white{% endif %}">
+                <i class="fa-solid fa-ticket mr-1.5"></i>Quản Lý Mã Giảm Giá
+            </a>
+        </div>
+
+        <div class="p-5">
+            {% if admin_tab == 'facilities' %}
+            <!-- TAB 1: DUYỆT CỤM SÂN & TÍCH XANH -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                            <th class="py-3 pr-4">Cụm Sân</th>
+                            <th class="py-3 px-4">Chủ Sân</th>
+                            <th class="py-3 px-4">Trạng Thái</th>
+                            <th class="py-3 px-4">Tích Xanh</th>
+                            <th class="py-3 pl-4 text-right">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        {% for fac in facilities_list %}
+                        <tr class="hover:bg-slate-50/70">
+                            <td class="py-3.5 pr-4">
+                                <div class="font-extrabold text-slate-900">{{ fac.name }}</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">{{ fac.address }}</div>
+                            </td>
+                            <td class="py-3.5 px-4 font-semibold text-slate-700">
+                                {{ fac.owner.username|default:"Chưa gán" }}
+                            </td>
+                            <td class="py-3.5 px-4">
+                                {% if fac.status == 'ACTIVE' %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Đang hoạt động</span>
+                                {% elif fac.status == 'PENDING_REVIEW' %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700">Chờ duyệt</span>
+                                {% else %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">Tạm ngưng</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-4">
+                                {% if fac.is_verified %}
+                                <span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>Đã xác thực</span>
+                                {% else %}
+                                <span class="text-slate-400 font-semibold">Chưa có</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 pl-4 text-right whitespace-nowrap">
+                                <form method="post" class="inline-flex gap-1.5">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="tab" value="facilities">
+                                    <input type="hidden" name="target_id" value="{{ fac.id }}">
+                                    {% if fac.status != 'ACTIVE' or not fac.is_verified %}
+                                    <button type="submit" name="action" value="approve_facility"
+                                            class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition">
+                                        Duyệt & Tích Xanh
+                                    </button>
+                                    {% endif %}
+                                    {% if fac.status == 'ACTIVE' %}
+                                    <button type="submit" name="action" value="suspend_facility"
+                                            class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[11px] transition">
+                                        Tạm ngưng
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="py-10 text-center text-slate-400 font-semibold">Chưa có cụm sân nào.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% elif admin_tab == 'kyc' %}
+            <!-- TAB 2: DUYỆT HỒ SƠ KYC CHỦ SÂN -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                            <th class="py-3 pr-4">Tài Khoản Chủ Sân</th>
+                            <th class="py-3 px-4">CCCD / Ngân Hàng</th>
+                            <th class="py-3 px-4">Hạn Gói Duy Trì</th>
+                            <th class="py-3 px-4">Trạng Thái KYC</th>
+                            <th class="py-3 pl-4 text-right">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        {% for p in kyc_list %}
+                        <tr class="hover:bg-slate-50/70">
+                            <td class="py-3.5 pr-4">
+                                <div class="font-extrabold text-slate-900">{{ p.user.get_full_name|default:p.user.username }}</div>
+                                <div class="text-[11px] text-slate-500">@{{ p.user.username }}</div>
+                            </td>
+                            <td class="py-3.5 px-4 text-slate-700">
+                                <div>CCCD: <strong>{{ p.id_card_number|default:"Chưa cập nhật" }}</strong></div>
+                                <div class="text-[11px] text-slate-500">{{ p.bank_name }} — {{ p.bank_account_number }}</div>
+                            </td>
+                            <td class="py-3.5 px-4 font-semibold text-slate-700">
+                                {% if p.subscription_expires_at %}
+                                    {{ p.subscription_expires_at|date:"d/m/Y" }}
+                                {% else %}
+                                    <span class="text-slate-400">Chưa kích hoạt</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-4">
+                                {% if p.kyc_status == 'KYC_VERIFIED' %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Đã xác minh</span>
+                                {% elif p.kyc_status == 'KYC_PENDING' %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700">Chờ duyệt</span>
+                                {% else %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">Bị từ chối</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 pl-4 text-right whitespace-nowrap">
+                                <form method="post" class="inline-flex gap-1.5">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="tab" value="kyc">
+                                    <input type="hidden" name="target_id" value="{{ p.id }}">
+                                    {% if p.kyc_status != 'KYC_VERIFIED' %}
+                                    <button type="submit" name="action" value="approve_kyc"
+                                            class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition">
+                                        Duyệt KYC
+                                    </button>
+                                    {% endif %}
+                                    {% if p.kyc_status != 'KYC_REJECTED' %}
+                                    <button type="submit" name="action" value="reject_kyc"
+                                            class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[11px] transition">
+                                        Từ chối
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="py-10 text-center text-slate-400 font-semibold">Chưa có hồ sơ KYC nào.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% elif admin_tab == 'subscriptions' %}
+            <!-- TAB 3: DUYỆT ĐƠN GÓI DUY TRÌ -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                            <th class="py-3 pr-4">Mã Đơn</th>
+                            <th class="py-3 px-4">Chủ Sân & Gói</th>
+                            <th class="py-3 px-4">Số Tiền</th>
+                            <th class="py-3 px-4">Trạng Thái</th>
+                            <th class="py-3 pl-4 text-right">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        {% for o in sub_orders %}
+                        <tr class="hover:bg-slate-50/70">
+                            <td class="py-3.5 pr-4 font-mono font-bold text-slate-800">{{ o.order_code }}</td>
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-slate-900">{{ o.owner.username }}</div>
+                                <div class="text-[11px] text-slate-500">{{ o.plan.name }} ({{ o.plan.duration_days }} ngày)</div>
+                            </td>
+                            <td class="py-3.5 px-4 font-black text-emerald-700">{{ o.amount|floatformat:0 }} đ</td>
+                            <td class="py-3.5 px-4">
+                                {% if o.status == 'APPROVED' %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Đã duyệt</span>
+                                {% elif o.status == 'PENDING' %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700">Chờ duyệt</span>
+                                {% else %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">Từ chối</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 pl-4 text-right whitespace-nowrap">
+                                {% if o.status == 'PENDING' %}
+                                <form method="post" class="inline-flex gap-1.5">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="tab" value="subscriptions">
+                                    <input type="hidden" name="target_id" value="{{ o.id }}">
+                                    <button type="submit" name="action" value="approve_subscription"
+                                            class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition">
+                                        Duyệt & Gia hạn
+                                    </button>
+                                    <button type="submit" name="action" value="reject_subscription"
+                                            class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[11px] transition">
+                                        Từ chối
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-[11px] text-slate-400 font-semibold">Đã xử lý</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-12 text-center">
+                                <i class="fa-solid fa-crown text-3xl text-slate-300 mb-2 block"></i>
+                                <div class="text-sm font-bold text-slate-600">Hiện chưa có đơn đăng ký gói duy trì nào chờ duyệt</div>
+                                <p class="text-xs text-slate-400 mt-1">Khi Chủ sân gửi yêu cầu gia hạn gói duy trì, đơn sẽ xuất hiện ngay tại đây để bạn duyệt 1 chạm.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% elif admin_tab == 'coupons' %}
+            <!-- TAB 4: QUẢN LÝ MÃ GIẢM GIÁ -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                                <th class="py-3 pr-4">Mã</th>
+                                <th class="py-3 px-4">Mức Giảm</th>
+                                <th class="py-3 px-4">Hết Hạn</th>
+                                <th class="py-3 px-4">Trạng Thái</th>
+                                <th class="py-3 pl-4 text-right">Bật / Tắt</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            {% for cp in coupons_list %}
+                            <tr class="hover:bg-slate-50/70">
+                                <td class="py-3.5 pr-4">
+                                    <span class="px-2 py-1 rounded-lg bg-slate-100 font-mono font-black text-slate-800">{{ cp.code }}</span>
+                                    <div class="text-[11px] text-slate-500 mt-1">{{ cp.description }}</div>
+                                </td>
+                                <td class="py-3.5 px-4 font-bold text-emerald-700">
+                                    {% if cp.discount_type == 'PERCENT' %}
+                                        Giảm {{ cp.discount_value|floatformat:0 }}% (tối đa {{ cp.max_discount|floatformat:0 }}đ)
+                                    {% else %}
+                                        Giảm {{ cp.discount_value|floatformat:0 }}đ
+                                    {% endif %}
+                                </td>
+                                <td class="py-3.5 px-4 text-slate-600">{{ cp.valid_to|date:"d/m/Y" }}</td>
+                                <td class="py-3.5 px-4">
+                                    {% if cp.is_active %}
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Đang bật</span>
+                                    {% else %}
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-200 text-slate-600">Đang tắt</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3.5 pl-4 text-right">
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="tab" value="coupons">
+                                        <input type="hidden" name="target_id" value="{{ cp.id }}">
+                                        <button type="submit" name="action" value="toggle_coupon"
+                                                class="px-3 py-1.5 rounded-lg border font-bold text-[11px] transition {% if cp.is_active %}bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100{% else %}bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100{% endif %}">
+                                            {% if cp.is_active %}Tắt mã{% else %}Bật lại{% endif %}
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="py-10 text-center text-slate-400">Chưa có mã giảm giá nào.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FORM TẠO MÃ GIẢM GIÁ NHANH -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                    <h4 class="text-sm font-black text-slate-800 mb-3">
+                        <i class="fa-solid fa-plus-circle text-emerald-600 mr-1.5"></i>Tạo Mã Giảm Giá Mới
+                    </h4>
+                    <form method="post" class="space-y-3 text-xs">
+                        {% csrf_token %}
+                        <input type="hidden" name="tab" value="coupons">
+                        <input type="hidden" name="action" value="create_coupon">
+                        <div>
+                            <label class="font-bold text-slate-600 block mb-1">Mã Code (VD: SUMMER15)</label>
+                            <input type="text" name="code" required placeholder="SPORT15"
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono uppercase font-bold">
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-600 block mb-1">Mô tả ngắn</label>
+                            <input type="text" name="description" placeholder="Ưu đãi cuối tuần"
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="font-bold text-slate-600 block mb-1">Loại giảm</label>
+                                <select name="discount_type" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 font-bold">
+                                    <option value="PERCENT">Theo %</option>
+                                    <option value="FIXED">Số tiền cố định</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="font-bold text-slate-600 block mb-1">Giá trị (% hoặc đ)</label>
+                                <input type="number" name="discount_value" value="15" required
+                                       class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="font-bold text-slate-600 block mb-1">Giảm tối đa (đ)</label>
+                                <input type="number" name="max_discount" value="50000"
+                                       class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                            </div>
+                            <div>
+                                <label class="font-bold text-slate-600 block mb-1">Đơn tối thiểu (đ)</label>
+                                <input type="number" name="min_order_value" value="150000"
+                                       class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                            </div>
+                        </div>
+                        <button type="submit"
+                                class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-sm transition">
+                            Tạo Mã Giảm Giá
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

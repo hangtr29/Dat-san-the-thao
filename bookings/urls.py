@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_admin
 
 app_name = 'bookings'
 
@@ -38,6 +38,9 @@ urlpatterns = [
     path('api/notifications/mark-all-read/', views.notification_mark_all_read, name='notification_mark_all_read'),
     path('api/notifications/<uuid:notification_id>/toggle-read/',
          views.notification_toggle_read, name='notification_toggle_read'),
+
+    # ---- Khu vực dành cho Admin trung gian (Giao diện trực quan) ----
+    path('admin-panel/', views_admin.admin_platform_hub, name='admin_hub'),
 
     # ---- Khu vực dành cho Chủ sân (Owner) ----
     path('dashboard/', views.owner_dashboard, name='owner_dashboard'),

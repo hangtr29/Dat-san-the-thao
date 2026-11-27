@@ -146,43 +146,35 @@
             <nav class="flex-1 overflow-y-auto p-3.5 space-y-6">
 
                 {% if user.role == 'ADMIN' %}
-                <!-- NHÓM DÀNH RIÊNG CHO ADMIN TRUNG GIAN: KIỂM DUYỆT & QUẢN TRỊ NỀN TẢNG -->
+                <!-- NHÓM DÀNH RIÊNG CHO ADMIN TRUNG GIAN: GIAO DIỆN TRỰC QUAN 1-CLICK (KHÔNG CẦN VÀO DJANGO ADMIN RỐI MẮT) -->
                 <div>
                     <span class="px-3 text-[10px] font-black uppercase tracking-wider text-amber-400/90 block mb-2">Quản Trị Nền Tảng (Admin)</span>
                     <div class="space-y-1">
-                        <a href="/admin/" target="_blank"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition">
+                        <a href="{% url 'bookings:admin_hub' %}?tab=facilities"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'admin_facilities' %}bg-amber-500 text-slate-950 shadow-md{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-shield-halved w-4 text-center text-amber-400"></i>
-                                <span>Cổng Quản Trị Hệ Thống</span>
-                            </div>
-                            <span class="text-[10px] font-black">↗</span>
-                        </a>
-                        <a href="/admin/users/ownerprofile/" target="_blank"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-id-card-clip w-4 text-center text-sky-400"></i>
-                                <span>Duyệt Hồ Sơ KYC Chủ Sân</span>
-                            </div>
-                        </a>
-                        <a href="/admin/facilities/facility/" target="_blank"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-circle-check w-4 text-center text-emerald-400"></i>
+                                <i class="fa-solid fa-circle-check w-4 text-center {% if active_menu == 'admin_facilities' %}text-slate-950{% else %}text-emerald-400{% endif %}"></i>
                                 <span>Duyệt Cụm Sân & Tích Xanh</span>
                             </div>
                         </a>
-                        <a href="/admin/users/subscriptionorder/" target="_blank"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                        <a href="{% url 'bookings:admin_hub' %}?tab=kyc"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'admin_kyc' %}bg-amber-500 text-slate-950 shadow-md{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-crown w-4 text-center text-amber-400"></i>
+                                <i class="fa-solid fa-id-card-clip w-4 text-center {% if active_menu == 'admin_kyc' %}text-slate-950{% else %}text-sky-400{% endif %}"></i>
+                                <span>Duyệt Hồ Sơ KYC Chủ Sân</span>
+                            </div>
+                        </a>
+                        <a href="{% url 'bookings:admin_hub' %}?tab=subscriptions"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'admin_subscriptions' %}bg-amber-500 text-slate-950 shadow-md{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-crown w-4 text-center {% if active_menu == 'admin_subscriptions' %}text-slate-950{% else %}text-amber-400{% endif %}"></i>
                                 <span>Duyệt Gói Duy Trì Chủ Sân</span>
                             </div>
                         </a>
-                        <a href="/admin/facilities/coupon/" target="_blank"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                        <a href="{% url 'bookings:admin_hub' %}?tab=coupons"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if active_menu == 'admin_coupons' %}bg-amber-500 text-slate-950 shadow-md{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
                             <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-ticket w-4 text-center text-pink-400"></i>
+                                <i class="fa-solid fa-ticket w-4 text-center {% if active_menu == 'admin_coupons' %}text-slate-950{% else %}text-pink-400{% endif %}"></i>
                                 <span>Quản Lý Mã Giảm Giá</span>
                             </div>
                         </a>

@@ -85,6 +85,11 @@ class BookingEngineService:
         if not slot_ids:
             return False, "Vui lòng chọn ít nhất 1 khung giờ.", None
 
+        # Chuẩn hóa session_key <= 64 ký tự để không lỗi VARCHAR(64) trên PostgreSQL
+        if session_key and len(str(session_key)) > 64:
+            import hashlib
+            session_key = hashlib.sha256(str(session_key).encode('utf-8')).hexdigest()[:64]
+
         # Chuẩn hoá & lọc UUID hợp lệ (chống ValidationError 500 khi nhận sai định dạng)
         import uuid as _uuid
         clean_ids = []

@@ -158,10 +158,13 @@ def lock_and_book_slots(request):
         return redirect('facilities:facility_list')
     slot_ids = valid_slot_ids
 
-    # Đảm bảo session key cho khách vãng lai
-    if not request.session.session_key:
-        request.session.save()
-    session_key = request.session.session_key
+    # Đảm bảo mã định danh giữ chỗ gọn (32 ký tự <= VARCHAR(64) trên PostgreSQL)
+    # vì signed_cookies trên Vercel có session_key rất dài (> 64 ký tự)
+    guest_lock_id = request.session.get('guest_lock_id')
+    if not guest_lock_id:
+        guest_lock_id = uuid.uuid4().hex
+        request.session['guest_lock_id'] = guest_lock_id
+    session_key = guest_lock_id
 
     # Khách đăng nhập thì lấy user, chưa thì None
     user = request.user if request.user.is_authenticated else None
